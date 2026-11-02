@@ -2,7 +2,6 @@ using System.IO.Compression;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
-using NuGet.Versioning;
 using LauncherKit.Infrastructure;
 using LauncherKit.TestSupport;
 
@@ -16,13 +15,13 @@ public sealed class LogsCollectorTests
 	{
 		// Arrange
 		using var temp = new TempDirectory();
-		var rootLog = temp.CreateFile("bootstrapper.log", "root");
+		var rootLog = temp.CreateFile("root.log", "root");
 		temp.CreateDirectory(Path.Combine("1.2.3", "logs"));
 		temp.CreateFile(Path.Combine("1.2.3", "appsettings.json"), "{}");
 		temp.CreateFile(Path.Combine("1.2.3", "console.log"), "console");
 		temp.CreateFile(Path.Combine("1.2.3", "logs", "app.log"), "application");
 		var output = temp.Combine("output");
-		var sut = CreateSut(temp.Path, NuGetVersion.Parse("1.2.3"), output, temp.Combine("documents"));
+		var sut = CreateSut(temp.Path, temp.Combine("1.2.3"), output, temp.Combine("documents"));
 
 		// Act
 		var exception = await sut.CollectLogs(output, null, CancellationToken.None);
@@ -47,7 +46,7 @@ public sealed class LogsCollectorTests
 		using var temp = new TempDirectory();
 		temp.CreateDirectory("1.2.3");
 		var output = temp.Combine("output");
-		var sut = CreateSut(temp.Path, NuGetVersion.Parse("1.2.3"), output, temp.Combine("documents"));
+		var sut = CreateSut(temp.Path, temp.Combine("1.2.3"), output, temp.Combine("documents"));
 
 		// Act
 		var exception = await sut.CollectLogs(output, null, CancellationToken.None);
@@ -81,7 +80,7 @@ public sealed class LogsCollectorTests
 		documents.CreateFile(Path.Combine(skseDirectory, "crash.log"), "skse");
 		documents.CreateFile(Path.Combine(skseDirectory, "crash.dmp"), "dump");
 		var output = temp.Combine("output");
-		var sut = CreateSut(temp.Path, NuGetVersion.Parse("1.2.3"), output, documents.Path);
+		var sut = CreateSut(temp.Path, temp.Combine("1.2.3"), output, documents.Path);
 
 		// Act
 		var exception = await sut.CollectLogs(output, null, CancellationToken.None);
@@ -105,7 +104,7 @@ public sealed class LogsCollectorTests
 		using var skyrim = new TempDirectory();
 		skyrim.CreateFile(Path.Combine("custom-organizer", "logs", "usvfs.log"), "usvfs");
 		var output = temp.Combine("output");
-		var sut = CreateSut(temp.Path, NuGetVersion.Parse("1.2.3"), output, temp.Combine("documents"));
+		var sut = CreateSut(temp.Path, temp.Combine("1.2.3"), output, temp.Combine("documents"));
 
 		// Act
 		var exception = await sut.CollectLogs(output, skyrim.Combine("custom-organizer"), CancellationToken.None);
@@ -124,7 +123,7 @@ public sealed class LogsCollectorTests
 		using var temp = new TempDirectory();
 		using var skyrim = new TempDirectory();
 		var output = temp.Combine("output");
-		var sut = CreateSut(temp.Path, NuGetVersion.Parse("1.2.3"), output, temp.Combine("documents"));
+		var sut = CreateSut(temp.Path, temp.Combine("1.2.3"), output, temp.Combine("documents"));
 
 		// Act
 		var exception = await sut.CollectLogs(output, skyrim.Combine("missing-organizer"), CancellationToken.None);
@@ -189,7 +188,7 @@ public sealed class LogsCollectorTests
 
 	private static LogsCollector CreateSut(
 		string launcherRoot,
-		NuGetVersion? installedVersion,
+		string? installedLauncherDirectory,
 		string output,
 		string documentsDirectory,
 		bool createOutput = true)
@@ -198,7 +197,7 @@ public sealed class LogsCollectorTests
 		mocker.Use<ILogger<LogsCollector>>(NullLogger<LogsCollector>.Instance);
 		mocker.Use<TimeProvider>(new FakeTimeProvider(new DateTimeOffset(2026, 9, 8, 12, 0, 0, TimeSpan.Zero)));
 		mocker.GetMock<ILaunchersRootDirectoryManager>().SetupGet(x => x.Directory).Returns(launcherRoot);
-		mocker.GetMock<ILaunchersRootDirectoryManager>().Setup(x => x.TryGetInstalledVersion()).Returns(installedVersion);
+		mocker.GetMock<ILaunchersRootDirectoryManager>().Setup(x => x.TryGetInstalledLauncherDirectory()).Returns(installedLauncherDirectory);
 		mocker.GetMock<IFileSystemUtils>()
 			.Setup(x => x.GetSpecialFolderPath(Environment.SpecialFolder.MyDocuments))
 			.Returns(documentsDirectory);

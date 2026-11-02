@@ -41,6 +41,9 @@ public class FileSystemUtils : IFileSystemUtils
 	public IReadOnlyList<string> GetFilesRecursive(string directory) =>
 		Directory.GetFiles(directory, "*", RecursiveEnumeration);
 
+	public IReadOnlyList<string> GetDirectories(string directory) =>
+		Directory.GetDirectories(directory, "*", new EnumerationOptions { AttributesToSkip = 0 });
+
 	public IReadOnlyList<string> GetDirectoriesRecursive(string directory) =>
 		Directory.GetDirectories(directory, "*", RecursiveEnumeration);
 

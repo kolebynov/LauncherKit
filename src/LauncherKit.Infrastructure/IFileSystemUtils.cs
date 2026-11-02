@@ -14,6 +14,9 @@ public interface IFileSystemUtils
 	/// <summary>Every file in the directory and its subdirectories, hidden and system files included.</summary>
 	IReadOnlyList<string> GetFilesRecursive(string directory);
 
+	/// <summary>The direct subdirectories of the directory, hidden and system ones included.</summary>
+	IReadOnlyList<string> GetDirectories(string directory);
+
 	/// <summary>Every subdirectory of the directory at any depth, hidden and system ones included.</summary>
 	IReadOnlyList<string> GetDirectoriesRecursive(string directory);
 

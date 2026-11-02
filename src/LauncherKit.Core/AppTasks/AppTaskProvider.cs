@@ -104,18 +104,20 @@ public sealed class AppTaskProvider : IAppTaskProvider
 				context.MicroTasksFactory.CreateDelegateMicroTask(
 					(_, _) =>
 					{
+						// The setup is a per-user bundle: it needs no elevation (an elevated one run by another admin
+						// account would install into that account's profile), shows only its progress, and the
+						// launcher's MSI starts the updated launcher once installed.
 						var filePath = _fileStorageService.GetFilePath(downloadInfo.FileName)!;
 						_processRunner.StartProcess(
-							new ProcessStartInfo(filePath)
+							new ProcessStartInfo(filePath, "/passive")
 							{
 								WorkingDirectory = Path.GetDirectoryName(filePath)!,
 								UseShellExecute = true,
-								Verb = "runas",
 							},
 							CancellationToken.None).Forget();
 						_applicationLifetime.Exit();
 						return ValueTask.CompletedTask;
-					}, MicroTaskDescription.LaunchLauncher.Instance),
+					}, MicroTaskDescription.RunLauncherSetup.Instance),
 			], [], null);
 
 	public ValueTask<AppTask> CreateInstallModpackTask(ModpackFeedItem modpackFeedItem, IReadOnlyList<ModpackPatchFeedItem> patches,

@@ -1,5 +1,3 @@
-using System.Formats.Tar;
-using System.IO.Compression;
 using Nuke.Common;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
@@ -9,8 +7,9 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 namespace LauncherKit.Build;
 
 /// <summary>
-/// Reusable NUKE publish, packaging, test and editor components. Consumers provide all project and product names;
-/// this project neither imports consumer product properties nor supplies a fallback product identity.
+/// Reusable NUKE publish, test and editor components. Consumers provide all project and product names and their own
+/// installer packaging; this project neither imports consumer product properties nor supplies a fallback product
+/// identity.
 /// </summary>
 public abstract class LauncherBuild : NukeBuild
 {
@@ -23,20 +22,14 @@ public abstract class LauncherBuild : NukeBuild
 	[Parameter("Version suffix appended to the launcher version, e.g. 'beta.42' - Default is none (stable)")]
 	protected readonly string? VersionSuffix;
 
-	[Parameter("Release asset name format, without extension; defaults to {AssetName}_{version}")]
-	protected readonly string? ReleaseAssetNameFormat;
-
 	[Solution]
 	protected readonly Solution Solution = null!;
 
 	protected abstract string LauncherProjectName { get; }
-	protected abstract string BootstrapperProjectName { get; }
-	protected abstract string BootstrapperExecutableName { get; }
 	protected abstract string CollectorProjectName { get; }
 	protected abstract string CollectorExecutableName { get; }
 	protected abstract string ConsoleHelperProjectName { get; }
 	protected abstract string FeedEditorProjectName { get; }
-	protected abstract string AssetName { get; }
 	protected abstract string VersionPrefix { get; }
 
 	protected static string Runtime => OperatingSystem.IsWindows() ? "win-x64" : "linux-x64";
@@ -45,7 +38,6 @@ public abstract class LauncherBuild : NukeBuild
 		: $"{VersionPrefix}-{VersionSuffix}";
 	protected AbsolutePath PublishDirectory => ArtifactsDirectory / "publish";
 	protected AbsolutePath LauncherPublishDirectory => PublishDirectory / "Launcher";
-	protected AbsolutePath LauncherArchivePath => PublishDirectory / "LauncherArchive.tar.br";
 
 	public Target Clean => _ => _
 		.Executes(() => ArtifactsDirectory.DeleteDirectory());
@@ -82,43 +74,11 @@ public abstract class LauncherBuild : NukeBuild
 		.DependsOn(PublishLauncher)
 		.Executes(() =>
 		{
-			// Neither native symbols nor the project-reference and graphics-library symbols ship in the archive.
+			// Neither native symbols nor the project-reference and graphics-library symbols ship with the launcher.
 			foreach (var symbolFilePath in LauncherPublishDirectory.GlobFiles("*.pdb"))
 			{
 				symbolFilePath.DeleteFile();
 			}
-		});
-
-	public Target ZipLauncher => _ => _
-		.DependsOn(CleanLauncherSymbols)
-		.Executes(async () =>
-		{
-			using var launcherArchiveStream = File.Create(LauncherArchivePath, 8192,
-				FileOptions.Asynchronous | FileOptions.SequentialScan);
-			using var brotliStream = new BrotliStream(launcherArchiveStream, new BrotliCompressionOptions { Quality = 9 });
-			using var tarWriter = new TarWriter(brotliStream);
-			foreach (var filePath in Directory.EnumerateFiles(LauncherPublishDirectory))
-			{
-				await tarWriter.WriteEntryAsync(filePath, Path.GetFileName(filePath));
-			}
-		});
-
-	public Target PublishBootstrapper => _ => _
-		.DependsOn(ZipLauncher)
-		.Executes(() =>
-		{
-			var bootstrapperPublishDirectory = PublishDirectory / "Bootstrapper";
-			DotNetPublish(settings => settings
-				.SetProject(GetProjectPath(BootstrapperProjectName))
-				.SetConfiguration(Configuration)
-				.SetRuntime(Runtime)
-				.SetOutput(bootstrapperPublishDirectory)
-				.SetVersionSuffix(VersionSuffix)
-				.SetProperty("LauncherArchive", LauncherArchivePath));
-			var assetName = string.Format(System.Globalization.CultureInfo.InvariantCulture,
-				ReleaseAssetNameFormat ?? $"{AssetName}_{{0}}", Version);
-			(bootstrapperPublishDirectory / GetExecutableName(BootstrapperExecutableName)).Copy(
-				ArtifactsDirectory / GetExecutableName(assetName), ExistsPolicy.FileOverwrite);
 		});
 
 	public Target PublishConsoleCollector => _ => _

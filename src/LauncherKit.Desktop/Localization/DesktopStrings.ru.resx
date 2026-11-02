@@ -74,7 +74,7 @@
 	<data name="MicroInstallSevenZip" xml:space="preserve"><value>Установка 7-Zip</value></data>
 	<data name="MicroInstallSkyrim" xml:space="preserve"><value>Установка Skyrim</value></data>
 	<data name="MicroInstalling" xml:space="preserve"><value>Установка</value></data>
-	<data name="MicroLaunchLauncher" xml:space="preserve"><value>Запуск лаунчера</value></data>
+	<data name="MicroRunLauncherSetup" xml:space="preserve"><value>Запуск установки лаунчера</value></data>
 	<data name="MicroMergePlugins" xml:space="preserve"><value>Объединение плагинов из {0}</value></data>
 	<data name="MicroPrepareFile" xml:space="preserve"><value>Подготовка файла</value></data>
 	<data name="MicroPreparing" xml:space="preserve"><value>Подготовка</value></data>

@@ -1,4 +1,3 @@
-using NuGet.Versioning;
 using LauncherKit.TestSupport;
 
 namespace LauncherKit.Infrastructure.Tests;
@@ -7,26 +6,25 @@ namespace LauncherKit.Infrastructure.Tests;
 public sealed class LaunchersRootDirectoryManagerTests
 {
 	[Test]
-	public void SetInstalledVersion_ThenRead_RoundTripsVersion()
+	public void TryGetInstalledLauncherDirectory_VersionFile_ReturnsDirectoryNamedByVersion()
 	{
 		// Arrange
 		using var temp = new TempDirectory();
 		var child = temp.CreateDirectory("current");
+		temp.CreateFile(".version", "2.3.4-beta.1");
 		var mocker = new AutoMocker(MockBehavior.Strict);
 		mocker.GetMock<IFileSystemUtils>().Setup(x => x.EnsureDirectoryExists(temp.Path, true));
 		var sut = CreateSut(mocker, true, child);
-		var expected = NuGetVersion.Parse("2.3.4-beta.1");
 
 		// Act
-		sut.SetInstalledVersion(expected);
-		var result = sut.TryGetInstalledVersion();
+		var result = sut.TryGetInstalledLauncherDirectory();
 
 		// Assert
-		Assert.That(result, Is.EqualTo(expected));
+		Assert.That(result, Is.EqualTo(temp.Combine("2.3.4-beta.1")));
 	}
 
 	[Test]
-	public void TryGetInstalledVersion_MissingVersionFile_ReturnsNull()
+	public void TryGetInstalledLauncherDirectory_MissingVersionFile_ReturnsNull()
 	{
 		// Arrange
 		using var temp = new TempDirectory();
@@ -36,14 +34,14 @@ public sealed class LaunchersRootDirectoryManagerTests
 		var sut = CreateSut(mocker, true, child);
 
 		// Act
-		var result = sut.TryGetInstalledVersion();
+		var result = sut.TryGetInstalledLauncherDirectory();
 
 		// Assert
 		Assert.That(result, Is.Null);
 	}
 
 	[Test]
-	public void TryGetInstalledVersion_GarbageVersionFile_Throws()
+	public void TryGetInstalledLauncherDirectory_GarbageVersionFile_Throws()
 	{
 		// Arrange
 		using var temp = new TempDirectory();
@@ -54,7 +52,7 @@ public sealed class LaunchersRootDirectoryManagerTests
 		var sut = CreateSut(mocker, true, child);
 
 		// Act + Assert
-		Assert.That(sut.TryGetInstalledVersion, Throws.InstanceOf<InvalidOperationException>());
+		Assert.That(sut.TryGetInstalledLauncherDirectory, Throws.InstanceOf<InvalidOperationException>());
 	}
 
 	[Test]

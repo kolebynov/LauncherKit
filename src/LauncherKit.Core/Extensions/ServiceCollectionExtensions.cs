@@ -114,6 +114,7 @@ public static class ServiceCollectionExtensions
 
 		services.AddConfiguredScopeInitializer<LegacyPartialDownloadsInitializer>();
 		services.AddConfiguredScopeInitializer<CleanupOldDataInitializer>();
+		services.AddGlobalInitializer<DataDirectoriesRegistrationInitializer>();
 
 		services.Configure<DownloadSettings>(configuration.GetSection("Download"));
 		services.Configure<FeedSettings>(configuration.GetSection("Feed"));

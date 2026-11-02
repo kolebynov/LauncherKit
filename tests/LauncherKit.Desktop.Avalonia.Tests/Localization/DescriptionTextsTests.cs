@@ -67,7 +67,7 @@ public sealed class DescriptionTextsTests
 				MicroTaskDescription.SelectModpackComponents.Instance,
 				new MicroTaskDescription.RunProcess("argument-marker"),
 				new MicroTaskDescription.GameStarted(StartGameVariant.Game),
-				MicroTaskDescription.LaunchLauncher.Instance,
+				MicroTaskDescription.RunLauncherSetup.Instance,
 				MicroTaskDescription.DeleteModOrganizer.Instance,
 				MicroTaskDescription.DeleteOldSaves.Instance,
 				MicroTaskDescription.ExtractModpackPatch.Instance,

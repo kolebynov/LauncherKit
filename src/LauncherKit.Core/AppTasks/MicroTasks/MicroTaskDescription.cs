@@ -14,7 +14,7 @@ public union MicroTaskDescription(
 	MicroTaskDescription.SelectModpackComponents,
 	MicroTaskDescription.RunProcess,
 	MicroTaskDescription.GameStarted,
-	MicroTaskDescription.LaunchLauncher,
+	MicroTaskDescription.RunLauncherSetup,
 	MicroTaskDescription.DeleteModOrganizer,
 	MicroTaskDescription.DeleteOldSaves,
 	MicroTaskDescription.ExtractModpackPatch,
@@ -69,7 +69,7 @@ public union MicroTaskDescription(
 
 	public sealed record GameStarted(StartGameVariant Variant);
 
-	public sealed record LaunchLauncher;
+	public sealed record RunLauncherSetup;
 
 	public sealed record DeleteModOrganizer;
 

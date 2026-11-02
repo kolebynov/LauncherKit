@@ -1,9 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-	<ItemGroup>
-		<PackageReference Include="NuGet.Versioning"/>
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\LauncherKit.Infrastructure\LauncherKit.Infrastructure.csproj"/>
-	</ItemGroup>
-</Project>

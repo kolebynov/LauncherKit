@@ -13,14 +13,13 @@ public sealed class LauncherLogsSource(ILaunchersRootDirectoryManager launchersR
 			yield return new LogFile(file, Path.GetRelativePath(root, file));
 		}
 
-		var version = launchersRootDirectoryManager.TryGetInstalledVersion();
-		logger.LogInformation("Detected launcher version {LauncherVersion}", version);
-		if (version == null)
+		var directory = launchersRootDirectoryManager.TryGetInstalledLauncherDirectory();
+		logger.LogInformation("Detected launcher directory {LauncherDirectory}", directory);
+		if (directory == null)
 		{
 			yield break;
 		}
 
-		var directory = Path.Combine(root, version.ToString());
 		if (!Directory.Exists(directory))
 		{
 			logger.LogWarning("Launcher directory {LauncherDirectory} does not exist", directory);

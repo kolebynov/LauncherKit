@@ -20,6 +20,7 @@ public static class ProductTestSupport
 		ModpackVersionFile = Path.Combine("Example MO", "mods", "Example", "version.txt"),
 		UserModsSeparator = "USER MODS",
 		RequiredSkyrimVersion = "1.5.97.0",
+		RegistryKey = @"HKEY_CURRENT_USER\Software\Example\Example Launcher",
 		FirstSetupHelpUri = new Uri("https://example.test/setup"),
 		GameLaunchVariants =
 		[

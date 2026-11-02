@@ -17,6 +17,8 @@ public sealed class LauncherProductOptions
 	public string ModpackVersionFile { get; set; } = string.Empty;
 	public string UserModsSeparator { get; set; } = string.Empty;
 	public string RequiredSkyrimVersion { get; set; } = string.Empty;
+	/// <summary>Registry key under which the consumer's installer reads the launcher's data directories, e.g. <c>HKEY_CURRENT_USER\Software\Company\Product</c>.</summary>
+	public string RegistryKey { get; set; } = string.Empty;
 	public Uri? FirstSetupHelpUri { get; set; }
 	public IReadOnlyList<GameLaunchVariant> GameLaunchVariants { get; set; } = [];
 
@@ -37,6 +39,7 @@ public sealed class LauncherProductOptions
 		Require(ModpackVersionFile, nameof(ModpackVersionFile));
 		Require(UserModsSeparator, nameof(UserModsSeparator));
 		Require(RequiredSkyrimVersion, nameof(RequiredSkyrimVersion));
+		Require(RegistryKey, nameof(RegistryKey));
 		if (GameLaunchVariants is not { Count: > 0 })
 		{
 			throw new ArgumentException("Consumer product identity requires game launch variants.", nameof(GameLaunchVariants));

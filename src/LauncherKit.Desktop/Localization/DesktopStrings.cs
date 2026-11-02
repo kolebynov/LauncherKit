@@ -72,7 +72,7 @@ public sealed class DesktopStrings
 	public const string MicroInstallSevenZip = nameof(MicroInstallSevenZip);
 	public const string MicroInstallSkyrim = nameof(MicroInstallSkyrim);
 	public const string MicroInstalling = nameof(MicroInstalling);
-	public const string MicroLaunchLauncher = nameof(MicroLaunchLauncher);
+	public const string MicroRunLauncherSetup = nameof(MicroRunLauncherSetup);
 	public const string MicroMergePlugins = nameof(MicroMergePlugins);
 	public const string MicroPrepareFile = nameof(MicroPrepareFile);
 	public const string MicroPreparing = nameof(MicroPreparing);

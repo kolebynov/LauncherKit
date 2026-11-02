@@ -1,15 +1,10 @@
-﻿using System.Text;
-using NuGet.Versioning;
+﻿using NuGet.Versioning;
 
 namespace LauncherKit.Infrastructure;
 
 public sealed class LaunchersRootDirectoryManager : ILaunchersRootDirectoryManager
 {
-	private readonly IFileSystemUtils _fileSystemUtils;
-
 	public string Directory { get; }
-
-	public CompositeFormat InstallLogFileNameFormat { get; } = CompositeFormat.Parse("install_{0}.log");
 
 	public LaunchersRootDirectoryManager(
 		bool useCurrentDirectory,
@@ -19,14 +14,13 @@ public sealed class LaunchersRootDirectoryManager : ILaunchersRootDirectoryManag
 	{
 		ArgumentNullException.ThrowIfNull(product);
 		product.Validate();
-		_fileSystemUtils = fileSystemUtils;
 		Directory = !useCurrentDirectory
 			? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), product.RootDirectoryName)
 			: Path.GetDirectoryName(currentDirectory ?? System.IO.Directory.GetCurrentDirectory())!;
-		_fileSystemUtils.EnsureDirectoryExists(Directory);
+		fileSystemUtils.EnsureDirectoryExists(Directory);
 	}
 
-	public NuGetVersion? TryGetInstalledVersion()
+	public string? TryGetInstalledLauncherDirectory()
 	{
 		var filePath = Path.Combine(Directory, ".version");
 		if (!File.Exists(filePath))
@@ -35,16 +29,10 @@ public sealed class LaunchersRootDirectoryManager : ILaunchersRootDirectoryManag
 		}
 
 		var content = File.ReadAllText(filePath);
+		// Parsed rather than used as is, so the file cannot name a path outside the root.
 		return NuGetVersion.TryParse(content, out var version)
-			? version
+			? Path.Combine(Directory, version.ToString())
 			: throw new InvalidOperationException(
 				$"Installed version marker '{filePath}' contains invalid version '{content}'.");
-	}
-
-	public void SetInstalledVersion(NuGetVersion version)
-	{
-		_fileSystemUtils.EnsureDirectoryExists(Directory);
-		var filePath = Path.Combine(Directory, ".version");
-		File.WriteAllText(filePath, version.ToString());
 	}
 }
