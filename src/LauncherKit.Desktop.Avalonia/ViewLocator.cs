@@ -4,33 +4,18 @@ using Avalonia.Controls.Templates;
 
 namespace LauncherKit.Desktop.Avalonia;
 
-public sealed class ViewLocator : IDataTemplate
+/// <summary>
+/// The application-wide data template for view models: creates each view through the consumer's
+/// <see cref="IViewRegistry"/> with the services of the scope current at that moment.
+/// </summary>
+public sealed class ViewLocator(IViewRegistry registry, Func<IServiceProvider> services) : IDataTemplate
 {
-	private IViewRegistry? _registry;
-	private Func<IServiceProvider>? _services;
-
-	public void Configure(IViewRegistry registry, Func<IServiceProvider> services)
+	public Control? Build(object? param) => param switch
 	{
-		ArgumentNullException.ThrowIfNull(registry);
-		ArgumentNullException.ThrowIfNull(services);
-		_registry = registry;
-		_services = services;
-	}
-
-	public Control? Build(object? param)
-	{
-		if (param is null)
-		{
-			return null;
-		}
-
-		if (_registry is null || _services is null)
-		{
-			throw new InvalidOperationException("The view locator has not been configured with a view registry and service provider.");
-		}
-
-		return _registry.CreateView(param.GetType(), _services());
-	}
+		null => null,
+		ViewModelBase viewModel => registry.CreateView(viewModel, services()),
+		_ => throw new ArgumentException($"'{param.GetType().FullName}' is not a view model.", nameof(param)),
+	};
 
 	public bool Match(object? data) => data is ViewModelBase;
 }

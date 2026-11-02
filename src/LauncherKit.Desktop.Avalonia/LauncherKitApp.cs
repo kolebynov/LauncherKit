@@ -2,6 +2,8 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Styling;
+using FluentAvalonia.UI.Controls;
 using LauncherKit.Core;
 using LauncherKit.Core.Extensions;
 using LauncherKit.Desktop.Avalonia.Localization;
@@ -9,6 +11,7 @@ using LauncherKit.Desktop.Avalonia.Services;
 using LauncherKit.Desktop.Localization;
 using LauncherKit.Desktop.Services;
 using LauncherKit.Infrastructure;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
@@ -21,16 +24,12 @@ namespace LauncherKit.Desktop.Avalonia;
 
 /// <summary>
 /// The kit's Avalonia application: composes logging, configuration, kit services and the application scope, has the
-/// consumer load its XAML, configures the view locator, shows the main window and disposes everything on exit. A
+/// consumer load its XAML, installs the view locator, shows the main window and disposes everything on exit. A
 /// consumer derives its <c>App</c> from it and only supplies its identity, registrations, views and shell through the
-/// abstract and virtual members. The consumer's XAML must declare a <see cref="ViewLocator"/> resource keyed
-/// <see cref="ViewLocatorResourceKey"/>.
+/// abstract and virtual members.
 /// </summary>
 public abstract class LauncherKitApp : Application
 {
-	/// <summary>Key of the <see cref="ViewLocator"/> resource the consumer's application XAML declares.</summary>
-	public const string ViewLocatorResourceKey = "ViewLocator";
-
 	private AppInstance? _appInstance;
 	private ILogger<LauncherKitApp> _logger = null!;
 
@@ -46,13 +45,7 @@ public abstract class LauncherKitApp : Application
 		OnServicesBuilt(Services);
 		LoadXaml();
 		_logger = Services.GetRequiredService<ILogger<LauncherKitApp>>();
-		if (!Resources.TryGetResource(ViewLocatorResourceKey, null, out var viewLocator) || viewLocator is not ViewLocator locator)
-		{
-			throw new InvalidOperationException(
-				$"The application XAML must declare a {nameof(ViewLocator)} resource with the key '{ViewLocatorResourceKey}'.");
-		}
-
-		locator.Configure(CreateViewRegistry(), () => Services);
+		InstallViewLocator(new ViewLocator(CreateViewRegistry(), () => Services));
 		Services.GetRequiredService<LauncherKitScopeReloadService>().Start(_appInstance.CreateNewScope);
 
 		AppDomain.CurrentDomain.UnhandledException += (_, args) =>
@@ -124,7 +117,7 @@ public abstract class LauncherKitApp : Application
 	{
 	}
 
-	/// <summary>The consumer's explicit view model to view registrations.</summary>
+	/// <summary>The consumer's view model to view mapping, used by the application-wide <see cref="ViewLocator"/>.</summary>
 	protected abstract IViewRegistry CreateViewRegistry();
 
 	/// <summary>The consumer's main window; called once at startup with the current scope's services.</summary>
@@ -145,6 +138,23 @@ public abstract class LauncherKitApp : Application
 	/// </summary>
 	protected virtual IDisposable? StartDesktopServices(IClassicDesktopStyleApplicationLifetime desktop) => null;
 
+	/// <summary>
+	/// Configuration values compiled into the consumer rather than shipped in <c>appsettings.json</c> (e.g. server bearer
+	/// tokens). They are added first, so the configuration files and environment variables override them.
+	/// </summary>
+	protected virtual IEnumerable<KeyValuePair<string, string?>> GetInMemoryConfiguration() => [];
+
+	// The locator is the first application data template, so it builds every view model's view, and every FAFrame
+	// builds its pages through it.
+	private void InstallViewLocator(ViewLocator viewLocator)
+	{
+		DataTemplates.Insert(0, viewLocator);
+		Styles.Add(new Style(static selector => selector.OfType<FAFrame>())
+		{
+			Setters = { new Setter(FAFrame.NavigationPageFactoryProperty, new FramePageFactory(viewLocator)) },
+		});
+	}
+
 	private void ConfigureAppServices(AppBuilder appBuilder)
 	{
 		var services = appBuilder.Services;
@@ -154,6 +164,7 @@ public abstract class LauncherKitApp : Application
 			BeforeConfiguration(appBuilder.Product, loggerFactory);
 		}
 
+		appBuilder.Configuration.AddInMemoryCollection(GetInMemoryConfiguration());
 		appBuilder.Configuration.AddLauncherKitConfiguration(Directory.GetCurrentDirectory(), appBuilder.Product);
 		services.AddLauncherKitLocalization(GetType().Assembly);
 		services.AddSingleton(new LauncherKitDesktopOptions
