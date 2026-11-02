@@ -100,9 +100,9 @@ public abstract class LauncherKitApp : Application
 
 	/// <summary>
 	/// Runs after logging is configured and before the configuration files are read, e.g. to migrate files the
-	/// configuration reads. The logger factory is valid only during the call.
+	/// configuration reads. Consumers own any dependencies needed by this pre-DI operation.
 	/// </summary>
-	protected virtual void BeforeConfiguration(LauncherProductOptions product, ILoggerFactory loggerFactory)
+	protected virtual void BeforeConfiguration(LauncherProductOptions product)
 	{
 	}
 
@@ -143,10 +143,7 @@ public abstract class LauncherKitApp : Application
 	{
 		var services = appBuilder.Services;
 		ConfigureLogging(services);
-		using (var loggerFactory = new Serilog.Extensions.Logging.SerilogLoggerFactory(Log.Logger))
-		{
-			BeforeConfiguration(appBuilder.Product, loggerFactory);
-		}
+		BeforeConfiguration(appBuilder.Product);
 
 		appBuilder.Configuration.AddInMemoryCollection(GetInMemoryConfiguration());
 		appBuilder.Configuration.AddLauncherKitConfiguration(Directory.GetCurrentDirectory(), appBuilder.Product);
