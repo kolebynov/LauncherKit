@@ -10,6 +10,7 @@ using LauncherKit.Desktop.Avalonia.Localization;
 using LauncherKit.Desktop.Avalonia.Services;
 using LauncherKit.Desktop.Localization;
 using LauncherKit.Desktop.Services;
+using LauncherKit.Desktop.ViewModels;
 using LauncherKit.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,9 +25,9 @@ namespace LauncherKit.Desktop.Avalonia;
 
 /// <summary>
 /// The kit's Avalonia application: composes logging, configuration, kit services and the application scope, has the
-/// consumer load its XAML, installs the view locator, shows the main window and disposes everything on exit. A
-/// consumer derives its <c>App</c> from it and only supplies its identity, registrations, views and shell through the
-/// abstract and virtual members.
+/// consumer load its XAML, installs the view locator, shows the main window with the current scope's
+/// <see cref="MainWindowViewModelBase"/> and disposes everything on exit. A consumer derives its <c>App</c> from it and only
+/// supplies its identity, registrations, views and main window through the abstract and virtual members.
 /// </summary>
 public abstract class LauncherKitApp : Application
 {
@@ -69,7 +70,7 @@ public abstract class LauncherKitApp : Application
 			if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop) return;
 			ObservableSystem.RegisterUnhandledExceptionHandler(e => _logger.LogError(e, "Unhandled observable system exception"));
 			var mainWindow = GetMainWindow(Services);
-			mainWindow.DataContext = GetShellViewModel(Services);
+			mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModelBase>();
 			desktop.MainWindow = mainWindow;
 			var desktopServices = StartDesktopServices(desktop);
 			desktop.Exit += (_, _) =>
@@ -107,7 +108,7 @@ public abstract class LauncherKitApp : Application
 	}
 
 	/// <summary>
-	/// Registers the consumer's services (views, shell, view-side services, initializers, localization of its views)
+	/// Registers the consumer's services (views, main window, view-side services, initializers, localization of its views)
 	/// after the kit's configuration and desktop services; <paramref name="builder"/>'s configuration is already loaded.
 	/// </summary>
 	protected abstract void ConfigureServices(AppBuilder builder);
@@ -119,9 +120,6 @@ public abstract class LauncherKitApp : Application
 
 	/// <summary>The consumer's main window; called once at startup with the current scope's services.</summary>
 	protected abstract Window GetMainWindow(IServiceProvider services);
-
-	/// <summary>The consumer's shell view model, set as the main window's data context at startup and after scope reloads.</summary>
-	protected abstract object GetShellViewModel(IServiceProvider services);
 
 	/// <summary>
 	/// Rebuilds the rendered pages after a language change, keeping their view models and the scope that owns the tasks;
@@ -170,10 +168,10 @@ public abstract class LauncherKitApp : Application
 			GetLifetime = () => (IClassicDesktopStyleApplicationLifetime)ApplicationLifetime!,
 			GetCurrentServices = () => Services,
 			GetCloseHandlers = () => Services.GetServices<IAppCloseHandler>(),
-			RefreshShell = () =>
+			RefreshMainWindow = () =>
 			{
 				if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: { } window })
-					window.DataContext = GetShellViewModel(Services);
+					window.DataContext = Services.GetRequiredService<MainWindowViewModelBase>();
 			},
 			ReloadViews = () =>
 			{

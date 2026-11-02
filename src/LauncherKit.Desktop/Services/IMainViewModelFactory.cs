@@ -6,8 +6,8 @@ namespace LauncherKit.Desktop.Services;
 public interface IMainViewModelFactory
 {
 	bool IsSetupRequired { get; }
-	HomeViewModel? CreateHome();
-	FirstSetupViewModel? CreateFirstSetup();
+	HomeViewModel CreateHome();
+	FirstSetupViewModel CreateFirstSetup();
 	SettingsViewModel? CreateSettings();
 	DownloadsViewModel? CreateDownloads();
 	ModpackChangelogViewModel? CreateModpackChangelog();

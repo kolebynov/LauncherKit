@@ -19,8 +19,8 @@ public sealed class MainViewModelFactory : IMainViewModelFactory
 
 	public bool IsSetupRequired { get; }
 
-	public HomeViewModel? CreateHome() => IsSetupRequired ? null : _serviceProvider.GetRequiredService<HomeViewModel>();
-	public FirstSetupViewModel? CreateFirstSetup() => IsSetupRequired ? _serviceProvider.GetRequiredService<FirstSetupViewModel>() : null;
+	public HomeViewModel CreateHome() => _serviceProvider.GetRequiredService<HomeViewModel>();
+	public FirstSetupViewModel CreateFirstSetup() => _serviceProvider.GetRequiredService<FirstSetupViewModel>();
 	public SettingsViewModel? CreateSettings() => _serviceProvider.GetService<SettingsViewModel>();
 	public DownloadsViewModel? CreateDownloads() => IsSetupRequired ? null : _serviceProvider.GetService<DownloadsViewModel>();
 	public ModpackChangelogViewModel? CreateModpackChangelog() => IsSetupRequired ? null : _serviceProvider.GetService<ModpackChangelogViewModel>();

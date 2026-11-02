@@ -101,13 +101,13 @@ public sealed class LauncherKitScopeReloadServiceTests
 		Assert.That(events, Is.EqualTo(new[] { "replace", "shell", "consumer" }));
 	}
 
-	private static LauncherKitDesktopOptions CreateOptions(Action refreshShell, Action reloadViews) => new()
+	private static LauncherKitDesktopOptions CreateOptions(Action refreshMainWindow, Action reloadViews) => new()
 	{
 		GetMainWindow = () => null,
 		GetLifetime = () => throw new InvalidOperationException("No lifetime is needed for reload tests."),
 		GetCurrentServices = () => throw new InvalidOperationException("No services are needed for reload tests."),
 		GetCloseHandlers = () => [],
-		RefreshShell = refreshShell,
+		RefreshMainWindow = refreshMainWindow,
 		ReloadViews = reloadViews,
 	};
 

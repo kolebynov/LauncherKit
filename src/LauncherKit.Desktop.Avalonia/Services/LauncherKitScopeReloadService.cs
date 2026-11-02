@@ -32,7 +32,7 @@ public sealed class LauncherKitScopeReloadService : IDisposable
 				if (!_disposed) _replaceScope!();
 			}, () =>
 			{
-				if (!_disposed) _desktop.RefreshShell();
+				if (!_disposed) _desktop.RefreshMainWindow();
 			}), TimeSpan.FromMilliseconds(200), timeProvider);
 	}
 
@@ -66,13 +66,13 @@ public sealed class LauncherKitScopeReloadService : IDisposable
 
 	public void RequestConfigurationReload() => _requestConfigurationReload();
 
-	internal static void PostConfigurationReload(IUiDispatcher dispatcher, Action replaceScope, Action refreshShell)
+	internal static void PostConfigurationReload(IUiDispatcher dispatcher, Action replaceScope, Action refreshMainWindow)
 	{
 		dispatcher.Post(() =>
 		{
-			// Disposal, scope publication and shell replacement share one UI turn.
+			// Disposal, scope publication and main window view model replacement share one UI turn.
 			replaceScope();
-			refreshShell();
+			refreshMainWindow();
 		});
 	}
 

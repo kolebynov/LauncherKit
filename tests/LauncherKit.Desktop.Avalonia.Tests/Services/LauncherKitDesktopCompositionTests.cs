@@ -25,7 +25,7 @@ public sealed class LauncherKitDesktopCompositionTests
 			{
 				typeof(FirstSetupViewModel), typeof(AppTaskQueueViewModel), typeof(HomeViewModel),
 				typeof(DownloadsViewModel), typeof(GraphPacksViewModel), typeof(OptionalModsViewModel),
-				typeof(SettingsViewModel), typeof(MainWindowViewModel), typeof(ModpackChangelogViewModel),
+				typeof(SettingsViewModel), typeof(ModpackChangelogViewModel),
 			})
 				Assert.That(services.Single(x => x.ServiceType == model).Lifetime, Is.EqualTo(ServiceLifetime.Scoped));
 			Assert.That(services.Single(x => x.ServiceType == typeof(IUiDispatcher)).Lifetime, Is.EqualTo(ServiceLifetime.Singleton));
@@ -83,7 +83,7 @@ public sealed class LauncherKitDesktopCompositionTests
 		GetLifetime = () => throw new AssertionException("No lifetime expected."),
 		GetCurrentServices = currentServices,
 		GetCloseHandlers = () => [],
-		RefreshShell = () => { },
+		RefreshMainWindow = () => { },
 		ReloadViews = () => { },
 	};
 

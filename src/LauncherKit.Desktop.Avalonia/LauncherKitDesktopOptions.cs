@@ -12,7 +12,8 @@ public sealed class LauncherKitDesktopOptions
 	/// <summary>The services of the application scope current at the call; the scope is replaced on settings changes.</summary>
 	public required Func<IServiceProvider> GetCurrentServices { get; init; }
 	public required Func<IEnumerable<IAppCloseHandler>> GetCloseHandlers { get; init; }
-	public required Action RefreshShell { get; init; }
+	/// <summary>Sets the main window's data context to the current scope's <c>MainWindowViewModelBase</c>.</summary>
+	public required Action RefreshMainWindow { get; init; }
 	/// <summary>Rebuilds rendered pages and clears the consumer navigation cache, retaining their models.</summary>
 	public required Action ReloadViews { get; init; }
 }
