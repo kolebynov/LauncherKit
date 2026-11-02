@@ -8,8 +8,8 @@ from the consumer repository root. See [kit contracts](../AGENTS.md) and [STB mo
 
 ## Build gating
 
-The API lives in `kit/src/LauncherKit.DevAutomation`. The launcher references it, and defines `DEV_AUTOMATION` for the
-start-up hook in `App.OnFrameworkInitializationCompleted`, only when it is built with `-p:EnableDevAutomation=true`.
+The API lives in `kit/src/LauncherKit.DevAutomation`. The launcher references it, and defines `DEV_AUTOMATION` for its
+`LauncherKitApp.StartDesktopServices` override that starts the server, only when it is built with `-p:EnableDevAutomation=true`.
 `PublishLauncher` inherited from `LauncherKit.Build.LauncherBuild` passes `EnableDevAutomation=false` as a global property, so release builds never
 contain it, even if an environment variable sets it. The solution build still compiles the project, so it keeps up
 with API changes.

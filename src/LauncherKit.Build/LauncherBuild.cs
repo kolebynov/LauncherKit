@@ -28,7 +28,6 @@ public abstract class LauncherBuild : NukeBuild
 	protected abstract string LauncherProjectName { get; }
 	protected abstract string CollectorProjectName { get; }
 	protected abstract string CollectorExecutableName { get; }
-	protected abstract string ConsoleHelperProjectName { get; }
 	protected abstract string FeedEditorProjectName { get; }
 	protected abstract string VersionPrefix { get; }
 
@@ -99,7 +98,7 @@ public abstract class LauncherBuild : NukeBuild
 		.Executes(() =>
 		{
 			DotNetPublish(settings => settings
-				.SetProject(GetProjectPath(ConsoleHelperProjectName))
+				.SetProject(GetProjectPath("LauncherKit.ConsoleHelper"))
 				.SetConfiguration(Configuration)
 				.SetRuntime(Runtime)
 				.SetOutput(PublishDirectory / "ConsoleHelper"));

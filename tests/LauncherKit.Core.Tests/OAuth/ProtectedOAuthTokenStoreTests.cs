@@ -34,23 +34,36 @@ public sealed class ProtectedOAuthTokenStoreTests
 	}
 
 	[Test]
-	public void SuppliedProduct_ReadsAndWritesTokensUsingItsEntropy()
+	public void SuppliedProduct_ReadsAndWritesLegacyTokenFormatUsingItsEntropy()
 	{
-		var token = new OAuthToken("throwaway-access", "throwaway-refresh", DateTimeOffset.Parse("2026-11-02T12:00:00Z", System.Globalization.CultureInfo.InvariantCulture));
-		var json = JsonSerializer.SerializeToUtf8Bytes(token, OAuthJsonContext.Default.OAuthToken);
+		// Arrange: a token in the format released launchers stored, encrypted with the product's entropy.
+		var legacyJson = Encoding.UTF8.GetBytes("""
+			{"accessToken":"legacy-access","refreshToken":"legacy-refresh","expiresAt":"2026-11-02T12:00:00+00:00"}
+			""");
 		var entropy = Encoding.UTF8.GetBytes(ProductTestSupport.CreateProduct().OAuthTokenEntropy);
-		var stored = Convert.ToBase64String(ProtectedData.Protect(json, entropy, DataProtectionScope.CurrentUser));
+		var stored = Convert.ToBase64String(ProtectedData.Protect(legacyJson, entropy, DataProtectionScope.CurrentUser));
 		var mocker = LauncherKit.TestSupport.ProductTestSupport.CreateMocker();
 		var storage = mocker.GetMock<IGlobalKeyValueStorage>();
 		storage.Setup(x => x.Get("OAuthToken_Discord")).Returns(() => stored);
 		storage.Setup(x => x.Set("OAuthToken_Discord", It.IsAny<string?>()))
 			.Callback((string _, string? value) => stored = value!);
 		var sut = mocker.CreateInstance<ProtectedOAuthTokenStore>(enablePrivate: true);
+		var expiry = new DateTimeOffset(2026, 11, 2, 12, 0, 0, TimeSpan.Zero);
+		var replacement = new OAuthToken("new-access", "new-refresh", expiry.AddDays(1));
 
-		Assert.That(sut.Get("Discord"), Is.EqualTo(token));
-		sut.Set("Discord", token);
-		var decryptedJson = ProtectedData.Unprotect(Convert.FromBase64String(stored), entropy, DataProtectionScope.CurrentUser);
-		Assert.That(JsonSerializer.Deserialize(decryptedJson, OAuthJsonContext.Default.OAuthToken), Is.EqualTo(token));
+		// Act
+		var legacy = sut.Get("Discord");
+		sut.Set("Discord", replacement);
+
+		// Assert
+		Assert.That(legacy, Is.EqualTo(new OAuthToken("legacy-access", "legacy-refresh", expiry)));
+		using var document = JsonDocument.Parse(ProtectedData.Unprotect(Convert.FromBase64String(stored), entropy, DataProtectionScope.CurrentUser));
+		Assert.Multiple(() =>
+		{
+			Assert.That(document.RootElement.GetProperty("accessToken").GetString(), Is.EqualTo(replacement.AccessToken));
+			Assert.That(document.RootElement.GetProperty("refreshToken").GetString(), Is.EqualTo(replacement.RefreshToken));
+			Assert.That(document.RootElement.GetProperty("expiresAt").GetDateTimeOffset(), Is.EqualTo(replacement.ExpiresAt));
+		});
 	}
 
 	[Test]

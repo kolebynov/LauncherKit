@@ -11,7 +11,11 @@
 		<ProjectReference Include="../LauncherKit.Desktop/LauncherKit.Desktop.csproj"/>
 		<PackageReference Include="Avalonia"/>
 		<PackageReference Include="Avalonia.Desktop"/>
+		<PackageReference Include="Avalonia.Fonts.Inter"/>
 		<PackageReference Include="FluentAvaloniaUI"/>
 		<PackageReference Include="R3Extensions.Avalonia"/>
+		<PackageReference Include="Serilog"/>
+		<PackageReference Include="Serilog.Extensions.Logging"/>
+		<PackageReference Include="Serilog.Sinks.File"/>
 	</ItemGroup>
 </Project>

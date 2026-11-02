@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<PublishAot>false</PublishAot>
+		<PublishSingleFile>true</PublishSingleFile>
+		<PublishTrimmed>false</PublishTrimmed>
+		<BuiltInComInteropSupport>false</BuiltInComInteropSupport>
+		<TrimMode>link</TrimMode>
+		<NoWarn>IL2104;IL3000;IL3053;IL2026;IL3002;NU1903</NoWarn>
+		<CETCompat>false</CETCompat>
+		<OptimizationPreference>Size</OptimizationPreference>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LauncherKit.Core\LauncherKit.Core.csproj"/>
+	</ItemGroup>
+
+</Project>

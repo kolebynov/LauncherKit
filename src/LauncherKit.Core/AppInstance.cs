@@ -6,7 +6,8 @@ using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Core;
 
-public sealed class AppInstance : IDisposable
+/// <summary>The built service provider and its replaceable application scope; owned by the kit's application host.</summary>
+internal sealed class AppInstance : IDisposable
 {
 	private readonly IServiceProvider _rootServiceProvider;
 	private readonly ILogger<AppInstance> _logger;

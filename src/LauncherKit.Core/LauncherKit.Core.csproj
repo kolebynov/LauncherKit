@@ -26,8 +26,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="LauncherKit.Desktop.Avalonia"/>
+		<InternalsVisibleTo Include="LauncherKit.ConsoleHelper"/>
 		<InternalsVisibleTo Include="LauncherKit.Core.Tests"/>
-		<InternalsVisibleTo Include="STBLauncher.App.Tests"/>
 		<InternalsVisibleTo Include="LauncherKit.Desktop.Tests"/>
 		<InternalsVisibleTo Include="LauncherKit.Desktop.Avalonia.Tests"/>
 		<!-- Required for Moq/Castle to proxy internal interfaces in tests. -->

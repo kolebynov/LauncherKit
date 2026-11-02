@@ -5,6 +5,7 @@ using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Core;
 
+/// <summary>Collects the consumer's identity, configuration and services; the kit's application host builds it.</summary>
 public sealed class AppBuilder
 {
 	public IServiceCollection Services { get; } = new ServiceCollection();
@@ -20,7 +21,7 @@ public sealed class AppBuilder
 		Product = product;
 	}
 
-	public AppInstance Build()
+	internal AppInstance Build()
 	{
 		Services.AddLauncherKitCore(Configuration, Product);
 
