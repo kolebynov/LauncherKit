@@ -69,7 +69,7 @@ public abstract class LauncherKitApp : Application
 			base.OnFrameworkInitializationCompleted();
 			if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop) return;
 			ObservableSystem.RegisterUnhandledExceptionHandler(e => _logger.LogError(e, "Unhandled observable system exception"));
-			var mainWindow = GetMainWindow(Services);
+			var mainWindow = Services.GetRequiredService<MainView>();
 			mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModelBase>();
 			desktop.MainWindow = mainWindow;
 			var desktopServices = StartDesktopServices(desktop);
@@ -117,9 +117,6 @@ public abstract class LauncherKitApp : Application
 	protected virtual void OnServicesBuilt(IServiceProvider services)
 	{
 	}
-
-	/// <summary>The consumer's main window; called once at startup with the current scope's services.</summary>
-	protected abstract Window GetMainWindow(IServiceProvider services);
 
 	/// <summary>
 	/// Rebuilds the rendered pages after a language change, keeping their view models and the scope that owns the tasks;
