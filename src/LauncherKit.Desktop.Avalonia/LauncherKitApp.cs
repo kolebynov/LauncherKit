@@ -45,7 +45,7 @@ public abstract class LauncherKitApp : Application
 		OnServicesBuilt(Services);
 		LoadXaml();
 		_logger = Services.GetRequiredService<ILogger<LauncherKitApp>>();
-		InstallViewLocator(new ViewLocator(CreateViewRegistry(), () => Services));
+		InstallViewLocator();
 		Services.GetRequiredService<LauncherKitScopeReloadService>().Start(_appInstance.CreateNewScope);
 
 		AppDomain.CurrentDomain.UnhandledException += (_, args) =>
@@ -117,9 +117,6 @@ public abstract class LauncherKitApp : Application
 	{
 	}
 
-	/// <summary>The consumer's view model to view mapping, used by the application-wide <see cref="ViewLocator"/>.</summary>
-	protected abstract IViewRegistry CreateViewRegistry();
-
 	/// <summary>The consumer's main window; called once at startup with the current scope's services.</summary>
 	protected abstract Window GetMainWindow(IServiceProvider services);
 
@@ -144,14 +141,14 @@ public abstract class LauncherKitApp : Application
 	/// </summary>
 	protected virtual IEnumerable<KeyValuePair<string, string?>> GetInMemoryConfiguration() => [];
 
-	// The locator is the first application data template, so it builds every view model's view, and every FAFrame
-	// builds its pages through it.
-	private void InstallViewLocator(ViewLocator viewLocator)
+	// The locator (needing the consumer's IViewRegistry registration) is the first application data template, so it
+	// builds every view model's view, and every FAFrame builds its pages through it.
+	private void InstallViewLocator()
 	{
-		DataTemplates.Insert(0, viewLocator);
+		DataTemplates.Insert(0, Services.GetRequiredService<ViewLocator>());
 		Styles.Add(new Style(static selector => selector.OfType<FAFrame>())
 		{
-			Setters = { new Setter(FAFrame.NavigationPageFactoryProperty, new FramePageFactory(viewLocator)) },
+			Setters = { new Setter(FAFrame.NavigationPageFactoryProperty, Services.GetRequiredService<FramePageFactory>()) },
 		});
 	}
 
@@ -171,6 +168,7 @@ public abstract class LauncherKitApp : Application
 		{
 			GetMainWindow = () => (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow,
 			GetLifetime = () => (IClassicDesktopStyleApplicationLifetime)ApplicationLifetime!,
+			GetCurrentServices = () => Services,
 			GetCloseHandlers = () => Services.GetServices<IAppCloseHandler>(),
 			RefreshShell = () =>
 			{

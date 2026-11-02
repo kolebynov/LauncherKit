@@ -105,6 +105,7 @@ public sealed class LauncherKitScopeReloadServiceTests
 	{
 		GetMainWindow = () => null,
 		GetLifetime = () => throw new InvalidOperationException("No lifetime is needed for reload tests."),
+		GetCurrentServices = () => throw new InvalidOperationException("No services are needed for reload tests."),
 		GetCloseHandlers = () => [],
 		RefreshShell = refreshShell,
 		ReloadViews = reloadViews,

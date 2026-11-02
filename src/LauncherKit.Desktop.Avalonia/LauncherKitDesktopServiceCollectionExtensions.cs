@@ -19,7 +19,10 @@ namespace LauncherKit.Desktop.Avalonia;
 
 public static class LauncherKitDesktopServiceCollectionExtensions
 {
-	/// <summary>Registers kit desktop behavior. The consumer supplies LauncherKitDesktopOptions and localization overrides.</summary>
+	/// <summary>
+	/// Registers kit desktop behavior. The consumer supplies LauncherKitDesktopOptions, its <see cref="IViewRegistry"/>
+	/// and localization overrides.
+	/// </summary>
 	public static IServiceCollection AddLauncherKitDesktop(this IServiceCollection services)
 	{
 		services.AddEarlyGlobalInitializer(sp =>
@@ -69,6 +72,11 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 				LanguageCulture.ApplyToCurrentThread();
 				sp.GetRequiredService<LauncherKitDesktopOptions>().ReloadViews();
 			})));
+		services.TryAddSingleton(sp => new ViewLocator(
+			sp.GetService<IViewRegistry>() ?? throw new InvalidOperationException(
+				$"No {nameof(IViewRegistry)} is registered: the consumer must register its view model to view mapping."),
+			sp.GetRequiredService<LauncherKitDesktopOptions>().GetCurrentServices));
+		services.TryAddSingleton(sp => new FramePageFactory(sp.GetRequiredService<ViewLocator>()));
 		return services;
 	}
 }
