@@ -74,8 +74,7 @@ public sealed class LaunchersRootDirectoryManagerTests
 	public void IndependentIdentities_UseSeparateRootStateDirectories()
 	{
 		var first = ProductTestSupport.CreateProduct();
-		var second = ProductTestSupport.CreateProduct();
-		second.RootDirectoryName = "OtherLauncher";
+		var second = ProductTestSupport.CreateProduct(rootDirectoryName: "OtherLauncher");
 		var mocker = ProductTestSupport.CreateMocker();
 		var fileSystem = mocker.GetMock<IFileSystemUtils>();
 		var basePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -99,7 +98,7 @@ public sealed class LaunchersRootDirectoryManagerTests
 		var fileSystem = mocker.GetMock<IFileSystemUtils>();
 		mocker.Use(false);
 		mocker.Use("unused");
-		mocker.Use(new LauncherProductOptions());
+		mocker.Use(ProductTestSupport.CreateProduct(rootDirectoryName: ""));
 		Assert.That(() => mocker.CreateInstance<LaunchersRootDirectoryManager>(),
 			Throws.Exception.Matches<Exception>(error => error?.GetBaseException() is ArgumentException));
 		fileSystem.VerifyNoOtherCalls();

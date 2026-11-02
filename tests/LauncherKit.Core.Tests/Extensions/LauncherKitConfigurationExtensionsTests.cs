@@ -13,8 +13,7 @@ public sealed class LauncherKitConfigurationExtensionsTests
 	{
 		using var temp = new TempDirectory();
 		var prefix = $"LauncherKit_{Guid.NewGuid():N}_";
-		var product = ProductTestSupport.CreateProduct();
-		product.EnvironmentVariablePrefix = prefix;
+		var product = ProductTestSupport.CreateProduct(environmentVariablePrefix: prefix);
 		var variable = prefix + "App__Language";
 		File.WriteAllText(Path.Combine(temp.Path, "appsettings.json"),
 			"{\"Product\":{\"EnvironmentVariablePrefix\":\"IGNORED_\"},\"App\":{\"Language\":\"ru\",\"SkyrimDirectory\":\"base\"}}");
@@ -44,10 +43,8 @@ public sealed class LauncherKitConfigurationExtensionsTests
 	{
 		using var temp = new TempDirectory();
 		File.WriteAllText(Path.Combine(temp.Path, "appsettings.json"), """{"App":{"Language":"base"}}""");
-		var first = ProductTestSupport.CreateProduct();
-		var second = ProductTestSupport.CreateProduct();
-		first.EnvironmentVariablePrefix = $"First_{Guid.NewGuid():N}_";
-		second.EnvironmentVariablePrefix = $"Second_{Guid.NewGuid():N}_";
+		var first = ProductTestSupport.CreateProduct(environmentVariablePrefix: $"First_{Guid.NewGuid():N}_");
+		var second = ProductTestSupport.CreateProduct(environmentVariablePrefix: $"Second_{Guid.NewGuid():N}_");
 		var firstVariable = first.EnvironmentVariablePrefix + "App__Language";
 		var secondVariable = second.EnvironmentVariablePrefix + "App__Language";
 		Environment.SetEnvironmentVariable(firstVariable, "en");
@@ -77,7 +74,7 @@ public sealed class LauncherKitConfigurationExtensionsTests
 		using var temp = new TempDirectory();
 		using var configuration = new ConfigurationManager();
 		var originalSources = configuration.Sources.ToArray();
-		Assert.That(() => configuration.AddLauncherKitConfiguration(temp.Path, new LauncherProductOptions()),
+		Assert.That(() => configuration.AddLauncherKitConfiguration(temp.Path, ProductTestSupport.CreateProduct(rootDirectoryName: "")),
 			Throws.ArgumentException);
 		Assert.That(configuration.Sources, Is.EqualTo(originalSources));
 	}

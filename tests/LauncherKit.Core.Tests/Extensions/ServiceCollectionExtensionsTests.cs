@@ -121,7 +121,7 @@ public sealed class ServiceCollectionExtensionsTests
 	{
 		var services = new ServiceCollection();
 		var configuration = new ConfigurationBuilder().Build();
-		Assert.That(() => services.AddLauncherKitCore(configuration, new LauncherProductOptions()), Throws.ArgumentException);
+		Assert.That(() => services.AddLauncherKitCore(configuration, ProductTestSupport.CreateProduct(rootDirectoryName: "")), Throws.ArgumentException);
 		Assert.That(services, Is.Empty);
 	}
 
@@ -130,10 +130,10 @@ public sealed class ServiceCollectionExtensionsTests
 	{
 		using var temp = new TempDirectory();
 		var first = ProductTestSupport.CreateProduct();
-		var second = ProductTestSupport.CreateProduct();
-		second.SkyrimDataDirectoryName = ".OtherLauncher";
-		second.GlobalDatabaseFileName = "other-global.db";
-		second.LocalDatabaseFileName = "other-local.db";
+		var second = ProductTestSupport.CreateProduct(
+			skyrimDataDirectoryName: ".OtherLauncher",
+			globalDatabaseFileName: "other-global.db",
+			localDatabaseFileName: "other-local.db");
 		var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
 		{
 			["App:SkyrimDirectory"] = temp.Path,

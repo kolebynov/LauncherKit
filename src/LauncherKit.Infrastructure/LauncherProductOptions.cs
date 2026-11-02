@@ -3,24 +3,24 @@ namespace LauncherKit.Infrastructure;
 /// <summary>Required consumer-supplied local product identity. No product names are inferred.</summary>
 public sealed class LauncherProductOptions
 {
-	public string RootDirectoryName { get; set; } = string.Empty;
-	public string SkyrimDataDirectoryName { get; set; } = string.Empty;
-	public string GlobalDatabaseFileName { get; set; } = string.Empty;
-	public string LocalDatabaseFileName { get; set; } = string.Empty;
-	public string OAuthTokenEntropy { get; set; } = string.Empty;
-	public string EnvironmentVariablePrefix { get; set; } = string.Empty;
-	public string AppExecutableName { get; set; } = string.Empty;
-	public string DisplayName { get; set; } = string.Empty;
-	public string UserAgentProduct { get; set; } = string.Empty;
-	public string ModOrganizerDirectoryName { get; set; } = string.Empty;
-	public string ModpackProfileName { get; set; } = string.Empty;
-	public string ModpackVersionFile { get; set; } = string.Empty;
-	public string UserModsSeparator { get; set; } = string.Empty;
-	public string RequiredSkyrimVersion { get; set; } = string.Empty;
+	public required string RootDirectoryName { get; init; }
+	public required string SkyrimDataDirectoryName { get; init; }
+	public required string GlobalDatabaseFileName { get; init; }
+	public required string LocalDatabaseFileName { get; init; }
+	public required string OAuthTokenEntropy { get; init; }
+	public required string EnvironmentVariablePrefix { get; init; }
+	public required string AppExecutableName { get; init; }
+	public required string DisplayName { get; init; }
+	public required string UserAgentProduct { get; init; }
+	public required string ModOrganizerDirectoryName { get; init; }
+	public required string ModpackProfileName { get; init; }
+	public required string ModpackVersionFile { get; init; }
+	public required string UserModsSeparator { get; init; }
+	public required string RequiredSkyrimVersion { get; init; }
 	/// <summary>Registry key under which the consumer's installer reads the launcher's data directories, e.g. <c>HKEY_CURRENT_USER\Software\Company\Product</c>.</summary>
-	public string RegistryKey { get; set; } = string.Empty;
-	public Uri? FirstSetupHelpUri { get; set; }
-	public IReadOnlyList<GameLaunchVariant> GameLaunchVariants { get; set; } = [];
+	public required string RegistryKey { get; init; }
+	public Uri? FirstSetupHelpUri { get; init; }
+	public required IReadOnlyList<GameLaunchVariant> GameLaunchVariants { get; init; }
 
 	/// <summary>Rejects an incomplete identity before configuration or installation state is accessed.</summary>
 	public void Validate()
@@ -66,6 +66,6 @@ public sealed class LauncherProductOptions
 
 public sealed class GameLaunchVariant
 {
-	public string Id { get; set; } = string.Empty;
-	public string? ExecutablePath { get; set; }
+	public required string Id { get; init; }
+	public string? ExecutablePath { get; init; }
 }

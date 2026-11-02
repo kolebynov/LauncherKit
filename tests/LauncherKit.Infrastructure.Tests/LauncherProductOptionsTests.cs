@@ -9,36 +9,6 @@ public sealed class LauncherProductOptionsTests
 	private static IEnumerable<PropertyInfo> RequiredIdentityStrings() => typeof(LauncherProductOptions)
 		.GetProperties().Where(property => property.PropertyType == typeof(string));
 
-	[Test]
-	public void NewOptions_HaveNoProductIdentityDefaults()
-	{
-		var product = new LauncherProductOptions();
-		Assert.Multiple(() =>
-		{
-			foreach (var property in RequiredIdentityStrings())
-				Assert.That(property.GetValue(product), Is.EqualTo(string.Empty), property.Name);
-			Assert.That(product.GameLaunchVariants, Is.Empty);
-			Assert.That(product.FirstSetupHelpUri, Is.Null);
-			Assert.That(product.Validate, Throws.ArgumentException);
-		});
-	}
-
-	[Test]
-	public void CompleteFixture_ValidatesAndCreatesIndependentMutableOptions()
-	{
-		var first = ProductTestSupport.CreateProduct();
-		var second = ProductTestSupport.CreateProduct();
-		Assert.That(first.Validate, Throws.Nothing);
-		first.RootDirectoryName = "Changed";
-		first.GameLaunchVariants[0].Id = "Changed";
-		Assert.Multiple(() =>
-		{
-			Assert.That(second.RootDirectoryName, Is.EqualTo("ExampleLauncher"));
-			Assert.That(second.GameLaunchVariants[0].Id, Is.EqualTo("Game"));
-			Assert.That(first.GameLaunchVariants, Is.Not.SameAs(second.GameLaunchVariants));
-		});
-	}
-
 	[TestCaseSource(nameof(RequiredIdentityStrings))]
 	public void Validate_BlankRequiredIdentity_ThrowsArgumentException(PropertyInfo property)
 	{
@@ -53,13 +23,14 @@ public sealed class LauncherProductOptionsTests
 	[Test]
 	public void Validate_MissingOrInvalidLaunchVariants_ThrowsArgumentException()
 	{
-		var product = ProductTestSupport.CreateProduct();
+		var property = typeof(LauncherProductOptions).GetProperty(nameof(LauncherProductOptions.GameLaunchVariants))!;
 		foreach (var variants in new IReadOnlyList<GameLaunchVariant>?[]
 		{
 			null, [], [null!], [new() { Id = "" }], [new() { Id = " \t" }],
 		})
 		{
-			product.GameLaunchVariants = variants!;
+			var product = ProductTestSupport.CreateProduct();
+			property.SetValue(product, variants);
 			Assert.That(product.Validate, Throws.ArgumentException);
 		}
 	}
@@ -69,9 +40,8 @@ public sealed class LauncherProductOptionsTests
 	{
 		var settings = new AppSettings { AppDataDirectory = @"C:\DownloadsRoot", SkyrimDirectory = @"C:\Game" };
 		var first = ProductTestSupport.CreateProduct();
-		var second = ProductTestSupport.CreateProduct();
-		second.SkyrimDataDirectoryName = ".OtherLauncher";
-		second.ModOrganizerDirectoryName = "Other MO";
+		var second = ProductTestSupport.CreateProduct(
+			skyrimDataDirectoryName: ".OtherLauncher", modOrganizerDirectoryName: "Other MO");
 		Assert.Multiple(() =>
 		{
 			Assert.That(settings.GetSkyrimAppDataDirectory(first), Is.EqualTo(Path.Combine(settings.SkyrimDirectory, ".ExampleLauncher")));
@@ -89,8 +59,8 @@ public sealed class LauncherProductOptionsTests
 		var settings = new AppSettings { SkyrimDirectory = @"C:\Game" };
 		Assert.Multiple(() =>
 		{
-			Assert.That(() => settings.GetSkyrimAppDataDirectory(new LauncherProductOptions()), Throws.ArgumentException);
-			Assert.That(() => settings.GetModOrganizerDirectory(new LauncherProductOptions()), Throws.ArgumentException);
+			Assert.That(() => settings.GetSkyrimAppDataDirectory(ProductTestSupport.CreateProduct(rootDirectoryName: "")), Throws.ArgumentException);
+			Assert.That(() => settings.GetModOrganizerDirectory(ProductTestSupport.CreateProduct(rootDirectoryName: "")), Throws.ArgumentException);
 		});
 	}
 }

@@ -4,18 +4,25 @@ namespace LauncherKit.TestSupport;
 
 public static class ProductTestSupport
 {
-	public static LauncherProductOptions CreateProduct() => new()
+	public static LauncherProductOptions CreateProduct(
+		string rootDirectoryName = "ExampleLauncher",
+		string skyrimDataDirectoryName = ".ExampleLauncher",
+		string globalDatabaseFileName = "example-global.db",
+		string localDatabaseFileName = "example-local.db",
+		string oauthTokenEntropy = "ExampleLauncher.OAuthToken",
+		string environmentVariablePrefix = "EXAMPLE_LAUNCHER_",
+		string modOrganizerDirectoryName = "Example MO") => new()
 	{
-		RootDirectoryName = "ExampleLauncher",
-		SkyrimDataDirectoryName = ".ExampleLauncher",
-		GlobalDatabaseFileName = "example-global.db",
-		LocalDatabaseFileName = "example-local.db",
-		OAuthTokenEntropy = "ExampleLauncher.OAuthToken",
-		EnvironmentVariablePrefix = "EXAMPLE_LAUNCHER_",
+		RootDirectoryName = rootDirectoryName,
+		SkyrimDataDirectoryName = skyrimDataDirectoryName,
+		GlobalDatabaseFileName = globalDatabaseFileName,
+		LocalDatabaseFileName = localDatabaseFileName,
+		OAuthTokenEntropy = oauthTokenEntropy,
+		EnvironmentVariablePrefix = environmentVariablePrefix,
 		AppExecutableName = "ExampleLauncher.exe",
 		DisplayName = "Example Modpack",
 		UserAgentProduct = "ExampleLauncher",
-		ModOrganizerDirectoryName = "Example MO",
+		ModOrganizerDirectoryName = modOrganizerDirectoryName,
 		ModpackProfileName = "Example",
 		ModpackVersionFile = Path.Combine("Example MO", "mods", "Example", "version.txt"),
 		UserModsSeparator = "USER MODS",

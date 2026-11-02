@@ -70,8 +70,7 @@ public sealed class ProtectedOAuthTokenStoreTests
 	public void IndependentIdentities_CannotDecryptEachOthersTokens()
 	{
 		var first = ProductTestSupport.CreateProduct();
-		var second = ProductTestSupport.CreateProduct();
-		second.OAuthTokenEntropy = "OtherLauncher.OAuthToken";
+		var second = ProductTestSupport.CreateProduct(oauthTokenEntropy: "OtherLauncher.OAuthToken");
 		string? stored = null;
 		var mocker = ProductTestSupport.CreateMocker();
 		var storage = mocker.GetMock<IGlobalKeyValueStorage>();
@@ -95,7 +94,7 @@ public sealed class ProtectedOAuthTokenStoreTests
 	{
 		var mocker = ProductTestSupport.CreateMocker();
 		var storage = mocker.GetMock<IGlobalKeyValueStorage>();
-		OptionsStubs.Options(mocker, new LauncherProductOptions());
+		OptionsStubs.Options(mocker, ProductTestSupport.CreateProduct(rootDirectoryName: ""));
 		Assert.That(() => mocker.CreateInstance<ProtectedOAuthTokenStore>(enablePrivate: true),
 			Throws.Exception.Matches<Exception>(error => error?.GetBaseException() is ArgumentException));
 		storage.VerifyNoOtherCalls();
