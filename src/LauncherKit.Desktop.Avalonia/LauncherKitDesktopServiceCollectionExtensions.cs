@@ -74,7 +74,6 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 			sp.GetService<IViewRegistry>() ?? throw new InvalidOperationException(
 				$"No {nameof(IViewRegistry)} is registered: the consumer must register its view model to view mapping."),
 			sp.GetRequiredService<LauncherKitDesktopOptions>().GetCurrentServices));
-		services.TryAddSingleton(sp => new FramePageFactory(sp.GetRequiredService<ViewLocator>()));
 		return services;
 	}
 }

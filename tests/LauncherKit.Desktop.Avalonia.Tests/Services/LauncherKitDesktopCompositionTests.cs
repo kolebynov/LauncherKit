@@ -1,5 +1,3 @@
-using Avalonia.Controls;
-using Avalonia.Headless.NUnit;
 using Microsoft.Extensions.DependencyInjection;
 using LauncherKit.Desktop.Avalonia.Extensions;
 using LauncherKit.Desktop.Avalonia.Services;
@@ -51,32 +49,6 @@ public sealed class LauncherKitDesktopCompositionTests
 			Throws.InvalidOperationException.With.Message.Contains(nameof(IViewRegistry)));
 	}
 
-	[AvaloniaTest]
-	public void FramePageFactory_ConsumerViewRegistryRegistered_BuildsPagesWithCurrentScope()
-	{
-		// Arrange
-		var mocker = new AutoMocker(MockBehavior.Strict);
-		using var scopeServices = new ServiceCollection().BuildServiceProvider();
-		var model = new TestViewModel();
-		var view = new TextBlock();
-		mocker.GetMock<IViewRegistry>().Setup(x => x.CreateView(model, scopeServices)).Returns(view);
-		var services = new ServiceCollection();
-		services.AddLauncherKitDesktop();
-		services.AddSingleton(mocker.GetMock<IViewRegistry>().Object);
-		services.AddSingleton(CreateOptions(() => scopeServices));
-		using var provider = services.BuildServiceProvider();
-
-		// Act
-		var page = provider.GetRequiredService<FramePageFactory>().GetPageFromObject(model);
-
-		// Assert
-		Assert.Multiple(() =>
-		{
-			Assert.That(page, Is.SameAs(view));
-			Assert.That(page.DataContext, Is.SameAs(model));
-		});
-	}
-
 	private static LauncherKitDesktopOptions CreateOptions(Func<IServiceProvider> currentServices) => new()
 	{
 		GetMainWindow = () => null,
@@ -86,6 +58,4 @@ public sealed class LauncherKitDesktopCompositionTests
 		RefreshMainWindow = () => { },
 		ReloadViews = () => { },
 	};
-
-	private sealed class TestViewModel : ViewModelBase;
 }

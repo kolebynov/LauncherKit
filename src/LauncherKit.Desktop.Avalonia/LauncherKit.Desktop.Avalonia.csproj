@@ -12,7 +12,6 @@
 		<PackageReference Include="Avalonia"/>
 		<PackageReference Include="Avalonia.Desktop"/>
 		<PackageReference Include="Avalonia.Fonts.Inter"/>
-		<PackageReference Include="FluentAvaloniaUI"/>
 		<PackageReference Include="R3Extensions.Avalonia"/>
 		<PackageReference Include="Serilog"/>
 		<PackageReference Include="Serilog.Extensions.Logging"/>

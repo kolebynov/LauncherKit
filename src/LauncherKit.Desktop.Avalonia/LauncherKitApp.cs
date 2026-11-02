@@ -2,8 +2,6 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Styling;
-using FluentAvalonia.UI.Controls;
 using LauncherKit.Core;
 using LauncherKit.Core.Extensions;
 using LauncherKit.Desktop.Avalonia.Localization;
@@ -69,7 +67,8 @@ public abstract class LauncherKitApp : Application
 			base.OnFrameworkInitializationCompleted();
 			if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop) return;
 			ObservableSystem.RegisterUnhandledExceptionHandler(e => _logger.LogError(e, "Unhandled observable system exception"));
-			var mainWindow = Services.GetRequiredService<MainView>();
+			var mainWindow = Services.GetRequiredService<IMainView>() as Window
+				?? throw new InvalidOperationException("The registered IMainView must derive from Avalonia.Controls.Window.");
 			mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModelBase>();
 			desktop.MainWindow = mainWindow;
 			var desktopServices = StartDesktopServices(desktop);
@@ -136,16 +135,9 @@ public abstract class LauncherKitApp : Application
 	/// </summary>
 	protected virtual IEnumerable<KeyValuePair<string, string?>> GetInMemoryConfiguration() => [];
 
-	// The locator (needing the consumer's IViewRegistry registration) is the first application data template, so it
-	// builds every view model's view, and every FAFrame builds its pages through it.
-	private void InstallViewLocator()
-	{
+	// The locator uses the consumer's registry and current scope to build view models' views.
+	private void InstallViewLocator() =>
 		DataTemplates.Insert(0, Services.GetRequiredService<ViewLocator>());
-		Styles.Add(new Style(static selector => selector.OfType<FAFrame>())
-		{
-			Setters = { new Setter(FAFrame.NavigationPageFactoryProperty, Services.GetRequiredService<FramePageFactory>()) },
-		});
-	}
 
 	private void ConfigureAppServices(AppBuilder appBuilder)
 	{
