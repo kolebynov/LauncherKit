@@ -193,6 +193,9 @@ public static class ServiceCollectionExtensions
 			sp => new LaunchersRootDirectoryManager(true, sp.GetRequiredService<IFileSystemUtils>(),
 				sp.GetRequiredService<IOptions<LauncherProductOptions>>().Value));
 		services.TryAddSingleton<LogsCollector.Core.ILogsCollector, LogsCollector.Core.LogsCollector>();
+		services.TryAddEnumerable(ServiceDescriptor.Singleton<LogsCollector.Core.ILogsSource, LogsCollector.Core.LauncherLogsSource>());
+		services.TryAddEnumerable(ServiceDescriptor.Singleton<LogsCollector.Core.ILogsSource, LogsCollector.Core.SkseLogsSource>());
+		services.TryAddEnumerable(ServiceDescriptor.Singleton<LogsCollector.Core.ILogsSource, LogsCollector.Core.ModOrganizerLogsSource>());
 		services.TryAddSingleton<IProcessRunner, ProcessRunner>();
 		services.TryAddSingleton<IRegistryManager, RegistryManager>();
 		services.TryAddSingleton<ISettingsFileStore, AppSettingsOverrideFileStore>();

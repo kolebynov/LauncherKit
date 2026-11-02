@@ -23,7 +23,7 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 	public static IServiceCollection AddLauncherKitDesktop(this IServiceCollection services)
 	{
 		services.AddEarlyGlobalInitializer(sp =>
-			LanguageCulture.Apply(sp.GetRequiredService<IConfiguration>().GetValue<string>("App:Language") ?? string.Empty));
+			LanguageCulture.Apply(sp.GetRequiredService<IConfiguration>()["App:Language"] ?? string.Empty));
 		services.TryAddSingleton<IUiDispatcher, AvaloniaUiDispatcher>();
 		services.TryAddSingleton<FeedLoadStatusViewModel>();
 		services.AddOptions<LoopbackBrowserOptions>().Configure<IStringLocalizer<DesktopStrings>>((options, strings) =>

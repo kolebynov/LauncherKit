@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<IsPackable>false</IsPackable>
+		<!-- Keep NUKE's existing dependency advisories visible without promoting them to errors. -->
+		<WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+		<!-- NUKE injects parameters and the solution into readonly fields.
+		     Do not inherit the kit's advisory suppressions for this build-tool dependency graph. -->
+		<NoWarn>NU1604;CS0649;CA1051</NoWarn>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Nuke.Common"/>
+	</ItemGroup>
+</Project>

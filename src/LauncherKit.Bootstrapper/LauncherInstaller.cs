@@ -18,16 +18,19 @@ public sealed class LauncherInstaller
 	private readonly TimeProvider _timeProvider;
 	private readonly ILogger<LauncherInstaller> _logger;
 	private readonly LauncherProductOptions _product;
+	private readonly string _settingsFileName;
 
 	public LauncherInstaller(
 		IFileSystemUtils fileSystemUtils,
 		ILaunchersRootDirectoryManager launchersRootDirectoryManager,
 		IInterprocessLockFactory interprocessLockFactory,
 		TimeProvider timeProvider,
-		ILogger<LauncherInstaller> logger, LauncherProductOptions product)
+		ILogger<LauncherInstaller> logger, LauncherProductOptions product, string settingsFileName)
 	{
 		ArgumentNullException.ThrowIfNull(product);
 		product.Validate();
+		ArgumentException.ThrowIfNullOrEmpty(settingsFileName);
+		_settingsFileName = settingsFileName;
 		_fileSystemUtils = fileSystemUtils;
 		_launchersRootDirectoryManager = launchersRootDirectoryManager;
 		_interprocessLockFactory = interprocessLockFactory;
@@ -113,11 +116,11 @@ public sealed class LauncherInstaller
 
 	public void MigrateUserSettings(string prevLauncherDirectory, string newLauncherDirectory)
 	{
-		var settingsFilePath = Path.Combine(prevLauncherDirectory, LauncherConstants.SettingsOverrideFileName);
+		var settingsFilePath = Path.Combine(prevLauncherDirectory, _settingsFileName);
 		if (File.Exists(settingsFilePath))
 		{
 			_logger.LogInformation("Migrating user settings");
-			File.Copy(settingsFilePath, Path.Combine(newLauncherDirectory, LauncherConstants.SettingsOverrideFileName), true);
+			File.Copy(settingsFilePath, Path.Combine(newLauncherDirectory, _settingsFileName), true);
 		}
 	}
 

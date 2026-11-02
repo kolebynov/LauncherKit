@@ -156,6 +156,37 @@ public sealed class LogsCollectorTests
 			Does.Contain(Path.Combine("skse", "skse64.log")));
 	}
 
+	[Test]
+	public async Task CollectLogs_ConsumerSource_ArchivesActualBytesAndCollectorLog()
+	{
+		using var temp = new TempDirectory();
+		var pluginFile = temp.CreateFile("plugin.txt", "consumer diagnostic");
+		var output = temp.Combine("output");
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		mocker.GetMock<IFileSystemUtils>().Setup(x => x.EnsureDirectoryExists(output, true))
+			.Callback(() => Directory.CreateDirectory(output));
+		mocker.Use<IEnumerable<ILogsSource>>([new DiagnosticSource(pluginFile)]);
+		mocker.Use<ILogger<LogsCollector>>(NullLogger<LogsCollector>.Instance);
+		mocker.Use<TimeProvider>(TimeProvider.System);
+		var sut = mocker.CreateInstance<LogsCollector>();
+
+		Assert.That(await sut.CollectLogs(output, "consumer-install", CancellationToken.None), Is.Null);
+		using var archive = ZipFile.OpenRead(Path.Combine(output, "collected_logs.zip"));
+		Assert.That(archive.Entries.Select(x => x.FullName),
+			Is.EquivalentTo(new[] { "consumer/diagnostic.txt", "logs-collector.log" }));
+		using var reader = new StreamReader(archive.GetEntry("consumer/diagnostic.txt")!.Open());
+		Assert.That(await reader.ReadToEndAsync(), Is.EqualTo("consumer diagnostic"));
+	}
+
+	private sealed class DiagnosticSource(string file) : ILogsSource
+	{
+		public IEnumerable<LogFile> GetFiles(string? modOrganizerDirectory, ILogger logger)
+		{
+			Assert.That(modOrganizerDirectory, Is.EqualTo("consumer-install"));
+			yield return new LogFile(file, "consumer/diagnostic.txt");
+		}
+	}
+
 	private static LogsCollector CreateSut(
 		string launcherRoot,
 		NuGetVersion? installedVersion,
@@ -180,6 +211,9 @@ public sealed class LogsCollectorTests
 					Directory.CreateDirectory(output);
 				}
 			});
-		return mocker.CreateInstance<LogsCollector>();
+		return new LogsCollector(mocker.Get<IFileSystemUtils>(),
+			[new LauncherLogsSource(mocker.Get<ILaunchersRootDirectoryManager>()),
+				new SkseLogsSource(mocker.Get<IFileSystemUtils>()), new ModOrganizerLogsSource()],
+			mocker.Get<ILogger<LogsCollector>>(), mocker.Get<TimeProvider>());
 	}
 }

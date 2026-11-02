@@ -36,12 +36,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LauncherKit.LogsCollector.C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LauncherKit.TestSupport", "tests\LauncherKit.TestSupport\LauncherKit.TestSupport.csproj", "{7C422C37-7B60-4D6A-A8EB-3046342AF444}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LauncherKit.Build", "src\LauncherKit.Build\LauncherKit.Build.csproj", "{72C8A276-8ABA-49F9-82CE-96FF6F9DF9B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{72C8A276-8ABA-49F9-82CE-96FF6F9DF9B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72C8A276-8ABA-49F9-82CE-96FF6F9DF9B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72C8A276-8ABA-49F9-82CE-96FF6F9DF9B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72C8A276-8ABA-49F9-82CE-96FF6F9DF9B1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3B1191B5-E9F2-4393-8E49-5085F61E765C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3B1191B5-E9F2-4393-8E49-5085F61E765C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3B1191B5-E9F2-4393-8E49-5085F61E765C}.Release|Any CPU.ActiveCfg = Release|Any CPU

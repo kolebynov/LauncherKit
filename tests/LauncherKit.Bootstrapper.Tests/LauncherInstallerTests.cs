@@ -39,15 +39,15 @@ public sealed class LauncherInstallerTests
 		var current = temp.Combine("current");
 		Directory.CreateDirectory(previous);
 		Directory.CreateDirectory(current);
-		File.WriteAllText(Path.Combine(previous, "appsettings.override.json"), "old-settings");
-		File.WriteAllText(Path.Combine(current, "appsettings.override.json"), "replace-me");
+		File.WriteAllText(Path.Combine(previous, "consumer.settings.json"), "old-settings");
+		File.WriteAllText(Path.Combine(current, "consumer.settings.json"), "replace-me");
 		var sut = CreateMocker().CreateInstance<LauncherInstaller>(enablePrivate: true);
 
 		// Act
 		sut.MigrateUserSettings(previous, current);
 
 		// Assert
-		Assert.That(File.ReadAllText(Path.Combine(current, "appsettings.override.json")), Is.EqualTo("old-settings"));
+		Assert.That(File.ReadAllText(Path.Combine(current, "consumer.settings.json")), Is.EqualTo("old-settings"));
 	}
 
 	[Test]
@@ -77,6 +77,7 @@ public sealed class LauncherInstallerTests
 		var mocker = LauncherKit.TestSupport.ProductTestSupport.CreateMocker(MockBehavior.Strict);
 		mocker.Use<TimeProvider>(new FakeTimeProvider());
 		mocker.Use<Microsoft.Extensions.Logging.ILogger<LauncherInstaller>>(NullLogger<LauncherInstaller>.Instance);
+		mocker.Use<string>("consumer.settings.json");
 		return mocker;
 	}
 
