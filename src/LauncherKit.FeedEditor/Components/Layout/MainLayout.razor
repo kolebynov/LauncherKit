@@ -1,0 +1,36 @@
+@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="Theme" IsDarkMode="true" />
+<MudPopoverProvider />
+<MudDialogProvider CloseOnEscapeKey="true" />
+<MudSnackbarProvider />
+
+<MudLayout>
+	<MudAppBar Elevation="1">
+		<MudIcon Icon="@Icons.Material.Filled.RssFeed" Class="mr-3" />
+		<MudText Typo="Typo.h6">Редактор фида сборки</MudText>
+	</MudAppBar>
+	<MudMainContent>
+		<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-4">
+			@Body
+		</MudContainer>
+	</MudMainContent>
+</MudLayout>
+
+<div id="blazor-error-ui" style="display: none">
+	Произошла непредвиденная ошибка.
+	<a href="." class="reload">Перезагрузить</a>
+</div>
+
+@code {
+	// MudBlazor's dark primary and error are saturated enough to glare on the dark surfaces; calmer Material tones
+	// (indigo 300, red 300) keep buttons and errors readable without standing out as much.
+	private static readonly MudTheme Theme = new()
+	{
+		PaletteDark = new PaletteDark
+		{
+			Primary = "#7986CB",
+			Error = "#E57373",
+		},
+	};
+}

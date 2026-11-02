@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<ItemGroup>
+		<ProjectReference Include="../../src/LauncherKit.Desktop/LauncherKit.Desktop.csproj"/>
+		<ProjectReference Include="../LauncherKit.TestSupport/LauncherKit.TestSupport.csproj"/>
+		<PackageReference Include="Microsoft.Extensions.TimeProvider.Testing"/>
+	</ItemGroup>
+</Project>

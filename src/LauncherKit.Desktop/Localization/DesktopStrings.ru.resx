@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+	<resheader name="version"><value>2.0</value></resheader>
+	<resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+	<resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+	<data name="ActivateMods" xml:space="preserve"><value>Активация модов</value></data>
+	<data name="ActivatePlugins" xml:space="preserve"><value>Активация плагинов</value></data>
+	<data name="BetaCodeAlreadyActivated" xml:space="preserve"><value>Вы уже активировали данный бета-код</value></data>
+	<data name="BetaCodeInvalid" xml:space="preserve"><value>Некорректный бета-код</value></data>
+	<data name="BetaCodeRequired" xml:space="preserve"><value>Введите бета-код</value></data>
+	<data name="BetaCodeSuccess" xml:space="preserve"><value>Бета-код активирован</value></data>
+	<data name="ComponentOptionDescription" xml:space="preserve"><value>Установить {0}. {1}</value></data>
+	<data name="DeactivateMods" xml:space="preserve"><value>Отключение модов</value></data>
+	<data name="DeactivatePlugins" xml:space="preserve"><value>Отключение плагинов</value></data>
+	<data name="DeleteAccessDenied" xml:space="preserve"><value>{0}: нет доступа к файлу {1}.</value></data>
+	<data name="DeleteError" xml:space="preserve"><value>{0}: {1}</value></data>
+	<data name="DeleteFileInUse" xml:space="preserve"><value>{0}: файл используется. Если он сейчас скачивается или устанавливается, дождитесь завершения задачи или отмените её; иначе закройте программу, которая его открыла.</value></data>
+	<data name="DirectoryAppDataConflict" xml:space="preserve"><value>Папка данных лаунчера не должна совпадать с папкой Skyrim или пересекаться с ней</value></data>
+	<data name="DirectoryNotFound" xml:space="preserve"><value>Папка не существует</value></data>
+	<data name="DirectoryNotWritable" xml:space="preserve"><value>Нет доступа для записи в папку</value></data>
+	<data name="DirectoryRequired" xml:space="preserve"><value>Выберите папку</value></data>
+	<data name="DirectorySkyrimConflict" xml:space="preserve"><value>Папка Skyrim не должна совпадать с папкой данных лаунчера или пересекаться с ней</value></data>
+	<data name="DiscordDeveloper" xml:space="preserve"><value>Роль разработчика найдена, для Вас будут доступны все бета-версии</value></data>
+	<data name="DiscordMember" xml:space="preserve"><value>Участник сервера</value></data>
+	<data name="DiscordNotMember" xml:space="preserve"><value>Вы не состоите на сервере</value></data>
+	<data name="DiscordSponsor" xml:space="preserve"><value>Роль спонсора найдена, для Вас будут доступны бета-версии</value></data>
+	<data name="ExceptionDeleteItem" xml:space="preserve"><value>Не удалось удалить {0}.</value></data>
+	<data name="ExceptionDeleteMod" xml:space="preserve"><value>Не удалось удалить мод {0}.</value></data>
+	<data name="ExceptionDeleteSave" xml:space="preserve"><value>Не удалось удалить сохранение {0}.</value></data>
+	<data name="ExceptionDownloadServers" xml:space="preserve"><value>Не удалось скачать файл: серверы загрузки недоступны. Проверьте подключение к интернету и повторите попытку позже.</value></data>
+	<data name="ExceptionDownloadStalled" xml:space="preserve"><value>Данные не поступали в течение {0}. Повторите попытку.</value></data>
+	<data name="ExceptionDuplicatePlugin" xml:space="preserve"><value>Плагин {0} встречается несколько раз.</value></data>
+	<data name="ExceptionLocalSavesDisabled" xml:space="preserve"><value>Локальные сохранения отключены для профиля {0}.</value></data>
+	<data name="ExceptionModOrganizerRunning" xml:space="preserve"><value>Обнаружен запущенный экземпляр Mod Organizer. Закройте его и повторите операцию.</value></data>
+	<data name="ExceptionModpackNotInstalled" xml:space="preserve"><value>Сборка не установлена</value></data>
+	<data name="ExceptionNotEnoughSpace" xml:space="preserve"><value>На диске {0} недостаточно места для проведения операции. Требуется {1}, доступно {2}.
+Освободите место или измените путь до папки данных лаунчера на другой диск в настройках.</value></data>
+	<data name="ExceptionOAuth" xml:space="preserve"><value>Не удалось войти через {0}: {1}.</value></data>
+	<data name="ExceptionOAuthCancelled" xml:space="preserve"><value>Вход через {0} отменён.</value></data>
+	<data name="ExceptionOAuthPort" xml:space="preserve"><value>Порт для входа уже занят. Возможно, вход уже выполняется в другом окне лаунчера.</value></data>
+	<data name="ExceptionStoredFileAccessDenied" xml:space="preserve"><value>Нет доступа к файлу {0}.</value></data>
+	<data name="ExceptionStoredFileInUse" xml:space="preserve"><value>Файл {0} используется.</value></data>
+	<data name="ExceptionUnknown" xml:space="preserve"><value>Не удалось выполнить операцию: {0}</value></data>
+	<data name="ExceptionUnsupportedMod" xml:space="preserve"><value>Мод {0} не поддерживает сборку версии {1}.</value></data>
+	<data name="ExtraDownloadSize" xml:space="preserve"><value>Дополнительно будет скачано {0}</value></data>
+	<data name="GameVariantBethIni" xml:space="preserve"><value>BethINI</value></data>
+	<data name="GameVariantGame" xml:space="preserve"><value>Skyrim</value></data>
+	<data name="GameVariantModOrganizer" xml:space="preserve"><value>Mod Organizer</value></data>
+	<data name="GraphPackStepTitle" xml:space="preserve"><value>Выберите граф-пак</value></data>
+	<data name="MicroBackupArchiveFiles" xml:space="preserve"><value>Резервное копирование файлов из {0}</value></data>
+	<data name="MicroChangeProfile" xml:space="preserve"><value>Смена профиля на {0}</value></data>
+	<data name="MicroCheckFileHash" xml:space="preserve"><value>Проверка хеша файла</value></data>
+	<data name="MicroConfigureMod" xml:space="preserve"><value>Настройка мода</value></data>
+	<data name="MicroDeleteBackups" xml:space="preserve"><value>Удаление резервных копий</value></data>
+	<data name="MicroDeleteFile" xml:space="preserve"><value>Удаление {0}</value></data>
+	<data name="MicroDeleteFiles" xml:space="preserve"><value>Удаление файлов</value></data>
+	<data name="MicroDeleteModOrganizer" xml:space="preserve"><value>Удаление Mod Organizer</value></data>
+	<data name="MicroDeleteOldDownloads" xml:space="preserve"><value>Удаление старых загрузок</value></data>
+	<data name="MicroDeleteOldSaves" xml:space="preserve"><value>Удаление старых сохранений</value></data>
+	<data name="MicroDeletePreviousVersion" xml:space="preserve"><value>Удаление предыдущей версии</value></data>
+	<data name="MicroDeleteTemporaryFiles" xml:space="preserve"><value>Удаление временных файлов</value></data>
+	<data name="MicroDeleteUnneededFiles" xml:space="preserve"><value>Удаление ненужных файлов</value></data>
+	<data name="MicroDownloadFile" xml:space="preserve"><value>Загрузка {0}</value></data>
+	<data name="MicroExtractArchive" xml:space="preserve"><value>Распаковка {0}</value></data>
+	<data name="MicroExtractModPatch" xml:space="preserve"><value>Распаковка патча мода {0}</value></data>
+	<data name="MicroExtractModpack" xml:space="preserve"><value>Распаковка сборки</value></data>
+	<data name="MicroExtractModpackPatch" xml:space="preserve"><value>Распаковка патча сборки</value></data>
+	<data name="MicroFinishInstallation" xml:space="preserve"><value>Завершение установки</value></data>
+	<data name="MicroGameStarted" xml:space="preserve"><value>Запущено: {0}</value></data>
+	<data name="MicroGetDownloadSizes" xml:space="preserve"><value>Получение размеров загрузок</value></data>
+	<data name="MicroInstallMod" xml:space="preserve"><value>Установка мода {0}</value></data>
+	<data name="MicroInstallPrerequisite" xml:space="preserve"><value>Установка компонента {0}</value></data>
+	<data name="MicroInstallSevenZip" xml:space="preserve"><value>Установка 7-Zip</value></data>
+	<data name="MicroInstallSkyrim" xml:space="preserve"><value>Установка Skyrim</value></data>
+	<data name="MicroInstalling" xml:space="preserve"><value>Установка</value></data>
+	<data name="MicroLaunchLauncher" xml:space="preserve"><value>Запуск лаунчера</value></data>
+	<data name="MicroMergePlugins" xml:space="preserve"><value>Объединение плагинов из {0}</value></data>
+	<data name="MicroPrepareFile" xml:space="preserve"><value>Подготовка файла</value></data>
+	<data name="MicroPreparing" xml:space="preserve"><value>Подготовка</value></data>
+	<data name="MicroPreparingInstallation" xml:space="preserve"><value>Подготовка к установке</value></data>
+	<data name="MicroRestoreFile" xml:space="preserve"><value>Восстановление {0}</value></data>
+	<data name="MicroRestoreFiles" xml:space="preserve"><value>Восстановление файлов</value></data>
+	<data name="MicroRevertArchiveExtraction" xml:space="preserve"><value>Отмена распаковки {0}</value></data>
+	<data name="MicroRevertPluginsMerge" xml:space="preserve"><value>Отмена объединения плагинов из {0}</value></data>
+	<data name="MicroRunProcess" xml:space="preserve"><value>Запуск {0}</value></data>
+	<data name="MicroSelectModpackComponents" xml:space="preserve"><value>Выбор компонентов установки</value></data>
+	<data name="MicroSelectRequiredMod" xml:space="preserve"><value>Выбор обязательного мода</value></data>
+	<data name="MicroUninstallMod" xml:space="preserve"><value>Удаление мода {0}</value></data>
+	<data name="MicroUpdateModMetadata" xml:space="preserve"><value>Обновление метаданных мода</value></data>
+	<data name="MicroUpdateModpackVersion" xml:space="preserve"><value>Обновление версии сборки</value></data>
+	<data name="ModUpdating" xml:space="preserve"><value>Проходит обновление</value></data>
+	<data name="ModpackComponentsTitle" xml:space="preserve"><value>Компоненты установки</value></data>
+	<data name="ModpackInstallUnavailable" xml:space="preserve"><value>Нет версий сборки, доступных для установки</value></data>
+	<data name="ModpackTaskQueued" xml:space="preserve"><value>Операция со сборкой находится в очереди</value></data>
+	<data name="NoneOption" xml:space="preserve"><value>Не устанавливать</value></data>
+	<data name="OAuthMessage" xml:space="preserve"><value>Вы можете закрыть эту вкладку и вернуться в лаунчер.</value></data>
+	<data name="OAuthTitle" xml:space="preserve"><value>Авторизация завершена</value></data>
+	<data name="OtherGraphPackInstalled" xml:space="preserve"><value>Установлен граф-пак {0}</value></data>
+	<data name="RequiredModsStepTitle" xml:space="preserve"><value>Обязательные моды</value></data>
+	<data name="SelectOneModSubtitle" xml:space="preserve"><value>Выберите один мод</value></data>
+	<data name="SelectRequiredModTitle" xml:space="preserve"><value>Выберите обязательный мод: {0}</value></data>
+	<data name="SetupFailed" xml:space="preserve"><value>Ошибка конфигурации</value></data>
+	<data name="SetupIdle" xml:space="preserve"><value>Требуется настройка</value></data>
+	<data name="SetupRunning" xml:space="preserve"><value>Настройка лаунчера</value></data>
+	<data name="StorageDay" xml:space="preserve"><value>1 день</value></data>
+	<data name="StorageMonth" xml:space="preserve"><value>1 месяц</value></data>
+	<data name="StorageUnlimited" xml:space="preserve"><value>Неограниченно</value></data>
+	<data name="StorageWeek" xml:space="preserve"><value>1 неделя</value></data>
+	<data name="StoredComplete" xml:space="preserve"><value>Загружен</value></data>
+	<data name="StoredPartial" xml:space="preserve"><value>Не докачан</value></data>
+	<data name="TaskCleanupOldData" xml:space="preserve"><value>Очистка старых данных</value></data>
+	<data name="TaskDeleteOldSaves" xml:space="preserve"><value>Удаление старых сохранений</value></data>
+	<data name="TaskInstallMod" xml:space="preserve"><value>Установка мода {0}</value></data>
+	<data name="TaskInstallModpack" xml:space="preserve"><value>Установка сборки {0}</value></data>
+	<data name="TaskInstallModpackComponent" xml:space="preserve"><value>Установка {0}</value></data>
+	<data name="TaskInstallModpackPatch" xml:space="preserve"><value>Установка патча сборки {0}</value></data>
+	<data name="TaskInstallSevenZip" xml:space="preserve"><value>Установка 7-Zip</value></data>
+	<data name="TaskInstallSkyrim" xml:space="preserve"><value>Установка Skyrim</value></data>
+	<data name="TaskInstallVcRedist" xml:space="preserve"><value>Установка Visual C++ {0}</value></data>
+	<data name="TaskRunGame" xml:space="preserve"><value>Запуск игры: {0}</value></data>
+	<data name="TaskSelectModpackComponents" xml:space="preserve"><value>Выбор компонентов установки</value></data>
+	<data name="TaskUninstallMod" xml:space="preserve"><value>Удаление мода {0}</value></data>
+	<data name="TaskUninstallModpack" xml:space="preserve"><value>Удаление сборки</value></data>
+	<data name="TaskUpdateLauncher" xml:space="preserve"><value>Обновление лаунчера до {0}</value></data>
+	<data name="UnavailableFomodOption" xml:space="preserve"><value>Этот вариант недоступен для данной установки</value></data>
+	<data name="UnavailableGraphPackUpdating" xml:space="preserve"><value>Проходит обновление граф-пака</value></data>
+	<data name="YesOption" xml:space="preserve"><value>Установить</value></data>
+	<data name="DirectoryInvalidPath" xml:space="preserve"><value>Невалидный путь</value></data>
+	<data name="DirectoryConflict" xml:space="preserve"><value>Папка не должна совпадать с другой выбранной папкой или пересекаться с ней</value></data>
+	<data name="DirectorySkyrimCharacters" xml:space="preserve"><value>Путь до Skyrim может содержать только символы латинского алфавита, цифры, пробел и символы []{},</value></data>
+	<data name="ComponentModOptionDescription" xml:space="preserve"><value>Установить {0}</value></data>
+  <data name="SetupUnsupportedVersion" xml:space="preserve"><value>Обнаружена неподдерживаемая версия Skyrim {0}.
+
+Для сборки требуется версия Skyrim {1}.
+
+Вы можете выбрать другую пустую директорию, и лаунчер скачает Skyrim вместе со сборкой.
+
+Если же вы хотите установить Skyrim вручную или использовать Steam-версию игры, то используйте инструкцию из [этого документа]({2}).</value></data>
+</root>

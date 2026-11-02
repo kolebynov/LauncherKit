@@ -1,0 +1,91 @@
+@implements IDisposable
+@inject FeedSession Session
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-12">
+	<MudCard Elevation="2">
+		<MudCardHeader>
+			<CardHeaderContent>
+				<MudText Typo="Typo.h5">Вход</MudText>
+				<MudText Typo="Typo.body2" Class="mud-text-secondary">
+					Используйте API-токен R2 с доступом на чтение и запись к <b>@Session.FeedLocation</b>.
+				</MudText>
+			</CardHeaderContent>
+		</MudCardHeader>
+		<MudCardContent>
+			<form @onsubmit="SignInAsync">
+				<MudStack Spacing="3">
+					<MudTextField @bind-Value="_accessKeyId" Label="Access Key ID" Variant="Variant.Outlined" Immediate="true"
+								  AutoFocus="true" Disabled="_busy" />
+					<MudTextField @bind-Value="_secretAccessKey" Label="Secret Access Key" InputType="InputType.Password"
+								  Variant="Variant.Outlined" Immediate="true" Disabled="_busy" />
+					@if (_error is not null)
+					{
+						<MudAlert Severity="Severity.Error" Dense="true">@_error</MudAlert>
+					}
+					@* Gated only by _busy: field-based gating would race with Enter pressed before the last keystroke reaches the server. *@
+					<MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" Disabled="_busy">
+						@if (_busy)
+						{
+							<MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
+						}
+						Войти
+					</MudButton>
+				</MudStack>
+			</form>
+		</MudCardContent>
+	</MudCard>
+</MudContainer>
+
+@code {
+	private readonly CancellationTokenSource _disposed = new();
+	private string? _accessKeyId;
+	private string? _secretAccessKey;
+	private string? _error;
+	private bool _busy;
+
+	[Parameter]
+	public EventCallback OnSignedIn { get; set; }
+
+	public void Dispose()
+	{
+		_disposed.Cancel();
+		_disposed.Dispose();
+	}
+
+	private async Task SignInAsync()
+	{
+		if (_busy)
+		{
+			return;
+		}
+
+		if (string.IsNullOrWhiteSpace(_accessKeyId) || string.IsNullOrWhiteSpace(_secretAccessKey))
+		{
+			_error = "Введите Access Key ID и Secret Access Key.";
+			return;
+		}
+
+		_busy = true;
+		_error = null;
+		try
+		{
+			var result = await Session.SignInAsync(_accessKeyId, _secretAccessKey, _disposed.Token);
+			if (result == SignInResult.InvalidCredentials)
+			{
+				_error = "R2 отклонил эти ключи доступа.";
+				return;
+			}
+
+			_secretAccessKey = null;
+			await OnSignedIn.InvokeAsync();
+		}
+		catch (FeedStorageException e)
+		{
+			_error = e.Message;
+		}
+		finally
+		{
+			_busy = false;
+		}
+	}
+}

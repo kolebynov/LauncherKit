@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<base href="/" />
+	<title>Редактор фида сборки</title>
+	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+	<link href="@Assets["_content/MudBlazor/MudBlazor.min.css"]" rel="stylesheet" />
+	<link href="@Assets["LauncherKit.FeedEditor.styles.css"]" rel="stylesheet" />
+	<ImportMap />
+	<HeadOutlet @rendermode="RenderModeWithoutPrerendering" />
+</head>
+
+<body>
+	<Routes @rendermode="RenderModeWithoutPrerendering" />
+	<script src="_framework/blazor.web.js"></script>
+	<script src="@Assets["_content/MudBlazor/MudBlazor.min.js"]"></script>
+</body>
+
+</html>
+
+@code {
+	// The feed session lives in the interactive circuit; prerendering would only show a throwaway sign-in form.
+	private static readonly IComponentRenderMode RenderModeWithoutPrerendering = new InteractiveServerRenderMode(prerender: false);
+}

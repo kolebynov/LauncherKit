@@ -1,0 +1,381 @@
+@* A bucket-relative path with suggestions from the keys in the bucket; any text is accepted, existing or not.
+   A path missing from the bucket can be uploaded from a local file under that exact key: the browser sends the file
+   straight to R2 through presigned URLs (wwwroot/js/upload.js), so it never passes through the server or the circuit.
+   With OnSha256Known set, choosing an existing object reports its SHA-256 from its x-amz-meta-checksum-sha256 metadata, if any.
+   A cleared field reports an empty string, so it binds to non-nullable model paths. *@
+@using System.Globalization
+@using System.Diagnostics
+@using System.Runtime.ExceptionServices
+@using Microsoft.JSInterop
+@implements IAsyncDisposable
+@inject FeedSession Session
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<MudAutocomplete T="string" Value="@Value" ValueChanged="OnValueChanged" Label="@Label" Required="@Required"
+				 Validation="@(Required ? FeedRules.Required : null)" HelperText="@HelperText" Clearable="@(!Required)"
+				 SearchFunc="Search" CoerceValue="true" MaxItems="MaxSuggestions" OpenOnFocus="true"
+				 Variant="Variant.Outlined" Margin="Margin.Dense" ReadOnly="@(_upload is not null)">
+	<MoreItemsTemplate>
+		<MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Показаны первые @MaxSuggestions совпадений; уточните запрос, чтобы сузить список.</MudText>
+	</MoreItemsTemplate>
+</MudAutocomplete>
+@if (_upload is { } upload)
+{
+	<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-1">
+		<MudProgressLinear Color="Color.Primary" Value="@upload.Percent" Rounded="true" Size="Size.Medium" Style="flex: 1 1 auto; min-width: 0" />
+		<MudText Typo="Typo.caption" Class="flex-shrink-0" Style="white-space: nowrap">@upload.Description</MudText>
+		<MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Error" Class="flex-shrink-0" OnClick="@upload.Cancel">Отменить</MudButton>
+	</MudStack>
+}
+else if (!string.IsNullOrWhiteSpace(Value) && !Session.ObjectKeys.Contains(Value, StringComparer.Ordinal))
+{
+	<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-1">
+		<MudText Typo="Typo.caption" Color="Color.Warning">Файла нет в бакете.</MudText>
+		<input type="file" id="@_inputId" @ref="_input" @onchange="UploadAsync" hidden />
+		<MudButton HtmlTag="label" for="@_inputId" Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.Upload">
+			Загрузить файл
+		</MudButton>
+	</MudStack>
+}
+
+@code {
+	private const int MaxSuggestions = 50;
+
+	/// <summary>Parts sent at once; parallel requests make up for the per-connection throughput limit.</summary>
+	private const int ParallelPartCount = 4;
+
+	private static readonly TimeSpan ProgressRefreshPeriod = TimeSpan.FromSeconds(1);
+
+	private readonly string _inputId = $"upload-{Guid.NewGuid():N}";
+	private ElementReference _input;
+	private IJSObjectReference? _module;
+	private UploadState? _upload;
+	private CancellationTokenSource? _lookup;
+
+	[Parameter, EditorRequired]
+	public required string Label { get; set; }
+
+	[Parameter]
+	public string? Value { get; set; }
+
+	[Parameter]
+	public EventCallback<string> ValueChanged { get; set; }
+
+	[Parameter]
+	public bool Required { get; set; }
+
+	[Parameter]
+	public string? HelperText { get; set; }
+
+	/// <summary>
+	/// Receives the SHA-256 (uppercase hex) of the file at <see cref="Value"/> once it is known: after a file is
+	/// uploaded under it, or after an existing object with SHA-256 metadata is chosen.
+	/// </summary>
+	[Parameter]
+	public EventCallback<string> OnSha256Known { get; set; }
+
+	public async ValueTask DisposeAsync()
+	{
+		_upload?.Cancel();
+		_lookup?.Cancel();
+		if (_module is not null)
+		{
+			await IgnoreDisconnectAsync(_module.DisposeAsync);
+		}
+	}
+
+	private async Task OnValueChanged(string? value)
+	{
+		value ??= string.Empty;
+		await ValueChanged.InvokeAsync(value);
+		await LookUpSha256Async(value);
+	}
+
+	private async Task LookUpSha256Async(string key)
+	{
+		_lookup?.Cancel();
+		if (!OnSha256Known.HasDelegate || !Session.ObjectKeys.Contains(key, StringComparer.Ordinal))
+		{
+			return;
+		}
+
+		using var lookup = new CancellationTokenSource();
+		_lookup = lookup;
+		try
+		{
+			var sha256 = await Session.GetObjectSha256Async(key, lookup.Token);
+			// Another path may have been chosen meanwhile; its own lookup reports its hash.
+			if (sha256 is not null && !lookup.IsCancellationRequested && Value == key)
+			{
+				Snackbar.Add($"SHA-256 файла {key} взят из R2.", Severity.Info);
+				await OnSha256Known.InvokeAsync(sha256);
+			}
+		}
+		catch (OperationCanceledException) when (lookup.IsCancellationRequested)
+		{
+			// Another path was chosen or the field was removed.
+		}
+		finally
+		{
+			if (_lookup == lookup)
+			{
+				_lookup = null;
+			}
+		}
+	}
+
+	private Task<IEnumerable<string>> Search(string? text, CancellationToken cancellationToken) =>
+		Task.FromResult(string.IsNullOrWhiteSpace(text)
+			? Session.ObjectKeys
+			: Session.ObjectKeys.Where(key => key.Contains(text.Trim(), StringComparison.OrdinalIgnoreCase)));
+
+	private async Task UploadAsync()
+	{
+		if (_upload is not null || string.IsNullOrWhiteSpace(Value))
+		{
+			return;
+		}
+
+		var key = Value;
+		IJSObjectReference? file;
+		try
+		{
+			_module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/upload.js");
+			file = await _module.InvokeAsync<IJSObjectReference?>("openFile", _input);
+		}
+		catch (JSDisconnectedException)
+		{
+			// The browser is gone together with its file picker.
+			return;
+		}
+
+		if (file is null)
+		{
+			return;
+		}
+
+		try
+		{
+			var info = await file.InvokeAsync<BrowserFileInfo>("info");
+			using var upload = new UploadState(info.Size);
+			_upload = upload;
+			var refresh = RefreshProgressAsync(file, upload);
+			ObjectUpload? started = null;
+			try
+			{
+				started = await Session.StartUploadAsync(key, info.Size, info.ContentType, upload.Token);
+				var (etags, sha256) = await SendAsync(file, started, upload.Token);
+				await Session.CompleteUploadAsync(started, etags, upload.Token);
+				started = null;
+				Snackbar.Add($"Файл {key} загружен.", Severity.Success);
+				await OnSha256Known.InvokeAsync(sha256);
+			}
+			catch (Exception e) when (upload.Token.IsCancellationRequested && e is OperationCanceledException or JSException or FeedStorageException)
+			{
+				// A cancelled request may also fail as a storage or browser error rather than a cancellation.
+				Snackbar.Add($"Загрузка {key} отменена.", Severity.Info);
+			}
+			catch (FeedStorageException e)
+			{
+				Snackbar.Add(e.Message, Severity.Error);
+			}
+			catch (JSException e)
+			{
+				// upload.js reports the failures of the browser's requests to R2 in Russian, as a one-line message that
+				// JSException follows with the JavaScript stack.
+				Snackbar.Add($"Не удалось загрузить файл {key}: {e.Message.Split('\n', 2)[0]}", Severity.Error);
+			}
+			finally
+			{
+				_upload = null;
+				upload.Cancel();
+				await refresh;
+				if (started is not null)
+				{
+					await Session.AbortUploadAsync(started);
+				}
+			}
+		}
+		catch (JSDisconnectedException)
+		{
+			// The browser is gone; there is no one left to report the upload to.
+		}
+		finally
+		{
+			await AbortAsync(file);
+			await IgnoreDisconnectAsync(file.DisposeAsync);
+		}
+	}
+
+	/// <summary>
+	/// Sends the parts of <paramref name="upload"/> from the browser while it hashes the file. The first failure
+	/// stops the rest, so a failed part or an unreadable file ends the upload at once.
+	/// </summary>
+	private async Task<(string?[] ETags, string Sha256)> SendAsync(
+		IJSObjectReference file, ObjectUpload upload, CancellationToken cancellationToken)
+	{
+		using var stop = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+		Exception? failure = null;
+		var etags = new string?[upload.Parts.Count];
+		var nextPart = 0;
+		string? sha256 = null;
+
+		// Every continuation runs on the circuit's synchronization context, so the shared state needs no locking.
+		async Task SendPartsAsync()
+		{
+			try
+			{
+				while (!stop.IsCancellationRequested && nextPart < upload.Parts.Count)
+				{
+					var part = upload.Parts[nextPart++];
+					var url = await Session.GetUploadPartUrlAsync(upload, part.Number);
+					etags[part.Number - 1] = await file.InvokeAsync<string?>(
+						"uploadPart", stop.Token, url, part.Offset, part.Length, upload.UploadId is null ? upload.ContentType : null);
+				}
+			}
+			catch (Exception e)
+			{
+				await StopOnFailureAsync(e);
+			}
+		}
+
+		async Task HashAsync()
+		{
+			try
+			{
+				sha256 = await file.InvokeAsync<string>("hash", stop.Token);
+			}
+			catch (Exception e)
+			{
+				await StopOnFailureAsync(e);
+			}
+		}
+
+		async Task StopOnFailureAsync(Exception e)
+		{
+			// Rethrown below once everything has stopped; the cancellations it causes are not reported.
+			failure ??= e;
+			await stop.CancelAsync();
+			// The browser keeps sending until its requests are aborted.
+			await AbortAsync(file);
+		}
+
+		await Task.WhenAll(Enumerable.Range(0, Math.Min(ParallelPartCount, upload.Parts.Count))
+			.Select(_ => SendPartsAsync())
+			.Append(HashAsync()));
+		if (failure is not null)
+		{
+			ExceptionDispatchInfo.Throw(failure);
+		}
+
+		return (etags, sha256!);
+	}
+
+	private async Task RefreshProgressAsync(IJSObjectReference file, UploadState upload)
+	{
+		using var timer = new PeriodicTimer(ProgressRefreshPeriod);
+		try
+		{
+			while (await timer.WaitForNextTickAsync(upload.Token))
+			{
+				upload.Sample(await file.InvokeAsync<BrowserUploadProgress>("progress", upload.Token));
+				StateHasChanged();
+			}
+		}
+		catch (OperationCanceledException)
+		{
+			// The upload finished.
+		}
+		catch (JSDisconnectedException)
+		{
+			// The circuit is gone; DisposeAsync cancels the upload.
+		}
+	}
+
+	private static async Task AbortAsync(IJSObjectReference file)
+	{
+		try
+		{
+			await file.InvokeVoidAsync("abort");
+		}
+		catch (JSDisconnectedException)
+		{
+			// The browser is gone together with everything it was doing.
+		}
+	}
+
+	private static async Task IgnoreDisconnectAsync(Func<ValueTask> action)
+	{
+		try
+		{
+			await action();
+		}
+		catch (JSDisconnectedException)
+		{
+			// The browser is gone together with everything it was doing.
+		}
+	}
+
+	private sealed record BrowserFileInfo(long Size, string ContentType);
+
+	private sealed record BrowserUploadProgress(long Uploaded, long Hashed);
+
+	/// <summary>
+	/// A running upload. The shown progress and speed are taken together by <see cref="Sample"/>, so any render shows
+	/// the same snapshot.
+	/// </summary>
+	private sealed class UploadState(long total) : IDisposable
+	{
+		private readonly CancellationTokenSource _cancellation = new();
+		private long _sampledAt = Stopwatch.GetTimestamp();
+		private BrowserUploadProgress _shown = new(0, 0);
+		private double? _bytesPerSecond;
+
+		public CancellationToken Token => _cancellation.Token;
+
+		public double Percent => total == 0 ? 0 : _shown.Uploaded * 100.0 / total;
+
+		public string Description
+		{
+			get
+			{
+				if (total > 0 && _shown.Uploaded == total && _shown.Hashed < total)
+				{
+					// Hashing runs alongside the upload and only shows when it is the slower one.
+					return $"SHA-256: {ToMegabytes(_shown.Hashed)} / {ToMegabytes(total)} МБ";
+				}
+
+				var progress = $"{ToMegabytes(_shown.Uploaded)} / {ToMegabytes(total)} МБ";
+				return _bytesPerSecond is { } speed ? $"{progress}, {ToMegabytes(speed)} МБ/с" : progress;
+			}
+		}
+
+		/// <summary>
+		/// Shows <paramref name="progress"/> and the average upload speed since the previous sample (or the start).
+		/// </summary>
+		public void Sample(BrowserUploadProgress progress)
+		{
+			var now = Stopwatch.GetTimestamp();
+			_bytesPerSecond = (progress.Uploaded - _shown.Uploaded) / Stopwatch.GetElapsedTime(_sampledAt, now).TotalSeconds;
+			_sampledAt = now;
+			_shown = progress;
+		}
+
+		public void Cancel()
+		{
+			try
+			{
+				_cancellation.Cancel();
+			}
+			catch (ObjectDisposedException)
+			{
+				// The upload already ended.
+			}
+		}
+
+		public void Dispose() => _cancellation.Dispose();
+
+		private static string ToMegabytes(double bytes) => (bytes / 1048576.0).ToString("0.0", CultureInfo.CurrentCulture);
+	}
+}

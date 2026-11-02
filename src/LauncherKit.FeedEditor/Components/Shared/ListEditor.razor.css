@@ -1,0 +1,17 @@
+/* MudBlazor drops the separating border of an expanded panel and paints it like its surroundings, so its edges
+   are invisible. Outline it, mark it with a primary bar, and tint its header so nested panels stay distinguishable. */
+.list-editor ::deep .mud-expand-panel.mud-panel-expanded {
+	border: 1px solid var(--mud-palette-lines-default);
+	border-left: 4px solid var(--mud-palette-primary);
+}
+
+.list-editor ::deep .mud-expand-panel.mud-panel-expanded > .mud-expand-panel-header {
+	background-color: var(--mud-palette-background-gray);
+	border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+/* Dense panels have no vertical content padding, which would glue the fields to the new borders. */
+.list-editor ::deep .mud-expand-panel-content {
+	padding-top: 16px;
+	padding-bottom: 16px;
+}

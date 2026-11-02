@@ -1,0 +1,28 @@
+<MudGrid Spacing="2">
+	<MudItem xs="12" md="7">
+		<S3PathField @bind-Value="DownloadInfo.S3Path" Label="@($"{Label}: путь S3")" Required="true" OnSha256Known="OnSha256KnownAsync" />
+	</MudItem>
+	<MudItem xs="12" md="5">
+		<MudTextField @bind-Value="DownloadInfo.Hash" Label="SHA-256 (необязательно)" Clearable="true"
+					  Validation="@FeedRules.OptionalSha256" Variant="Variant.Outlined" Margin="Margin.Dense" />
+	</MudItem>
+</MudGrid>
+
+@code {
+	[Parameter, EditorRequired]
+	public required DownloadInfoModel DownloadInfo { get; set; }
+
+	[Parameter]
+	public string Label { get; set; } = "Загрузка";
+
+	/// <summary>Re-renders the whole feed editor, so the unsaved-changes marker notices the filled hash.</summary>
+	[CascadingParameter(Name = FeedChangedCascade.Name)]
+	public EventCallback FeedChanged { get; set; }
+
+	// The hash of the file the path now points to (uploaded or chosen) replaces the old one.
+	private Task OnSha256KnownAsync(string sha256)
+	{
+		DownloadInfo.Hash = sha256;
+		return FeedChanged.InvokeAsync();
+	}
+}

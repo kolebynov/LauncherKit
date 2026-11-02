@@ -1,0 +1,54 @@
+@switch (Action)
+{
+	case InstallModAction installMod:
+		<DownloadInfoEditor DownloadInfo="installMod.DownloadInfo" Label="Архив мода" />
+		<MudTextField @bind-Value="installMod.ModName" Label="Имя мода" Required="true" Validation="@FeedRules.Required"
+					  HelperText="Имя мода в Mod Organizer: архив скачивается и устанавливается как этот мод. Для FOMOD-архива пользователь выбирает опции; любой другой распаковывается целиком. Основной архив мода сюда не добавляйте — он устанавливается автоматически."
+					  Variant="Variant.Outlined" Margin="Margin.Dense" />
+		<ModPlacementEditor @bind-Placement="installMod.Placement" />
+		break;
+	case SelectRequiredModAction selectRequiredMod:
+		<StringListEditor Label="Моды" Items="selectRequiredMod.Mods" Required="true"
+						  HelperText="Пользователь выбирает один установленный мод; следующие шаги могут проверить его условием SelectedMod" />
+		break;
+	case ActivateModsAction activateMods:
+		<MudSwitch @bind-Value="activateMods.Activate" Label="@(activateMods.Activate ? "Включить" : "Отключить")" Color="Color.Primary" />
+		<StringListEditor Label="Моды" Items="activateMods.Mods" Required="true" />
+		break;
+	case ActivatePluginsAction activatePlugins:
+		<MudSwitch @bind-Value="activatePlugins.Activate" Label="@(activatePlugins.Activate ? "Включить" : "Отключить")" Color="Color.Primary" />
+		<StringListEditor Label="Плагины" Items="activatePlugins.Plugins" Required="true" />
+		break;
+	case RemoveFileSystemItemAction removeFileSystemItem:
+		<StringListEditor Label="Пути" Items="removeFileSystemItem.Paths" Required="true"
+						  HelperText="Файлы и папки относительно папки Skyrim, по одному в строке; отсутствующие пропускаются" />
+		<MudSwitch @bind-Value="removeFileSystemItem.FailOnFailedDelete" Label="Прерывать установку, если не удалось удалить" Color="Color.Primary" />
+		<MudText Typo="Typo.caption" Class="mud-text-secondary">
+			Если выключено, пути, которые не удалось удалить (например, занятые другим процессом), пропускаются, и установка продолжается.
+		</MudText>
+		break;
+	case ExtractArchiveAction extractArchive:
+		<DownloadInfoEditor DownloadInfo="extractArchive.DownloadInfo" Label="Архив" />
+		<MudTextField @bind-Value="extractArchive.DestinationPath" Label="Путь назначения"
+					  HelperText="Относительно папки Skyrim, пусто — сама папка Skyrim: архив скачивается и распаковывается сюда целиком"
+					  Variant="Variant.Outlined" Margin="Margin.Dense" />
+		break;
+	case MergePluginsAction mergePlugins:
+		<DownloadInfoEditor DownloadInfo="mergePlugins.DownloadInfo" Label="Файл plugins.txt" />
+		<MudText Typo="Typo.caption" Class="mud-text-secondary">
+			Плагины из файла получают его порядок и состояние (включён — строка со «*»), отсутствующие в профиле добавляются после предыдущего плагина файла; остальные плагины профиля остаются на месте, loadorder.txt пересобирается. Файл может содержать не все плагины. Имя файла должно быть уникальным, как у архивов.
+		</MudText>
+		break;
+	case ChangeProfileAction changeProfile:
+		<MudTextField @bind-Value="changeProfile.ProfileName" Label="Имя профиля" Required="true" Validation="@FeedRules.Required"
+					  HelperText="Профиль Mod Organizer, который нужно выбрать; он должен уже существовать, например быть распакован предыдущим действием"
+					  Variant="Variant.Outlined" Margin="Margin.Dense" />
+		break;
+	default:
+		throw new InvalidOperationException($"Unsupported mod install action type {Action.GetType()}.");
+}
+
+@code {
+	[Parameter, EditorRequired]
+	public required ModInstallActionModel Action { get; set; }
+}

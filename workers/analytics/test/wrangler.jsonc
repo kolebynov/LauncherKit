@@ -1,0 +1,12 @@
+{
+	"name": "analytics-test",
+	"main": "../src/index.ts",
+	"tsconfig": "../tsconfig.json",
+	"compatibility_date": "2026-08-28",
+	"analytics_engine_datasets": [
+		{
+			"binding": "ANALYTICS",
+			"dataset": "analytics_test",
+		},
+	],
+}

@@ -1,0 +1,308 @@
+@implements IDisposable
+@inject FeedSession Session
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<NavigationLock ConfirmExternalNavigation="Session.HasUnsavedChanges" />
+
+<MudStack Spacing="3">
+	<MudPaper Outlined="true" Class="pa-3">
+		<MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+			<MudText Typo="Typo.subtitle1">Редактируется <b>@Session.FeedLocation</b></MudText>
+			@if (Session.HasUnsavedChanges)
+			{
+				<MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Outlined">Есть несохранённые изменения</MudChip>
+			}
+			<MudSpacer />
+			<MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Refresh" Disabled="_busy" OnClick="ReloadAsync">Перезагрузить</MudButton>
+			<MudTooltip Text="Заново прочитать список файлов бакета для подсказок путей, сохранив ваши правки">
+				<MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.FolderOpen" Disabled="_busy" OnClick="RefreshPathsAsync">Обновить пути</MudButton>
+			</MudTooltip>
+			<MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Logout" Disabled="_busy" OnClick="SignOutAsync">Выйти</MudButton>
+			<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload" Disabled="_busy"
+					   OnClick="@(() => SaveAsync(overwrite: false))">
+				Сохранить
+			</MudButton>
+		</MudStack>
+	</MudPaper>
+
+	@if (_errors.Count > 0)
+	{
+		<MudAlert Severity="Severity.Error" ShowCloseIcon="true" CloseIconClicked="@(() => _errors = [])">
+			<MudText Typo="Typo.subtitle2">Фид не сохранён. Сначала исправьте ошибки:</MudText>
+			<ul class="ml-4">
+				@foreach (var error in _errors)
+				{
+					<li><b>@error.Location</b>: @error.Message</li>
+				}
+			</ul>
+		</MudAlert>
+	}
+
+	<CascadingValue Name="@FeedChangedCascade.Name" Value="_feedChanged" IsFixed="true">
+		@* Every field edit re-renders the editor, so summaries in collapsed entries and tab badges stay current. *@
+		<MudForm FieldChanged="@((MudBlazor.Utilities.FormFieldChangedEventArgs _) => { })">
+			<MudTabs Outlined="true" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-4">
+				@if (Session.IsLegacy)
+				{
+					<MudTabPanel Text="@($"Лаунчеры V11 ({Session.LegacyFeed!.Launchers.Count})")">
+						<LegacyLaunchersEditor Feed="Session.LegacyFeed" />
+					</MudTabPanel>
+				}
+				else
+				{
+				<MudTabPanel Text="Общие">
+					<MudTextField @bind-Value="Feed.DefaultLanguage" Label="Язык по умолчанию" Required="true" Validation="@FeedRules.Language" Variant="Variant.Outlined" Margin="Margin.Dense" />
+				</MudTabPanel>
+				<MudTabPanel Text="@($"Компоненты ({Feed.InstallComponents.Count})")">
+					<MudText Typo="Typo.body2">Компоненты предлагаются по значению «Порядок». Идентификатор используется в задачах установки.</MudText>
+					<ListEditor TItem="InstallComponentModel" Items="Feed.InstallComponents" Factories="ComponentFactories" Title="@(item => $"{item.Order}: {item.Id} — {item.Kind}")" AddToEnd="true">
+						<ItemContent Context="component">
+							<InstallComponentEditor Component="component" />
+						</ItemContent>
+					</ListEditor>
+				</MudTabPanel>
+				<MudTabPanel Text="@($"Предварительные зависимости ({Feed.Prerequisites.Count})")">
+					<ListEditor TItem="PrerequisiteModel" Items="Feed.Prerequisites" Factories="PrerequisiteFactories" Title="@(item => item.Id)" AddToEnd="true">
+						<ItemContent Context="prerequisite">
+							<MudTextField @bind-Value="prerequisite.Id" Label="Идентификатор" Required="true" Variant="Variant.Outlined" Margin="Margin.Dense" />
+							<DownloadInfoEditor DownloadInfo="prerequisite.DownloadInfo" Label="Установщик" />
+							<MudTextField @bind-Value="prerequisite.Arguments" Label="Аргументы запуска" Variant="Variant.Outlined" Margin="Margin.Dense" />
+						</ItemContent>
+					</ListEditor>
+				</MudTabPanel>
+				<MudTabPanel Text="Загрузки">
+					<MudStack Spacing="4">
+						<MudText Typo="Typo.h6">Skyrim</MudText>
+						<DownloadInfoEditor DownloadInfo="Feed.SkyrimDownloadInfo" Label="Архив Skyrim" />
+						<MudText Typo="Typo.h6">7-Zip</MudText>
+						<DownloadInfoEditor DownloadInfo="Feed.SevenZipDownloadInfo" Label="Архив 7-Zip" />
+					</MudStack>
+				</MudTabPanel>
+
+				<MudTabPanel Text="@($"Сборки ({Feed.Modpacks.Count})")">
+					<ListEditor TItem="ModpackModel" Items="Feed.Modpacks" Factories="ModpackFactories"
+								Title="@(modpack => $"Сборка {modpack.Version} — установщик {modpack.InitialVersion}, патчей: {modpack.Patches.Count}{(modpack.IsAvailableForSponsors ? " (спонсорам)" : string.Empty)}")">
+						<ItemContent Context="modpack">
+							<ModpackEditor Modpack="modpack" />
+						</ItemContent>
+					</ListEditor>
+				</MudTabPanel>
+
+				<MudTabPanel Text="@($"Списки изменений сборки ({Feed.ModpackChangelogs.Count})")">
+					<ListEditor TItem="ModpackChangelogModel" Items="Feed.ModpackChangelogs" Factories="ChangelogFactories"
+								Title="@(changelog => $"{changelog.Version} — {changelog.Path}")">
+						<ItemContent Context="changelog">
+							<MudGrid Spacing="2">
+								<MudItem xs="12" sm="4">
+									<MudTextField @bind-Value="changelog.Version" Label="Версия" Required="true" Validation="@FeedRules.Version"
+												  Variant="Variant.Outlined" Margin="Margin.Dense" />
+								</MudItem>
+								<MudItem xs="12" sm="8">
+									<LocalizedField Value="changelog.Path" Label="Путь к Markdown" IsPath="true" />
+								</MudItem>
+							</MudGrid>
+						</ItemContent>
+					</ListEditor>
+				</MudTabPanel>
+
+				<MudTabPanel Text="@($"Лаунчеры ({Feed.Launchers.Count})")">
+					<ListEditor TItem="LauncherModel" Items="Feed.Launchers" Factories="LauncherFactories"
+								Title="@(launcher => $"{launcher.Version} — {launcher.DownloadInfo.S3Path}{(launcher.SupportsNewModpackVersions ? " (новые сборки)" : string.Empty)}")">
+						<ItemContent Context="launcher">
+							<MudStack Spacing="2">
+								<MudGrid Spacing="2">
+									<MudItem xs="12" sm="4">
+										<MudTextField @bind-Value="launcher.Version" Label="Версия" Required="true" Validation="@FeedRules.Version"
+													  Variant="Variant.Outlined" Margin="Margin.Dense" />
+									</MudItem>
+									<MudItem xs="12" sm="8">
+										<LocalizedField @bind-Value="launcher.ChangelogPath" Label="Путь к списку изменений" IsPath="true" Optional="true" />
+									</MudItem>
+									<MudItem xs="12">
+										<MudSwitch @bind-Value="launcher.SupportsNewModpackVersions" Label="Нужен для новых версий сборки" Color="Color.Primary" />
+										<MudText Typo="Typo.caption">Старые лаунчеры сообщают, что для установки новых версий сборки нужно обновиться</MudText>
+									</MudItem>
+								</MudGrid>
+								<DownloadInfoEditor DownloadInfo="launcher.DownloadInfo" Label="Лаунчер" />
+							</MudStack>
+						</ItemContent>
+					</ListEditor>
+				</MudTabPanel>
+
+				<MudTabPanel Text="@($"Графпаки ({Feed.GraphPacks.Count})")">
+					<MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">Лаунчер предлагает графпаки в этом порядке.</MudText>
+					<ListEditor TItem="GraphPackModel" Items="Feed.GraphPacks" Factories="GraphPackFactories" Title="GraphPackTitle" AddToEnd="true">
+						<ItemContent Context="graphPack">
+							<GraphPackEditor Pack="graphPack" />
+						</ItemContent>
+					</ListEditor>
+				</MudTabPanel>
+
+				<MudTabPanel Text="@($"Моды ({Feed.Mods.Count})")">
+					<ListEditor TItem="ModModel" Items="Feed.Mods" Factories="ModFactories" Title="ModTitle" AddToEnd="true">
+						<ItemContent Context="mod">
+							<ModEditor Mod="mod" />
+						</ItemContent>
+					</ListEditor>
+				</MudTabPanel>
+
+				<MudTabPanel Text="@($"Бета-доступ ({Feed.BetaVersions.Count + Feed.SponsorRoleIds.Count + Feed.DeveloperRoleIds.Count})")">
+					<BetaVersionsEditor BetaVersions="Feed.BetaVersions" SponsorRoleIds="Feed.SponsorRoleIds"
+										DeveloperRoleIds="Feed.DeveloperRoleIds" />
+				</MudTabPanel>
+				}
+
+				<MudTabPanel Text="JSON">
+					<MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">Предпросмотр того, что загрузит «Сохранить» (только чтение).</MudText>
+					<MudPaper Outlined="true" Class="pa-3" Style="max-height: 70vh; overflow: auto">
+						<pre style="margin: 0">@Session.Serialize()</pre>
+					</MudPaper>
+				</MudTabPanel>
+			</MudTabs>
+		</MudForm>
+	</CascadingValue>
+</MudStack>
+
+@code {
+	private static readonly IReadOnlyList<ListItemFactory<ModpackModel>> ModpackFactories = [new("релиз сборки", () => new ModpackModel())];
+	private static readonly IReadOnlyList<ListItemFactory<ModpackChangelogModel>> ChangelogFactories = [new("список изменений", () => new ModpackChangelogModel())];
+	private static readonly IReadOnlyList<ListItemFactory<LauncherModel>> LauncherFactories = [new("лаунчер", () => new LauncherModel())];
+	private static readonly IReadOnlyList<ListItemFactory<GraphPackModel>> GraphPackFactories = [new("графпак", () => new GraphPackModel())];
+	private static readonly IReadOnlyList<ListItemFactory<ModModel>> ModFactories = [new("мод", () => new ModModel())];
+	private static readonly IReadOnlyList<ListItemFactory<InstallComponentModel>> ComponentFactories = [new("компонент", () => new InstallComponentModel())];
+	private static readonly IReadOnlyList<ListItemFactory<PrerequisiteModel>> PrerequisiteFactories = [new("зависимость", () => new PrerequisiteModel())];
+
+	private readonly CancellationTokenSource _disposed = new();
+	private EventCallback _feedChanged;
+	private IReadOnlyList<FeedValidationError> _errors = [];
+	private bool _busy;
+
+	[Parameter]
+	public EventCallback OnSignedOut { get; set; }
+
+	private FeedModel Feed => Session.Feed!;
+
+	public void Dispose()
+	{
+		_disposed.Cancel();
+		_disposed.Dispose();
+	}
+
+	protected override void OnInitialized() => _feedChanged = EventCallback.Factory.Create(this, () => { });
+
+	private static string GraphPackTitle(GraphPackModel graphPack)
+	{
+		var latest = graphPack.Items.Count > 0 ? $" — последняя {graphPack.Items[0].Version}" : string.Empty;
+		return $"{graphPack.Name}{(graphPack.IsDefault ? " (по умолчанию)" : string.Empty)}{latest}";
+	}
+
+	private static string ModTitle(ModModel mod)
+	{
+		var latest = mod.Items.Count > 0 ? $" — последняя {mod.Items[0].Version}" : string.Empty;
+		return $"{mod.Name}{latest}";
+	}
+
+	private async Task SaveAsync(bool overwrite)
+	{
+		_errors = Session.Validate();
+		if (_errors.Count > 0)
+		{
+			return;
+		}
+
+		SaveResult result;
+		_busy = true;
+		try
+		{
+			result = await Session.SaveAsync(overwrite, _disposed.Token);
+		}
+		catch (FeedStorageException e)
+		{
+			Snackbar.Add(e.Message, Severity.Error);
+			return;
+		}
+		finally
+		{
+			_busy = false;
+		}
+
+		if (result == SaveResult.Saved)
+		{
+			Snackbar.Add("Фид сохранён.", Severity.Success);
+			return;
+		}
+
+		var choice = await DialogService.ShowMessageBoxAsync(
+			"Сохранённый фид изменился",
+			"Кто-то сохранил фид после того, как вы его загрузили. Перезаписать чужие изменения своими или отменить свои и загрузить чужие?",
+			yesText: "Перезаписать", noText: "Отменить мои и перезагрузить", cancelText: "Отмена");
+		if (choice == true)
+		{
+			await SaveAsync(overwrite: true);
+		}
+		else if (choice == false)
+		{
+			await LoadStoredAsync();
+		}
+	}
+
+	private async Task ReloadAsync()
+	{
+		if (await ConfirmDiscardAsync("Перезагрузить"))
+		{
+			await LoadStoredAsync();
+		}
+	}
+
+	private async Task RefreshPathsAsync()
+	{
+		_busy = true;
+		try
+		{
+			await Session.RefreshObjectKeysAsync(_disposed.Token);
+			Snackbar.Add($"Файлов в бакете: {Session.ObjectKeys.Count}.", Severity.Info);
+		}
+		catch (FeedStorageException e)
+		{
+			Snackbar.Add(e.Message, Severity.Error);
+		}
+		finally
+		{
+			_busy = false;
+		}
+	}
+
+	private async Task SignOutAsync()
+	{
+		if (await ConfirmDiscardAsync("Выйти"))
+		{
+			Session.SignOut();
+			await OnSignedOut.InvokeAsync();
+		}
+	}
+
+	private async Task LoadStoredAsync()
+	{
+		_busy = true;
+		try
+		{
+			await Session.ReloadAsync(_disposed.Token);
+			_errors = [];
+			Snackbar.Add("Загружен сохранённый фид.", Severity.Info);
+		}
+		catch (FeedStorageException e)
+		{
+			Snackbar.Add(e.Message, Severity.Error);
+		}
+		finally
+		{
+			_busy = false;
+		}
+	}
+
+	private async Task<bool> ConfirmDiscardAsync(string action) =>
+		!Session.HasUnsavedChanges
+		|| await DialogService.ShowMessageBoxAsync(
+			"Несохранённые изменения", "Ваши изменения не сохранены и будут потеряны.", yesText: action, cancelText: "Отмена") == true;
+}

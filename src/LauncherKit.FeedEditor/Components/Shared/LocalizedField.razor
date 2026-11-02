@@ -1,0 +1,88 @@
+@inject FeedSession Session
+
+<MudStack Spacing="2">
+	<MudText Typo="Typo.subtitle2">@Label</MudText>
+	<MudGrid Spacing="2">
+		@foreach (var language in (Value?.Keys.ToArray() ?? []))
+		{
+			<MudItem xs="12" md="6" @key="language">
+				<MudStack Spacing="1">
+					@if (IsPath)
+					{
+						<S3PathField Value="@(Value![language])" ValueChanged="@(text => SetTextAsync(language, text))" Label="@language" Required="true" />
+					}
+					else
+					{
+						<MudTextField T="string" Value="@(Value![language])" ValueChanged="@(text => SetTextAsync(language, text))" Label="@language" Required="true" Lines="2" Variant="Variant.Outlined" Margin="Margin.Dense" />
+					}
+					<MudButton Size="Size.Small" OnClick="@(() => RemoveAsync(language))">Удалить язык @language</MudButton>
+				</MudStack>
+			</MudItem>
+		}
+	</MudGrid>
+	<MudStack Row="true" AlignItems="AlignItems.Center">
+		<MudTextField @bind-Value="_language" Label="Код языка (ru, en, en-US)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+		<MudButton OnClick="AddAsync">Добавить язык</MudButton>
+	</MudStack>
+	@if (_error is not null)
+	{
+		<MudText Color="Color.Error">@_error</MudText>
+	}
+	<MudText Typo="Typo.caption">@(Optional ? "Необязательное поле. Если задано, нужен" : "Обязателен") язык по умолчанию: @Session.Feed?.DefaultLanguage</MudText>
+</MudStack>
+
+@code {
+	[Parameter] public IReadOnlyDictionary<string, string>? Value { get; set; }
+	[Parameter] public EventCallback<IReadOnlyDictionary<string, string>?> ValueChanged { get; set; }
+	[Parameter, EditorRequired] public required string Label { get; set; }
+	[Parameter] public bool IsPath { get; set; }
+	[Parameter] public bool Optional { get; set; }
+	[CascadingParameter(Name = FeedChangedCascade.Name)] public EventCallback FeedChanged { get; set; }
+	private string? _language;
+	private string? _error;
+
+
+	// Required fields retain one mutable dictionary; optional maps may be replaced to enable/disable the field.
+	private Dictionary<string, string> EditableValues() =>
+		Value as Dictionary<string, string> ?? (Value is null ? [] : new Dictionary<string, string>(Value));
+	private async Task AddAsync()
+	{
+		var language = _language?.Trim();
+		if (FeedRules.Language(language) is { } error)
+		{
+			_error = error;
+			return;
+		}
+		var values = EditableValues();
+		if (values.Keys.Any(x => string.Equals(x, language, StringComparison.OrdinalIgnoreCase)))
+		{
+			_error = "Этот язык уже добавлен.";
+			return;
+		}
+		values.Add(language!, string.Empty);
+		Value = values;
+		_language = null;
+		_error = null;
+		await ValueChanged.InvokeAsync(values);
+		await FeedChanged.InvokeAsync();
+	}
+
+	private async Task SetTextAsync(string language, string? text)
+	{
+		var values = EditableValues();
+		values[language] = text ?? string.Empty;
+		Value = values;
+		await ValueChanged.InvokeAsync(Value);
+		await FeedChanged.InvokeAsync();
+	}
+
+	private async Task RemoveAsync(string language)
+	{
+		var values = EditableValues();
+		values.Remove(language);
+		Value = values;
+		if (Optional && Value.Count == 0) Value = null;
+		await ValueChanged.InvokeAsync(Value);
+		await FeedChanged.InvokeAsync();
+	}
+}

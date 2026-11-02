@@ -1,0 +1,146 @@
+@typeparam TItem where TItem : class
+@inject IDialogService DialogService
+
+@* A plain element, so the scoped styles in ListEditor.razor.css can reach the MudBlazor panels through ::deep. *@
+<div class="list-editor">
+	<MudStack Spacing="2">
+		<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+			@if (Factories.Count == 1)
+			{
+				<MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+						   StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => Add(Factories[0]))">
+					Добавить @Factories[0].Label
+				</MudButton>
+			}
+			else
+			{
+				<MudMenu Label="Добавить" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+						 StartIcon="@Icons.Material.Filled.Add" EndIcon="@Icons.Material.Filled.KeyboardArrowDown">
+					@foreach (var factory in Factories)
+					{
+						<MudMenuItem OnClick="@(() => Add(factory))">@factory.Label</MudMenuItem>
+					}
+				</MudMenu>
+			}
+			<MudText Typo="Typo.caption" Class="mud-text-secondary">Записей: @Items.Count</MudText>
+		</MudStack>
+
+		@if (Items.Count > 0)
+		{
+			<MudExpansionPanels MultiExpansion="true" Elevation="0" Outlined="true">
+				@for (var i = 0; i < Items.Count; i++)
+				{
+					var index = i;
+					var item = Items[i];
+					<MudExpansionPanel @key="item" Expanded="@_expanded.Contains(item)" ExpandedChanged="@(expanded => SetExpanded(item, expanded))"
+									   Dense="true" Gutters="true">
+						<TitleContent>
+							<div class="d-flex align-center gap-1">
+								<MudText Class="flex-grow-1">@Title(item)</MudText>
+								<div @onclick:stopPropagation="true" class="d-flex">
+									<MudTooltip Text="Переместить выше">
+										<MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" aria-label="Переместить выше"
+													   Disabled="@(index == 0)" OnClick="@(() => Move(index, -1))" />
+									</MudTooltip>
+									<MudTooltip Text="Переместить ниже">
+										<MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" aria-label="Переместить ниже"
+													   Disabled="@(index == Items.Count - 1)" OnClick="@(() => Move(index, 1))" />
+									</MudTooltip>
+									<MudTooltip Text="Дублировать">
+										<MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" aria-label="Дублировать"
+													   OnClick="@(() => Duplicate(index))" />
+									</MudTooltip>
+									<MudTooltip Text="Удалить">
+										<MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="Удалить"
+													   OnClick="@(() => DeleteAsync(index))" />
+									</MudTooltip>
+								</div>
+							</div>
+						</TitleContent>
+						<ChildContent>
+							@* Collapsed entries are not rendered, which keeps large feeds responsive. *@
+							@if (_expanded.Contains(item))
+							{
+								@ItemContent(item)
+							}
+						</ChildContent>
+					</MudExpansionPanel>
+				}
+			</MudExpansionPanels>
+		}
+	</MudStack>
+</div>
+
+@code {
+	private readonly HashSet<TItem> _expanded = new(ReferenceEqualityComparer.Instance);
+
+	/// <summary>The edited list; the editor mutates it in place.</summary>
+	[Parameter, EditorRequired]
+	public required List<TItem> Items { get; set; }
+
+	/// <summary>One factory renders an "Add" button; several render an "Add" menu.</summary>
+	[Parameter, EditorRequired]
+	public required IReadOnlyList<ListItemFactory<TItem>> Factories { get; set; }
+
+	[Parameter, EditorRequired]
+	public required Func<TItem, string> Title { get; set; }
+
+	[Parameter, EditorRequired]
+	public required RenderFragment<TItem> ItemContent { get; set; }
+
+	/// <summary>
+	/// Adds new entries at the end and puts copies below their originals, for lists ordered oldest-first rather than newest-first.
+	/// </summary>
+	[Parameter]
+	public bool AddToEnd { get; set; }
+
+	/// <summary>Re-renders the whole feed editor after structural changes, so titles that summarize this list stay current.</summary>
+	[CascadingParameter(Name = FeedChangedCascade.Name)]
+	public EventCallback Changed { get; set; }
+
+	// By default new entries go first: most feed lists are kept newest-first.
+	private Task Add(ListItemFactory<TItem> factory) => Insert(AddToEnd ? Items.Count : 0, factory.Create());
+
+	// The copy goes on the side new entries are added to, so copying the newest entry yields a new newest entry.
+	private Task Duplicate(int index) => Insert(AddToEnd ? index + 1 : index, FeedJson.Clone(Items[index]));
+
+	private Task Insert(int index, TItem item)
+	{
+		Items.Insert(index, item);
+		_expanded.Add(item);
+		return Changed.InvokeAsync();
+	}
+
+	private Task Move(int index, int offset)
+	{
+		(Items[index], Items[index + offset]) = (Items[index + offset], Items[index]);
+		return Changed.InvokeAsync();
+	}
+
+	private async Task DeleteAsync(int index)
+	{
+		var item = Items[index];
+		var confirmed = await DialogService.ShowMessageBoxAsync(
+			"Удаление записи", $"Удалить «{Title(item)}»?", yesText: "Удалить", cancelText: "Отмена");
+		if (confirmed != true)
+		{
+			return;
+		}
+
+		Items.Remove(item);
+		_expanded.Remove(item);
+		await Changed.InvokeAsync();
+	}
+
+	private void SetExpanded(TItem item, bool expanded)
+	{
+		if (expanded)
+		{
+			_expanded.Add(item);
+		}
+		else
+		{
+			_expanded.Remove(item);
+		}
+	}
+}

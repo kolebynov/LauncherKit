@@ -1,0 +1,16 @@
+<MudAlert Severity="Severity.Info">Legacy feed V11: редактируется только список лаунчеров. Остальные поля сохраняются без интерпретации и проверки.</MudAlert>
+<ListEditor TItem="LegacyLauncherModel" Items="Feed.Launchers" Factories="Factories" Title="@(item => $"{item.Version} — {item.DownloadInfo.S3Path}")">
+	<ItemContent Context="launcher">
+		<MudStack Spacing="2">
+			<MudTextField @bind-Value="launcher.Version" Label="Версия" Required="true" Validation="@FeedRules.Version" Variant="Variant.Outlined" Margin="Margin.Dense" />
+			<S3PathField @bind-Value="launcher.ChangelogPath" Label="Путь к списку изменений (необязательно)" />
+			<MudSwitch @bind-Value="launcher.SupportsNewStbVersions" Label="Нужен для новых версий сборки" Color="Color.Primary" />
+			<DownloadInfoEditor DownloadInfo="launcher.DownloadInfo" Label="Лаунчер" />
+		</MudStack>
+	</ItemContent>
+</ListEditor>
+
+@code {
+	[Parameter, EditorRequired] public required LegacyFeedModel Feed { get; set; }
+	private static readonly IReadOnlyList<ListItemFactory<LegacyLauncherModel>> Factories = [new("лаунчер", () => new LegacyLauncherModel())];
+}

@@ -1,0 +1,58 @@
+<MudStack Spacing="3">
+	<MudGrid Spacing="2">
+		<MudItem xs="12" sm="6">
+			<MudTextField @bind-Value="Item.Version" Label="Версия" Required="true" Validation="@FeedRules.Version"
+						  Variant="Variant.Outlined" Margin="Margin.Dense" />
+		</MudItem>
+		<MudItem xs="12" sm="6">
+			<MudTextField @bind-Value="Item.SupportedModpackVersion" Label="Поддерживаемые версии сборки" Required="true"
+						  Validation="@FeedRules.VersionRange" HelperText="Например, [3.1.0, 3.2.0)"
+						  Variant="Variant.Outlined" Margin="Margin.Dense" />
+		</MudItem>
+		<MudItem xs="12">
+			<MudSwitch @bind-Value="Item.SupportsUninstall" Label="Можно удалить" Color="Color.Primary" />
+			<MudText Typo="Typo.caption">
+				Лаунчер предложит удалить эту версию: откатит шаги с «Можно откатить» в обратном порядке и удалит сам мод. Включайте, только если это полностью удаляет мод.
+			</MudText>
+		</MudItem>
+	</MudGrid>
+
+	<DownloadInfoEditor DownloadInfo="Item.ArchiveDownloadInfo" Label="Архив мода" />
+	<MudText Typo="Typo.caption" Class="mud-text-secondary mt-n2">
+		Основной архив мода. Лаунчер скачивает его и устанавливает как мод до шагов установки: для FOMOD-архива пользователь выбирает опции, любой другой распаковывается целиком в папку мода Mod Organizer.
+	</MudText>
+	<ModPlacementEditor @bind-Placement="Item.Placement" />
+
+	<ExpanderSection Title="Дополнительные шаги установки" Count="@Item.InstallSteps.Count"
+					 Description="Необязательны. Выполняются по порядку после установки основного архива. Условия ссылаются на шаги по номеру, поэтому после перемещения шагов проверьте условия.">
+		<ModInstallStepsEditor Steps="Item.InstallSteps" />
+	</ExpanderSection>
+
+	<ExpanderSection Title="Патчи" Count="@Item.Patches.Count"
+					 Description="Необязательны. Версия патча выше версии мода и ниже следующей версии мода. Новая установка ставит мод и все патчи по порядку версий; установленная версия этого мода обновляется только недостающими патчами, без переустановки. После каждого патча лаунчер записывает его версию в meta.ini мода.">
+		<ListEditor TItem="ModPatchModel" Items="Item.Patches" Factories="PatchFactories"
+					Title="@(patch => $"Патч {patch.Version}")">
+			<ItemContent Context="patch">
+				<MudStack Spacing="2">
+					<MudTextField @bind-Value="patch.Version" Label="Версия" Required="true" Validation="@FeedRules.Version"
+								  Variant="Variant.Outlined" Margin="Margin.Dense" />
+					<DownloadInfoEditor DownloadInfo="patch.DownloadInfo" Label="Архив патча" />
+					<MudText Typo="Typo.caption" Class="mud-text-secondary mt-n2">
+						Распаковывается целиком в папку мода Mod Organizer.
+					</MudText>
+					<ExpanderSection Title="Дополнительные шаги установки" Count="@patch.InstallSteps.Count" TitleTypo="Typo.subtitle2"
+									 Description="Необязательны. Выполняются по порядку после распаковки патча. При удалении или обновлении мода шаги с «Можно откатить» откатываются для всех установленных патчей, начиная с последнего, до отката шагов версии. Условия ссылаются на шаги по номеру, поэтому после перемещения шагов проверьте условия.">
+						<ModInstallStepsEditor Steps="patch.InstallSteps" />
+					</ExpanderSection>
+				</MudStack>
+			</ItemContent>
+		</ListEditor>
+	</ExpanderSection>
+</MudStack>
+
+@code {
+	private static readonly IReadOnlyList<ListItemFactory<ModPatchModel>> PatchFactories = [new("патч", () => new ModPatchModel())];
+
+	[Parameter, EditorRequired]
+	public required ModItemModel Item { get; set; }
+}

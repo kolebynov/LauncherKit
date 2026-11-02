@@ -1,0 +1,851 @@
+{
+  "Modpacks": [
+    {
+      "InitialVersion": "3.1.0",
+      "Version": "3.1.0",
+      "DownloadInfo": {
+        "S3Path": "STB/3.0/Skyrim True Believer [3.1.0].7z",
+        "Hash": "9DBD20E17BD455D5377BE57692578FDDF9D6D64109AC7280A9A9636CA7E09444"
+      },
+      "Patches": [
+        {
+          "Version": "3.1.6",
+          "RequireNewGame": false,
+          "DownloadInfo": {
+            "S3Path": "STB/3.0/Skyrim True Believer Patch [3.1.6].7z"
+          },
+          "InstallSteps": [
+            {
+              "Actions": [
+                {
+                  "$type": "RemoveFileSystemItem",
+                  "Paths": [
+                    "[STB] Mod Organizer\\mods\\STB\\NetScriptFramework",
+                    "[STB] Mod Organizer\\mods\\NetScriptFramework SkyrimSE",
+                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\REQ_KnockdownAttacks.pex",
+                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\Source\\REQ_KnockdownAttacks.psc",
+                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\REQ_StaminaConsumption.pex",
+                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\Source\\REQ_StaminaConsumption.psc"
+                  ],
+                  "FailOnFailedDelete": false
+                }
+              ],
+              "CanRollback": false
+            }
+          ]
+        },
+        {
+          "Version": "3.1.5",
+          "RequireNewGame": false,
+          "DownloadInfo": {
+            "S3Path": "STB/3.0/Skyrim True Believer Patch [3.1.5].7z"
+          },
+          "InstallSteps": [
+            {
+              "Actions": [
+                {
+                  "$type": "RemoveFileSystemItem",
+                  "Paths": [
+                    "[STB] Mod Organizer\\mods\\STB\\interface\\buttonTradeAll.swf",
+                    "[STB] Mod Organizer\\mods\\STB Widgets Untarnished UI\\interface\\buttonTradeAll.swf",
+                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\aaMZ_buttonTradeAll.pex",
+                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\Source\\aaMZ_buttonTradeAll.psc",
+                    "[STB] Mod Organizer\\mods\\PolarisRebalance\\Projectile.esp"
+                  ],
+                  "FailOnFailedDelete": false
+                }
+              ],
+              "CanRollback": false
+            }
+          ]
+        },
+        {
+          "Version": "3.1.4",
+          "RequireNewGame": false,
+          "DownloadInfo": {
+            "S3Path": "STB/3.0/Skyrim True Believer Patch [3.1.4].7z"
+          }
+        },
+        {
+          "Version": "3.1.3",
+          "RequireNewGame": true,
+          "DownloadInfo": {
+            "S3Path": "STB/3.0/Skyrim True Believer Patch [3.1.3].7z"
+          },
+          "InstallSteps": [
+            {
+              "Actions": [
+                {
+                  "$type": "RemoveFileSystemItem",
+                  "Paths": [
+                    "[STB] Mod Organizer\\mods\\STB\\SKSE\\Plugins\\PortalLightsRuntimePatcher.dll",
+                    "[STB] Mod Organizer\\mods\\STB\\SKSE\\Plugins\\PortalLightsRuntimePatcher.ini",
+                    "[STB] Mod Organizer\\mods\\STB\\SKSE\\Plugins\\PortalLightsRuntimePatcher.pdb",
+                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\aaMZ_SpeechMehaniksScript.pex",
+                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\Source\\aaMZ_SpeechMehaniksScript.psc"
+                  ],
+                  "FailOnFailedDelete": false
+                }
+              ],
+              "CanRollback": false
+            }
+          ]
+        },
+        {
+          "Version": "3.1.2",
+          "DownloadInfo": {
+            "S3Path": "STB/3.0/Skyrim True Believer Patch [3.1.2].7z"
+          },
+          "InstallSteps": [
+            {
+              "Actions": [
+                {
+                  "$type": "RemoveFileSystemItem",
+                  "Paths": [
+                    "[STB] Mod Organizer\\mods\\STB\\NetScriptFramework\\Plugins\\GamePlayTweaks.dll",
+                    "[STB] Mod Organizer\\mods\\STB\\NetScriptFramework\\Plugins\\GamePlayTweaks.pdb",
+                    "[STB] Mod Organizer\\mods\\STB\\NetScriptFramework\\Plugins\\Supporter.dll",
+                    "[STB] Mod Organizer\\mods\\STB\\NetScriptFramework\\Plugins\\Supporter.pdb",
+                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\aaMZ_NegativeMagicDebuff.pex",
+                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\source\\aaMZ_NegativeMagicDebuff.psc",
+                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\aaMZ_Encumbarance.pex",
+                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\source\\aaMZ_Encumbarance.psc"
+                  ],
+                  "FailOnFailedDelete": false
+                }
+              ],
+              "CanRollback": false
+            }
+          ]
+        },
+        {
+          "Version": "3.1.1",
+          "DownloadInfo": {
+            "S3Path": "STB/3.0/Skyrim True Believer Patch [3.1.1].7z"
+          }
+        }
+      ]
+    }
+  ],
+  "GraphPacks": [
+    {
+      "Name": "MD's Graphics Lite",
+      "LogoPath": "MDGraphicsLite/MDGraphicsLiteLogo.jpg",
+      "DescriptionPath": {
+        "ru": "MDGraphicsLite/MDGraphicsLiteDescription2.md"
+      },
+      "Items": [
+        {
+          "Version": "1.17.0",
+          "ArchiveDownloadInfo": {
+            "S3Path": "MDGraphicsLite/1.17.0/MD's Graphics Lite - Part 1 [1.17.0].7z",
+            "Hash": "84B7CB6C0097940B0B7C71B6FB11825CF2C4C42465EA6BD8660033179D510409"
+          },
+          "InstallSteps": [
+            {
+              "Actions": [
+                {
+                  "$type": "ActivateMods",
+                  "Activate": false,
+                  "Mods": [
+                    "MD's Graphics Lite"
+                  ]
+                },
+                {
+                  "$type": "RemoveFileSystemItem",
+                  "Paths": [
+                    "[STB] Mod Organizer\\overwrite\\ShaderCache",
+                    "[STB] Mod Organizer\\profiles\\STB - MD's Graphics Lite"
+                  ]
+                },
+                {
+                  "$type": "ExtractArchive",
+                  "DownloadInfo": {
+                    "S3Path": "MDGraphicsLite/1.17.0/MD's Graphics Lite - Part 2 [1.17.0].7z"
+                  },
+                  "DestinationPath": ""
+                }
+              ],
+              "CanRollback": false
+            },
+            {
+              "Actions": [
+                {
+                  "$type": "ChangeProfile",
+                  "ProfileName": "STB - MD's Graphics Lite"
+                },
+                {
+                  "$type": "ActivateMods",
+                  "Activate": true,
+                  "Mods": [
+                    "MD's Graphics Lite"
+                  ]
+                }
+              ],
+              "CanRollback": true
+            }
+          ],
+          "SupportedModpackVersion": "[3.1.0, 3.2.0)",
+          "SupportsUninstall": true
+        }
+      ],
+      "Recommendation": {
+        "ru": "Рекомендуемый вариант. Видеокарта: 4+ ГБ видеопамяти"
+      },
+      "IsDefault": true,
+      "IsDiscontinued": false
+    },
+    {
+      "Name": "MD's Graphics Full",
+      "LogoPath": "MDGraphicsFull/MDGraphicsFullLogo.jpg",
+      "DescriptionPath": {
+        "ru": "MDGraphicsFull/MDGraphicsFullDescription.md"
+      },
+      "Items": [
+        {
+          "Version": "1.17.0",
+          "ArchiveDownloadInfo": {
+            "S3Path": "MDGraphicsFull/1.17.0/MD's Graphics Full - Part 1 [1.17.0].7z",
+            "Hash": "ad3e481b84fc26d18ebe97b433a94585b077ddbfcefd48f2bfc0f377e7b10307"
+          },
+          "InstallSteps": [
+            {
+              "Actions": [
+                {
+                  "$type": "ActivateMods",
+                  "Activate": false,
+                  "Mods": [
+                    "MD's Graphics Full"
+                  ]
+                },
+                {
+                  "$type": "RemoveFileSystemItem",
+                  "Paths": [
+                    "[STB] Mod Organizer\\overwrite\\ShaderCache",
+                    "[STB] Mod Organizer\\profiles\\STB - MD's Graphics Full"
+                  ]
+                },
+                {
+                  "$type": "ExtractArchive",
+                  "DownloadInfo": {
+                    "S3Path": "MDGraphicsFull/1.17.0/MD's Graphics Full - Part 2 [1.17.0].7z"
+                  },
+                  "DestinationPath": ""
+                }
+              ],
+              "CanRollback": false
+            },
+            {
+              "Actions": [
+                {
+                  "$type": "ChangeProfile",
+                  "ProfileName": "STB - MD's Graphics Full"
+                },
+                {
+                  "$type": "ActivateMods",
+                  "Activate": true,
+                  "Mods": [
+                    "MD's Graphics Full"
+                  ]
+                }
+              ],
+              "CanRollback": true
+            }
+          ],
+          "SupportedModpackVersion": "[3.1.0, 3.2.0)",
+          "SupportsUninstall": true
+        }
+      ],
+      "Recommendation": {
+        "ru": "Видеокарта: 8+ ГБ видеопамяти"
+      },
+      "IsDefault": false,
+      "IsDiscontinued": false
+    },
+    {
+      "Name": "Single Archive Graphics",
+      "LogoPath": "SingleArchive/Logo.jpg",
+      "DescriptionPath": {
+        "ru": "SingleArchive/Description.md"
+      },
+      "Items": [
+        {
+          "Version": "1.0.0",
+          "ArchiveDownloadInfo": {
+            "S3Path": "SingleArchive/1.0.0/Single Archive Graphics [1.0.0].7z"
+          },
+          "InstallSteps": [
+            {
+              "Actions": [
+                {
+                  "$type": "RemoveFileSystemItem",
+                  "Paths": [
+                    "[STB] Mod Organizer\\overwrite\\ShaderCache"
+                  ]
+                }
+              ],
+              "CanRollback": false
+            }
+          ],
+          "SupportedModpackVersion": "[3.1.0, 3.2.0)",
+          "SupportsUninstall": true
+        }
+      ],
+      "Recommendation": {
+        "ru": "Видеокарта: 6+ ГБ видеопамяти"
+      },
+      "IsDefault": true,
+      "IsDiscontinued": true
+    }
+  ],
+  "SkyrimDownloadInfo": {
+    "S3Path": "Skyrim.7z",
+    "Hash": "095E636082E0034D104ADAEFAF865A5514780DE76354DE65BECE768D9E3406B9"
+  },
+  "BetaVersions": {
+    "25CCDE2272CA9403CAA61F0C6114BCB9A79EBD0DF8D3BC5364ADF6C17D65105A": "[3.0.0-beta.1, 3.0.0-rc.3)",
+    "1D1676533FB6BBD74084A85CB66B4E06AA565104D418875B5B2D6E0C723C5DBE": "[3.0.0-beta.1, 9.0.0]"
+  },
+  "SevenZipDownloadInfo": {
+    "S3Path": "7z.zip"
+  },
+  "Launchers": [
+    {
+      "DownloadInfo": {
+        "S3Path": "Launchers/STBLauncher_1.19.1.exe"
+      },
+      "Version": "1.19.1"
+    },
+    {
+      "DownloadInfo": {
+        "S3Path": "Launchers/STBLauncher_1.19.0.exe"
+      },
+      "Version": "1.19.0"
+    },
+    {
+      "DownloadInfo": {
+        "S3Path": "Launchers/STBLauncher_1.18.0.exe"
+      },
+      "Version": "1.18.0"
+    },
+    {
+      "DownloadInfo": {
+        "S3Path": "Launchers/STBLauncher_1.17.0.exe"
+      },
+      "Version": "1.17.0"
+    },
+    {
+      "DownloadInfo": {
+        "S3Path": "Launchers/STBLauncher_1.16.0.exe"
+      },
+      "Version": "1.16.0"
+    },
+    {
+      "DownloadInfo": {
+        "S3Path": "Launchers/STBLauncher_1.15.3.exe"
+      },
+      "Version": "1.15.3"
+    },
+    {
+      "DownloadInfo": {
+        "S3Path": "Launchers/STBLauncher_1.15.2.exe"
+      },
+      "Version": "1.15.2"
+    },
+    {
+      "DownloadInfo": {
+        "S3Path": "Launchers/STBLauncher_1.15.1.exe"
+      },
+      "Version": "1.15.1"
+    },
+    {
+      "DownloadInfo": {
+        "S3Path": "Launchers/STBLauncher_1.15.0.exe"
+      },
+      "Version": "1.15.0"
+    }
+  ],
+  "ModpackChangelogs": [
+    {
+      "Path": {
+        "ru": "Changelogs/STB/3.0/3.1.6.md"
+      },
+      "Version": "3.1.6"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/3.0/3.1.5.md"
+      },
+      "Version": "3.1.5"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/3.0/3.1.4.md"
+      },
+      "Version": "3.1.4"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/3.0/3.1.3.md"
+      },
+      "Version": "3.1.3"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/3.0/3.1.2.md"
+      },
+      "Version": "3.1.2"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/3.0/3.1.1.md"
+      },
+      "Version": "3.1.1"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/3.0/3.1.0.md"
+      },
+      "Version": "3.1.0"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/3.0/3.0.7.md"
+      },
+      "Version": "3.0.7"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/3.0/3.0.6.md"
+      },
+      "Version": "3.0.6"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/3.0/3.0.5.md"
+      },
+      "Version": "3.0.5"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/3.0/3.0.4.md"
+      },
+      "Version": "3.0.4"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/3.0/3.0.3.md"
+      },
+      "Version": "3.0.3"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/3.0/3.0.2.md"
+      },
+      "Version": "3.0.2"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/3.0/3.0.1.md"
+      },
+      "Version": "3.0.1"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/3.0/3.0.0.md"
+      },
+      "Version": "3.0.0"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/2.6/2.6.3.md"
+      },
+      "Version": "2.6.3"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/2.6/2.6.2.md"
+      },
+      "Version": "2.6.2"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/2.6/2.6.1.md"
+      },
+      "Version": "2.6.1"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/2.6/2.6.0.md"
+      },
+      "Version": "2.6.0"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/2.5/2.5.0.md"
+      },
+      "Version": "2.5.0"
+    },
+    {
+      "Path": {
+        "ru": "Changelogs/STB/2.4/2.4.0.md"
+      },
+      "Version": "2.4.0"
+    }
+  ],
+  "Mods": [
+    {
+      "DescriptionPath": {
+        "ru": "Mods/WispShelterStb/Description.md"
+      },
+      "DisplayName": {
+        "ru": "Убежка от Wisp0220"
+      },
+      "Items": [
+        {
+          "ArchiveDownloadInfo": {
+            "S3Path": "Mods/WispShelterStb/WispShelterStb_1.1.5.zip"
+          },
+          "InstallSteps": [
+            {
+              "Actions": [
+                {
+                  "$type": "ActivateMods",
+                  "Activate": false,
+                  "Mods": [
+                    "STB Hub"
+                  ]
+                }
+              ],
+              "CanRollback": true
+            }
+          ],
+          "SupportedModpackVersion": "[3.0.0-beta.10, 3.2.0)",
+          "Version": "1.1.5"
+        },
+        {
+          "ArchiveDownloadInfo": {
+            "S3Path": "Mods/WispShelterStb/WispShelterStb_1.1.2.zip"
+          },
+          "InstallSteps": [
+            {
+              "Actions": [
+                {
+                  "$type": "ActivateMods",
+                  "Activate": false,
+                  "Mods": [
+                    "STB Hub - Legacy",
+                    "STB Hub"
+                  ]
+                }
+              ],
+              "CanRollback": true
+            }
+          ],
+          "SupportedModpackVersion": "[2.6.0, 2.7.0)",
+          "Version": "1.1.2"
+        }
+      ],
+      "LogoPath": "Mods/WispShelterStb/Logo.jpg",
+      "Name": "WispShelterStb"
+    },
+    {
+      "DescriptionPath": {
+        "ru": "Mods/WispRouglikeStb/Description.md"
+      },
+      "DisplayName": {
+        "ru": "Коты от Wisp0220"
+      },
+      "Items": [
+        {
+          "ArchiveDownloadInfo": {
+            "S3Path": "Mods/WispRouglikeStb/WispRouglikeStb_1.3.2.zip"
+          },
+          "InstallSteps": [
+            {
+              "Actions": [
+                {
+                  "$type": "SelectRequiredMod",
+                  "Mods": [
+                    "STB Hub",
+                    "STB Hub - Legacy",
+                    "WispShelterStb"
+                  ]
+                }
+              ]
+            },
+            {
+              "Actions": [
+                {
+                  "$type": "ActivateMods",
+                  "Activate": true,
+                  "Mods": [
+                    "STB Hub"
+                  ]
+                },
+                {
+                  "$type": "ActivatePlugins",
+                  "Activate": false,
+                  "Plugins": [
+                    "WispRLSTBHubLegacyAdapter.esp",
+                    "WispRLHubAdapter.esp"
+                  ]
+                }
+              ],
+              "Condition": {
+                "Key": "SelectedMod",
+                "Operator": "Equal",
+                "StepIndex": 0,
+                "Value": "STB Hub"
+              }
+            },
+            {
+              "Actions": [
+                {
+                  "$type": "ActivateMods",
+                  "Activate": true,
+                  "Mods": [
+                    "STB Hub - Legacy"
+                  ]
+                },
+                {
+                  "$type": "ActivatePlugins",
+                  "Activate": false,
+                  "Plugins": [
+                    "WispRLHubAdapter.esp",
+                    "WispRLNewHubAdapter.esp"
+                  ]
+                }
+              ],
+              "Condition": {
+                "Key": "SelectedMod",
+                "Operator": "Equal",
+                "StepIndex": 0,
+                "Value": "STB Hub - Legacy"
+              }
+            },
+            {
+              "Actions": [
+                {
+                  "$type": "ActivateMods",
+                  "Activate": true,
+                  "Mods": [
+                    "WispShelterStb"
+                  ]
+                },
+                {
+                  "$type": "ActivatePlugins",
+                  "Activate": false,
+                  "Plugins": [
+                    "WispRLSTBHubLegacyAdapter.esp",
+                    "WispRLNewHubAdapter.esp"
+                  ]
+                }
+              ],
+              "Condition": {
+                "Key": "SelectedMod",
+                "Operator": "Equal",
+                "StepIndex": 0,
+                "Value": "WispShelterStb"
+              }
+            }
+          ],
+          "SupportedModpackVersion": "[3.0.0-beta.10, 3.2.0)",
+          "Version": "1.3.2"
+        },
+        {
+          "ArchiveDownloadInfo": {
+            "S3Path": "Mods/WispRouglikeStb/WispRouglikeStb_1.2.0.zip"
+          },
+          "InstallSteps": [
+            {
+              "Actions": [
+                {
+                  "$type": "SelectRequiredMod",
+                  "Mods": [
+                    "STB Hub",
+                    "STB Hub - Legacy",
+                    "WispShelterStb"
+                  ]
+                }
+              ]
+            },
+            {
+              "Actions": [
+                {
+                  "$type": "ActivateMods",
+                  "Activate": true,
+                  "Mods": [
+                    "STB Hub"
+                  ]
+                },
+                {
+                  "$type": "ActivatePlugins",
+                  "Activate": false,
+                  "Plugins": [
+                    "WispRLSTBHubLegacyAdapter.esp",
+                    "WispRLHubAdapter.esp"
+                  ]
+                }
+              ],
+              "Condition": {
+                "Key": "SelectedMod",
+                "Operator": "Equal",
+                "StepIndex": 0,
+                "Value": "STB Hub"
+              }
+            },
+            {
+              "Actions": [
+                {
+                  "$type": "ActivateMods",
+                  "Activate": true,
+                  "Mods": [
+                    "STB Hub - Legacy"
+                  ]
+                },
+                {
+                  "$type": "ActivatePlugins",
+                  "Activate": false,
+                  "Plugins": [
+                    "WispRLHubAdapter.esp",
+                    "WispRLNewHubAdapter.esp"
+                  ]
+                }
+              ],
+              "Condition": {
+                "Key": "SelectedMod",
+                "Operator": "Equal",
+                "StepIndex": 0,
+                "Value": "STB Hub - Legacy"
+              }
+            },
+            {
+              "Actions": [
+                {
+                  "$type": "ActivateMods",
+                  "Activate": true,
+                  "Mods": [
+                    "WispShelterStb"
+                  ]
+                },
+                {
+                  "$type": "ActivatePlugins",
+                  "Activate": false,
+                  "Plugins": [
+                    "WispRLSTBHubLegacyAdapter.esp",
+                    "WispRLNewHubAdapter.esp"
+                  ]
+                }
+              ],
+              "Condition": {
+                "Key": "SelectedMod",
+                "Operator": "Equal",
+                "StepIndex": 0,
+                "Value": "WispShelterStb"
+              }
+            }
+          ],
+          "SupportedModpackVersion": "[2.6.0, 2.7.0)",
+          "Version": "1.2.0"
+        }
+      ],
+      "LogoPath": "Mods/WispRouglikeStb/Logo.jpg",
+      "Name": "WispRouglikeStb"
+    },
+    {
+      "DescriptionPath": {
+        "ru": "Mods/STB_MKO/Description.md"
+      },
+      "DisplayName": {
+        "ru": "MCO от Yosh1m"
+      },
+      "LogoPath": "Mods/STB_MKO/Logo3.jpg",
+      "Name": "STB_MKO",
+      "Items": [
+        {
+          "SupportedModpackVersion": "[3.1.0, 3.2.0)",
+          "Version": "1.4.2",
+          "ArchiveDownloadInfo": {
+            "S3Path": "Mods/STB_MKO/STB_MKO_1.4.2.7z"
+          },
+          "InstallSteps": [
+            {
+              "CanRollback": true,
+              "Actions": [
+                {
+                  "$type": "ActivateMods",
+                  "Activate": false,
+                  "Mods": [
+                    "Dual Wield Addon"
+                  ]
+                },
+                {
+                  "$type": "ExtractArchive",
+                  "DownloadInfo": {
+                    "S3Path": "Mods/STB_MKO/STB_MKO_1.4.2.7z"
+                  },
+                  "DestinationPath": "[STB] Mod Organizer"
+                },
+                {
+                  "$type": "ActivateMods",
+                  "Activate": true,
+                  "Mods": [
+                    "STB_MKO"
+                  ]
+                },
+                {
+                  "$type": "MergePlugins",
+                  "DownloadInfo": {
+                    "S3Path": "Mods/STB_MKO/STB_MKO_1.4.2_plugins.txt"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "DefaultLanguage": "ru",
+  "InstallComponents": [
+    {
+      "Id": "graph-pack",
+      "Kind": "GraphPack",
+      "Title": {
+        "ru": "Графпак",
+        "en": "Graphics pack"
+      },
+      "Description": {
+        "ru": "Установить графпак.",
+        "en": "Install a graphics pack."
+      },
+      "SupportedModpackVersion": "(3.1.9, )",
+      "Order": 0
+    },
+    {
+      "Id": "wisp-shelter",
+      "Kind": "Mod",
+      "ModName": "WispShelterStb",
+      "Title": {
+        "ru": "Убежище Виспа",
+        "en": "Wisp shelter"
+      },
+      "Description": {
+        "ru": "Установить убежище Виспа.",
+        "en": "Install Wisp shelter."
+      },
+      "SupportedModpackVersion": "[3.1.0, )",
+      "Order": 1
+    }
+  ],
+  "Prerequisites": [
+    {
+      "Id": "directx9",
+      "DownloadInfo": {
+        "S3Path": "Prerequisites/dxwebsetup.exe"
+      },
+      "Arguments": "/silent"
+    }
+  ]
+}

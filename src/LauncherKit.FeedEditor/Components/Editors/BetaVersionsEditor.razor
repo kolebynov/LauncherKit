@@ -1,0 +1,106 @@
+@inject IDialogService DialogService
+
+<MudStack Spacing="3">
+	<MudText Typo="Typo.subtitle1">Роли спонсоров</MudText>
+	<MudText Typo="Typo.body2" Class="mud-text-secondary">
+		Пользователи с привязанным в лаунчере Discord и любой из этих ролей на сервере сборки получают без бета-кода
+		предрелизные версии сборки, отмеченные «Доступна спонсорам».
+	</MudText>
+	<StringListEditor Label="ID ролей" Items="SponsorRoleIds"
+					  HelperText="По одному ID в строке: в Discord ПКМ по роли → «Копировать ID роли» (нужен режим разработчика)" />
+
+	<MudText Typo="Typo.subtitle1">Роли разработчиков</MudText>
+	<MudText Typo="Typo.body2" Class="mud-text-secondary">
+		Пользователи с привязанным в лаунчере Discord и любой из этих ролей на сервере сборки получают без бета-кода
+		все предрелизные версии сборки, независимо от «Доступна спонсорам».
+	</MudText>
+	<StringListEditor Label="ID ролей" Items="DeveloperRoleIds"
+					  HelperText="По одному ID в строке: в Discord ПКМ по роли → «Копировать ID роли» (нужен режим разработчика)" />
+
+	<MudText Typo="Typo.subtitle1">Бета-коды</MudText>
+	<MudText Typo="Typo.body2" Class="mud-text-secondary">
+		Предрелизная версия сборки из диапазона ниже предлагается пользователям, которые ввели подходящий бета-код,
+		а предрелизная версия вне всех диапазонов — только разработчикам и спонсорам (если отмечена). Старые лаунчеры
+		без доступа по ролям показывают версию вне диапазонов всем. В фиде хранится хеш кода, а не сам код.
+	</MudText>
+
+	<MudPaper Outlined="true" Class="pa-3">
+		<MudGrid Spacing="2">
+			<MudItem xs="12" md="5">
+				<MudTextField @bind-Value="_newCode" Label="Новый бета-код" Variant="Variant.Outlined" Margin="Margin.Dense"
+							  Immediate="true" HelperText="Хешируется при добавлении" />
+			</MudItem>
+			<MudItem xs="12" md="5">
+				<MudTextField @bind-Value="_newVersionRange" Label="Версии сборки" Immediate="true"
+							  HelperText="Например, [3.2.0-beta.1, 3.2.0)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+			</MudItem>
+			<MudItem xs="12" md="2" Class="d-flex align-center">
+				<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" FullWidth="true"
+						   Disabled="@(string.IsNullOrWhiteSpace(_newCode) || FeedRules.VersionRange(_newVersionRange) is not null)"
+						   OnClick="Add">
+					Добавить
+				</MudButton>
+			</MudItem>
+		</MudGrid>
+		@if (_addError is not null)
+		{
+			<MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2">@_addError</MudAlert>
+		}
+	</MudPaper>
+
+	@foreach (var betaVersion in BetaVersions)
+	{
+		<MudStack @key="betaVersion" Row="true" AlignItems="AlignItems.Center" Spacing="2">
+			<MudTextField @bind-Value="betaVersion.Hash" Label="Хеш кода" Required="true" Validation="@FeedRules.Sha256"
+						  Variant="Variant.Outlined" Margin="Margin.Dense" Class="flex-grow-1" />
+			<MudTextField @bind-Value="betaVersion.VersionRange" Label="Версии сборки" Required="true" Validation="@FeedRules.VersionRange"
+						  Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width: 320px" />
+			<MudTooltip Text="Удалить">
+				<MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" aria-label="Удалить" OnClick="@(() => DeleteAsync(betaVersion))" />
+			</MudTooltip>
+		</MudStack>
+	}
+</MudStack>
+
+@code {
+	private string? _newCode;
+	private string? _newVersionRange;
+	private string? _addError;
+
+	[Parameter, EditorRequired]
+	public required List<BetaVersionModel> BetaVersions { get; set; }
+
+	/// <summary>The edited <see cref="FeedModel.SponsorRoleIds"/>.</summary>
+	[Parameter, EditorRequired]
+	public required List<string> SponsorRoleIds { get; set; }
+
+	/// <summary>The edited <see cref="FeedModel.DeveloperRoleIds"/>.</summary>
+	[Parameter, EditorRequired]
+	public required List<string> DeveloperRoleIds { get; set; }
+
+	private void Add()
+	{
+		var hash = BetaCodeHasher.Hash(_newCode!.Trim());
+		if (BetaVersions.Any(x => string.Equals(x.Hash, hash, StringComparison.OrdinalIgnoreCase)))
+		{
+			_addError = "Этот бета-код уже есть в фиде.";
+			return;
+		}
+
+		BetaVersions.Insert(0, new BetaVersionModel { Hash = hash, VersionRange = _newVersionRange!.Trim() });
+		_newCode = null;
+		_newVersionRange = null;
+		_addError = null;
+	}
+
+	private async Task DeleteAsync(BetaVersionModel betaVersion)
+	{
+		var confirmed = await DialogService.ShowMessageBoxAsync(
+			"Удаление бета-кода", $"Пользователи с этим кодом потеряют доступ к {betaVersion.VersionRange}. Удалить код?",
+			yesText: "Удалить", cancelText: "Отмена");
+		if (confirmed == true)
+		{
+			BetaVersions.Remove(betaVersion);
+		}
+	}
+}

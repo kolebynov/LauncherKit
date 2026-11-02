@@ -1,0 +1,88 @@
+<MudStack Spacing="3">
+	<MudStack Row="true" Wrap="Wrap.Wrap" Spacing="4">
+		@if (CanRollback || Step.CanRollback)
+		{
+			<MudSwitch @bind-Value="Step.CanRollback" Label="Можно откатить" Color="Color.Primary" />
+		}
+		<MudSwitch T="bool" Value="@(Step.Condition is not null)" ValueChanged="SetConditional" Disabled="@(StepIndex == 0 && Step.Condition is null)"
+				   Label="Выполнять только при условии" Color="Color.Primary" />
+	</MudStack>
+
+	@if (Step.Condition is { } condition)
+	{
+		<MudGrid Spacing="2">
+			<MudItem xs="12" sm="6" md="3">
+				<MudSelect @bind-Value="condition.StepIndex" Label="Шаг" Variant="Variant.Outlined" Margin="Margin.Dense"
+						   Error="@(condition.StepIndex >= StepIndex)" ErrorText="Должно ссылаться на предыдущий шаг.">
+					@for (var i = 0; i < StepIndex; i++)
+					{
+						var index = i;
+						<MudSelectItem Value="index">Шаг @index</MudSelectItem>
+					}
+				</MudSelect>
+			</MudItem>
+			<MudItem xs="12" sm="6" md="3">
+				<MudTextField @bind-Value="condition.Key" Label="Ключ" Required="true" Validation="@FeedRules.Required"
+							  Variant="Variant.Outlined" Margin="Margin.Dense" />
+			</MudItem>
+			<MudItem xs="12" sm="6" md="2">
+				<MudSelect @bind-Value="condition.Operator" Label="Оператор" Variant="Variant.Outlined" Margin="Margin.Dense">
+					<MudSelectItem Value="CompareOperator.Equal">равно</MudSelectItem>
+					<MudSelectItem Value="CompareOperator.NotEqual">не равно</MudSelectItem>
+				</MudSelect>
+			</MudItem>
+			<MudItem xs="12" sm="6" md="4">
+				@if (SelectableMods(condition) is { Count: > 0 } mods)
+				{
+					<MudSelect @bind-Value="condition.Value" Label="Значение" Variant="Variant.Outlined" Margin="Margin.Dense"
+							   Required="true" Validation="@FeedRules.Required">
+						@foreach (var mod in mods)
+						{
+							<MudSelectItem Value="mod">@mod</MudSelectItem>
+						}
+					</MudSelect>
+				}
+				else
+				{
+					<MudTextField @bind-Value="condition.Value" Label="Значение" Required="true" Validation="@FeedRules.Required"
+								  Variant="Variant.Outlined" Margin="Margin.Dense" />
+				}
+			</MudItem>
+		</MudGrid>
+	}
+
+	<MudText Typo="Typo.subtitle2">Действия</MudText>
+	<ListEditor TItem="ModInstallActionModel" Items="Step.Actions" Factories="ModInstallActionDisplay.Factories"
+				Title="ModInstallActionDisplay.Summary" AddToEnd="true">
+		<ItemContent Context="action">
+			<MudStack Spacing="2">
+				<ModInstallActionEditor Action="action" />
+			</MudStack>
+		</ItemContent>
+	</ListEditor>
+</MudStack>
+
+@code {
+	[Parameter, EditorRequired]
+	public required ModInstallStepModel Step { get; set; }
+
+	/// <summary>Position of <see cref="Step"/>; conditions may refer only to earlier steps.</summary>
+	[Parameter, EditorRequired]
+	public required int StepIndex { get; set; }
+
+	[Parameter, EditorRequired]
+	public required IReadOnlyList<ModInstallStepModel> Steps { get; set; }
+
+	/// <summary>Whether the launcher ever rolls the step back; otherwise «Можно откатить» is shown only to turn it off.</summary>
+	[Parameter]
+	public bool CanRollback { get; set; } = true;
+
+	private void SetConditional(bool conditional) =>
+		Step.Condition = conditional ? new ModInstallConditionModel { StepIndex = StepIndex - 1 } : null;
+
+	/// <summary>Mods offered by the referenced step's "Select required mod" action, the values a SelectedMod condition can match.</summary>
+	private List<string> SelectableMods(ModInstallConditionModel condition) =>
+		condition.Key == ModInstallConditionModel.SelectedModKey && condition.StepIndex >= 0 && condition.StepIndex < Steps.Count
+			? Steps[condition.StepIndex].Actions.OfType<SelectRequiredModAction>().SelectMany(x => x.Mods).Distinct().ToList()
+			: [];
+}

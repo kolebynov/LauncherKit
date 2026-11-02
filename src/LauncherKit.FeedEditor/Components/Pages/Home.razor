@@ -1,0 +1,29 @@
+@page "/"
+@page "/legacy"
+@inject FeedSession Session
+@inject NavigationManager Navigation
+
+<PageTitle>Редактор фида сборки</PageTitle>
+<MudStack Row="true" Class="pa-3">
+	<MudButton OnClick="@(() => Navigate(false))">Feed V12</MudButton>
+	<MudButton OnClick="@(() => Navigate(true))">Legacy feed V11</MudButton>
+</MudStack>
+
+@if (Session.IsSignedIn)
+{
+	<FeedEditorView OnSignedOut="StateHasChanged" />
+}
+else
+{
+	<LoginForm OnSignedIn="StateHasChanged" />
+}
+
+@code {
+	protected override void OnInitialized()
+	{
+		if (!Session.IsSignedIn)
+			Session.UseLegacy(new Uri(Navigation.Uri).AbsolutePath.TrimEnd('/').EndsWith("/legacy", StringComparison.OrdinalIgnoreCase));
+	}
+
+	private void Navigate(bool legacy) => Navigation.NavigateTo(legacy ? "/legacy" : "/", forceLoad: true);
+}

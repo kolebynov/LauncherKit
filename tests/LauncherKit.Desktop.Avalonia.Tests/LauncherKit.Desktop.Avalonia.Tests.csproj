@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<ItemGroup>
+		<ProjectReference Include="../../src/LauncherKit.Desktop.Avalonia/LauncherKit.Desktop.Avalonia.csproj"/>
+		<ProjectReference Include="../LauncherKit.TestSupport/LauncherKit.TestSupport.csproj"/>
+		<PackageReference Include="Microsoft.Extensions.TimeProvider.Testing"/>
+		<PackageReference Include="Avalonia.Headless"/>
+		<PackageReference Include="Avalonia.Headless.NUnit"/>
+	</ItemGroup>
+</Project>

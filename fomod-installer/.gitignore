@@ -1,0 +1,24 @@
+# User-specific files
+.vs/
+*.suo
+*.csproj.user
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+MigrationBackup/
+Packages/
+dist
+node_modules
+FomodInstaller.VC.db
+
+# test cases
+test_cases
+
+AnalysisReport.sarif

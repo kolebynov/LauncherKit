@@ -1,0 +1,43 @@
+@* An optional part of an editor (install steps, patches) collapsed by default; the title shows how many entries it has,
+   so a collapsed section still tells whether it is used. A compact outlined box rather than an expansion panel, so
+   collapsed sections stay small and separated. *@
+<div class="expander-section">
+	<button type="button" class="expander-section-header" aria-expanded="@(_expanded ? "true" : "false")"
+			@onclick="@(() => _expanded = !_expanded)">
+		<MudIcon Icon="@(_expanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" />
+		<MudText Typo="@TitleTypo">@Title (@Count)</MudText>
+	</button>
+	@* Collapsed content is not rendered, which keeps large feeds responsive. *@
+	@if (_expanded)
+	{
+		<div class="expander-section-content">
+			<MudStack Spacing="2">
+				@if (Description is not null)
+				{
+					<MudText Typo="Typo.caption" Class="mud-text-secondary">@Description</MudText>
+				}
+				@ChildContent
+			</MudStack>
+		</div>
+	}
+</div>
+
+@code {
+	private bool _expanded;
+
+	[Parameter, EditorRequired]
+	public required string Title { get; set; }
+
+	/// <summary>Number of entries in the section, shown after the title.</summary>
+	[Parameter, EditorRequired]
+	public required int Count { get; set; }
+
+	[Parameter]
+	public string? Description { get; set; }
+
+	[Parameter]
+	public Typo TitleTypo { get; set; } = Typo.subtitle1;
+
+	[Parameter, EditorRequired]
+	public required RenderFragment ChildContent { get; set; }
+}

@@ -1,0 +1,53 @@
+<MudStack Spacing="3">
+	<MudGrid Spacing="2">
+		<MudItem xs="12" sm="6">
+			<MudTextField @bind-Value="Modpack.InitialVersion" Label="Начальная версия" Required="true" Validation="@FeedRules.Version"
+						  HelperText="Версия полного архива установщика" Variant="Variant.Outlined" Margin="Margin.Dense" />
+		</MudItem>
+		<MudItem xs="12" sm="6">
+			<MudTextField @bind-Value="Modpack.Version" Label="Версия" Required="true" Validation="@FeedRules.Version"
+						  HelperText="Версия, под которой публикуется релиз" Variant="Variant.Outlined" Margin="Margin.Dense" />
+		</MudItem>
+	</MudGrid>
+	<DownloadInfoEditor DownloadInfo="Modpack.DownloadInfo" Label="Установщик" />
+	<MudSwitch @bind-Value="Modpack.IsAvailableForSponsors" Label="Доступна спонсорам" Color="Color.Primary" />
+	<MudText Typo="Typo.body2" Class="mud-text-secondary mt-n2">
+		Предрелизную версию получают без бета-кода пользователи лаунчера с привязанным Discord и ролью спонсора
+		(вкладка «Бета-доступ»). Разработчики получают все предрелизные версии независимо от этого флага.
+	</MudText>
+
+	<MudText Typo="Typo.body2" Class="mud-text-secondary">
+		Предлагаемые при установке компоненты и диапазоны версий задаются на вкладке «Компоненты».
+	</MudText>
+
+	<ExpanderSection Title="Патчи" Count="@Modpack.Patches.Count">
+		<ListEditor TItem="ModpackPatchModel" Items="Modpack.Patches" Factories="PatchFactories"
+					Title="@(patch => $"Патч {patch.Version}{(patch.RequireNewGame ? " (новая игра)" : string.Empty)}")">
+			<ItemContent Context="patch">
+				<MudStack Spacing="2">
+					<MudGrid Spacing="2">
+						<MudItem xs="12" sm="6">
+							<MudTextField @bind-Value="patch.Version" Label="Версия" Required="true" Validation="@FeedRules.Version"
+										  Variant="Variant.Outlined" Margin="Margin.Dense" />
+						</MudItem>
+						<MudItem xs="12" sm="6" Class="d-flex align-center">
+							<MudSwitch @bind-Value="patch.RequireNewGame" Label="Требуется новая игра" Color="Color.Warning" />
+						</MudItem>
+					</MudGrid>
+					<DownloadInfoEditor DownloadInfo="patch.DownloadInfo" Label="Патч" />
+					<ExpanderSection Title="Дополнительные шаги установки" Count="@patch.InstallSteps.Count" TitleTypo="Typo.subtitle2"
+									 Description="Необязательны. Выполняются по порядку после распаковки патча в папку Skyrim, например удаляют ненужные файлы. Патч не откатывается. Условия ссылаются на шаги по номеру, поэтому после перемещения шагов проверьте условия.">
+						<ModInstallStepsEditor Steps="patch.InstallSteps" CanRollback="false" />
+					</ExpanderSection>
+				</MudStack>
+			</ItemContent>
+		</ListEditor>
+	</ExpanderSection>
+</MudStack>
+
+@code {
+	private static readonly IReadOnlyList<ListItemFactory<ModpackPatchModel>> PatchFactories = [new("патч", () => new ModpackPatchModel())];
+
+	[Parameter, EditorRequired]
+	public required ModpackModel Modpack { get; set; }
+}

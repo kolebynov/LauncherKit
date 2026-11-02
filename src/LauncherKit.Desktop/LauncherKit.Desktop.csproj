@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<ItemGroup>
+		<InternalsVisibleTo Include="LauncherKit.Desktop.Tests"/>
+		<InternalsVisibleTo Include="LauncherKit.Desktop.Avalonia.Tests"/>
+		<InternalsVisibleTo Include="STBLauncher.App.Tests"/>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="../LauncherKit.Core/LauncherKit.Core.csproj"/>
+		<PackageReference Include="CommunityToolkit.Mvvm"/>
+		<PackageReference Include="Microsoft.Extensions.Localization"/>
+	</ItemGroup>
+</Project>

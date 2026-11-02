@@ -1,0 +1,24 @@
+<ListEditor TItem="ModInstallStepModel" Items="Steps" Factories="StepFactories" Title="StepTitle" AddToEnd="true">
+	<ItemContent Context="step">
+		<ModInstallStepEditor Step="step" StepIndex="@Steps.IndexOf(step)" Steps="Steps" CanRollback="CanRollback" />
+	</ItemContent>
+</ListEditor>
+
+@code {
+	private static readonly IReadOnlyList<ListItemFactory<ModInstallStepModel>> StepFactories = [new("шаг", () => new ModInstallStepModel())];
+
+	[Parameter, EditorRequired]
+	public required List<ModInstallStepModel> Steps { get; set; }
+
+	/// <summary>Whether the launcher ever rolls the steps back, so their «Можно откатить» switch is shown.</summary>
+	[Parameter]
+	public bool CanRollback { get; set; } = true;
+
+	private string StepTitle(ModInstallStepModel step)
+	{
+		var title = $"Шаг {Steps.IndexOf(step)}: {string.Join("; ", step.Actions.Select(ModInstallActionDisplay.Summary))}";
+		return step.Condition is { } condition
+			? $"{title} — если шаг {condition.StepIndex} {condition.Key} {(condition.Operator == CompareOperator.Equal ? "=" : "≠")} {condition.Value}"
+			: title;
+	}
+}

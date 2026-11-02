@@ -1,0 +1,37 @@
+<MudStack Spacing="3">
+	<MudGrid Spacing="2">
+		<MudItem xs="12" md="6">
+			<MudTextField @bind-Value="Mod.Name" Label="Имя" Required="true" Validation="@FeedRules.Required"
+						  HelperText="Имя мода в Mod Organizer; идентифицирует мод" Variant="Variant.Outlined" Margin="Margin.Dense" />
+		</MudItem>
+		<MudItem xs="12" md="6">
+			<LocalizedField @bind-Value="Mod.DisplayName" Label="Отображаемое имя" Optional="true" />
+		</MudItem>
+		<MudItem xs="12" md="6">
+			<S3PathField @bind-Value="Mod.LogoPath" Label="Путь к логотипу" Required="true" />
+		</MudItem>
+		<MudItem xs="12" md="6">
+			<LocalizedField Value="Mod.DescriptionPath" Label="Путь к описанию" IsPath="true" />
+		</MudItem>
+		@ChildContent
+	</MudGrid>
+
+	<MudText Typo="Typo.subtitle1">Версии</MudText>
+	<ListEditor TItem="ModItemModel" Items="Mod.Items" Factories="ItemFactories"
+				Title="@(item => $"{item.Version} — сборка {item.SupportedModpackVersion}{(item.SupportsUninstall ? " (можно удалить)" : string.Empty)}")">
+		<ItemContent Context="item">
+			<ModItemEditor Item="item" />
+		</ItemContent>
+	</ListEditor>
+</MudStack>
+
+@code {
+	private static readonly IReadOnlyList<ListItemFactory<ModItemModel>> ItemFactories = [new("версию", () => new ModItemModel())];
+
+	[Parameter, EditorRequired]
+	public required ModModel Mod { get; set; }
+
+	/// <summary>Further fields of a mod subtype, rendered as grid items after the mod's own fields.</summary>
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+}

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+	<ItemGroup>
+		<InternalsVisibleTo Include="LauncherKit.Desktop.Tests"/>
+		<InternalsVisibleTo Include="LauncherKit.Desktop.Avalonia.Tests"/>
+		<InternalsVisibleTo Include="STBLauncher.App.Tests"/>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="../LauncherKit.Desktop/LauncherKit.Desktop.csproj"/>
+		<PackageReference Include="Avalonia"/>
+		<PackageReference Include="Avalonia.Desktop"/>
+		<PackageReference Include="FluentAvaloniaUI"/>
+		<PackageReference Include="R3Extensions.Avalonia"/>
+	</ItemGroup>
+</Project>

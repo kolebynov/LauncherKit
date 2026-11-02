@@ -1,0 +1,54 @@
+<MudGrid Spacing="2">
+	<MudItem xs="12" sm="4">
+		<MudSelect T="ModPlacementKind?" Value="@Placement?.Kind" ValueChanged="SetKind" Label="Размещение в Mod Organizer"
+				   Variant="Variant.Outlined" Margin="Margin.Dense">
+			<MudSelectItem T="ModPlacementKind?" Value="null">По умолчанию</MudSelectItem>
+			<MudSelectItem T="ModPlacementKind?" Value="ModPlacementKind.UnderSeparator">Под разделителем</MudSelectItem>
+			<MudSelectItem T="ModPlacementKind?" Value="ModPlacementKind.NextToMod">Рядом с модом</MudSelectItem>
+		</MudSelect>
+	</MudItem>
+	@switch (Placement?.Kind)
+	{
+		case ModPlacementKind.UnderSeparator:
+			<MudItem xs="12" sm="8">
+				<MudTextField @bind-Value="Placement.Separator" Label="Разделитель" Required="true" Validation="@FeedRules.Separator"
+							  HelperText="Имя, как в Mod Organizer, без суффикса _separator. Мод встаёт последним под разделителем; отсутствующий разделитель создаётся над разделителем «ВАШИ МОДЫ» (или в конце списка, если его нет)."
+							  Variant="Variant.Outlined" Margin="Margin.Dense" />
+			</MudItem>
+			break;
+		case ModPlacementKind.NextToMod:
+			<MudItem xs="12" sm="5">
+				<MudTextField @bind-Value="Placement.ModName" Label="Мод" Required="true" Validation="@FeedRules.Required"
+							  HelperText="Имя мода в Mod Organizer. Если его нет в списке, мод остаётся на месте по умолчанию."
+							  Variant="Variant.Outlined" Margin="Margin.Dense" />
+			</MudItem>
+			<MudItem xs="12" sm="3">
+				<MudSelect @bind-Value="Placement.Side" Label="Где" Variant="Variant.Outlined" Margin="Margin.Dense"
+						   HelperText="Как показывает Mod Organizer">
+					<MudSelectItem Value="ModListSide.Below">Сразу под ним (перекрывает его)</MudSelectItem>
+					<MudSelectItem Value="ModListSide.Above">Сразу над ним (перекрывается им)</MudSelectItem>
+				</MudSelect>
+			</MudItem>
+			break;
+		default:
+			<MudItem xs="12" sm="8" Class="d-flex align-center">
+				<MudText Typo="Typo.caption" Class="mud-text-secondary">
+					Новый мод встаёт в конец списка Mod Organizer. Можно выбрать либо разделитель, либо мод, но не оба сразу.
+				</MudText>
+			</MudItem>
+			break;
+	}
+</MudGrid>
+
+@code {
+	[Parameter]
+	public ModPlacementModel? Placement { get; set; }
+
+	[Parameter]
+	public EventCallback<ModPlacementModel?> PlacementChanged { get; set; }
+
+	private Task SetKind(ModPlacementKind? kind) =>
+		kind == Placement?.Kind
+			? Task.CompletedTask
+			: PlacementChanged.InvokeAsync(kind is { } placementKind ? new ModPlacementModel { Kind = placementKind } : null);
+}

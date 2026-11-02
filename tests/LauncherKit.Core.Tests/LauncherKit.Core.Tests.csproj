@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json"/>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection"/>
+		<PackageReference Include="Microsoft.Extensions.TimeProvider.Testing"/>
+		<PackageReference Include="RichardSzalay.MockHttp"/>
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="..\..\fomod-installer\tests\testcase1\fomod\ModuleConfig.xml"
+				 Link="Fixtures\ModuleConfig.xml"
+				 CopyToOutputDirectory="PreserveNewest"/>
+		<!-- feedV11.json: the real feedV10.json converted to the closed-hierarchy ($type) format. -->
+		<Content Include="Fixtures\Feed\*.json" CopyToOutputDirectory="PreserveNewest"/>
+		<Content Include="..\LauncherKit.FeedEditor.Tests\Fixtures\feedV12.json"
+				 Link="Fixtures\Feed\feedV12.json"
+				 CopyToOutputDirectory="PreserveNewest"/>
+		<!-- launcher.db: written by the Linq2DB data access the launcher used before Microsoft.Data.Sqlite. -->
+		<Content Include="Fixtures\Db\*.db" CopyToOutputDirectory="PreserveNewest"/>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\LauncherKit.Core\LauncherKit.Core.csproj"/>
+		<ProjectReference Include="..\LauncherKit.TestSupport\LauncherKit.TestSupport.csproj"/>
+	</ItemGroup>
+</Project>

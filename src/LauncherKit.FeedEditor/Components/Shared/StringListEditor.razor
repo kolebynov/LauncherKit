@@ -1,0 +1,27 @@
+@* Edits a list of strings as one entry per line; blank lines and surrounding whitespace are dropped. *@
+<MudTextField T="string" Label="@Label" Value="@string.Join('\n', Items)" ValueChanged="OnValueChanged"
+			  Lines="3" Sizing="InputSizing.Auto" MaxLines="20" Variant="Variant.Outlined" Margin="Margin.Dense"
+			  HelperText="@(HelperText ?? "По одной записи в строке")"
+			  Error="@(Required && Items.Count == 0)" ErrorText="Нужна хотя бы одна запись." />
+
+@code {
+	[Parameter, EditorRequired]
+	public required string Label { get; set; }
+
+	/// <summary>The edited list; replaced in place on each change.</summary>
+	[Parameter, EditorRequired]
+	public required List<string> Items { get; set; }
+
+	[Parameter]
+	public string? HelperText { get; set; }
+
+	[Parameter]
+	public bool Required { get; set; }
+
+	private void OnValueChanged(string? value)
+	{
+		Items.Clear();
+		Items.AddRange((value ?? string.Empty)
+			.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+	}
+}

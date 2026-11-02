@@ -1,0 +1,28 @@
+.expander-section {
+	border: 1px solid var(--mud-palette-lines-default);
+	border-radius: var(--mud-default-borderradius);
+}
+
+.expander-section-header {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 8px;
+	width: 100%;
+	padding: 4px 12px;
+	border: none;
+	border-radius: inherit;
+	background: none;
+	color: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.expander-section-header:hover {
+	background-color: var(--mud-palette-action-default-hover);
+}
+
+.expander-section-content {
+	padding: 12px;
+	border-top: 1px solid var(--mud-palette-lines-default);
+}

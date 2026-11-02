@@ -1,0 +1,209 @@
+﻿<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd">
+	<moduleName>Установка MD's Graphics Lite</moduleName>
+	<requiredInstallFiles>
+		 <folder source="1. MD's Graphics Lite - Part 1" destination=""/>
+	</requiredInstallFiles>
+	
+	<installSteps order="Explicit">
+	
+		<installStep name="Начало">
+			<optionalFileGroups>
+				<group type="SelectAny" name="">
+					<plugins order="Explicit">
+						<plugin name="Продолжить">
+							<description>Устанавливаются все обязательные файлы.</description>
+							<files>
+								
+							</files>
+							<typeDescriptor>
+								<type name="Required"/>
+							</typeDescriptor>
+						</plugin>
+					</plugins>
+				</group>
+			</optionalFileGroups>
+		</installStep>
+
+		<installStep name="Погодный мод">
+			<optionalFileGroups>
+				<group type="SelectExactlyOne" name="Выберите погодный мод">
+					<plugins order="Explicit">
+						<plugin name="Azurite CS">
+							<description>Производительный погодный мод со значительными изменениями. Скриншоты - https://www.nexusmods.com/skyrimspecialedition/mods/150269</description>
+							<files>
+								<folder source="31. AW" destination="" priority="0"/>
+							</files>
+							<typeDescriptor>
+								<type name="Optional"/> 
+							</typeDescriptor>
+						</plugin>
+						<plugin name="Faithful CS">
+							<description>Максимально приближенные к ваниле настроения. Скриншоты - https://www.nexusmods.com/skyrimspecialedition/mods/119387</description>
+							<files>
+								<folder source="32. FW" destination="" priority="0"/>
+							</files>
+							<typeDescriptor>
+								<type name="Optional"/> 
+							</typeDescriptor>
+						</plugin>
+						<plugin name="Astralite Weathers">
+							<description>Погода с насыщенными красками. Скриншоты - https://www.nexusmods.com/skyrimspecialedition/mods/156979</description>
+							<files>
+								<folder source="33. AstW" destination="" priority="0"/>
+							</files>
+							<typeDescriptor>
+								<type name="Optional"/> 
+							</typeDescriptor>
+						</plugin>
+					</plugins>
+				</group>
+			</optionalFileGroups>
+		</installStep>
+
+		<installStep name="Трава">
+			<optionalFileGroups>
+				<group type="SelectExactlyOne" name="Выберите мод на траву">
+					<plugins order="Explicit">
+						<plugin name="Cathedral">
+							<description>Низкая и очень производительная трава. Ссылка для ознакомления - https://www.nexusmods.com/skyrimspecialedition/mods/21954</description>
+							<files>
+								<folder source="7. Grass Cathedral" destination="" priority="0"/>
+							</files>
+							<typeDescriptor>
+								<type name="Optional"/> 
+							</typeDescriptor>
+						</plugin>
+						<plugin name="FFM">
+							<description>Низкая и производительная трава. Ссылка для ознакомления - https://www.nexusmods.com/skyrimspecialedition/mods/148525</description>
+							<files>
+								<folder source="6. Grass FFM" destination="" priority="0"/>
+								<folder source="6.5 Grass FFSolstheim" destination="" priority="0"/>
+							</files>
+							<typeDescriptor>
+								<type name="Optional"/> 
+							</typeDescriptor>
+						</plugin>
+						<plugin name="Skoglendi">
+							<description>Трава средней высоты, достаточно производительная. Ссылка для ознакомления - https://www.nexusmods.com/skyrimspecialedition/mods/93944</description>
+							<files>
+								<folder source="5. Grass Skoglendi" destination="" priority="0"/>
+							</files>
+							<typeDescriptor>
+								<type name="Optional"/> 
+							</typeDescriptor>
+						</plugin>
+					</plugins>
+				</group>
+			</optionalFileGroups>
+		</installStep>
+
+		<installStep name="Волосы">
+			<optionalFileGroups>
+				<group type="SelectExactlyOne" name="Установить ретекстур волос?">
+					<plugins order="Explicit">
+						<plugin name="Да">
+							<description>Устанавливает более проработанные текстуры волос для всех персонажей. На очень слабых пк может влиять на производительность.</description>
+							<files>
+								<folder source="10. Hair Retex" destination="" priority="0"/>
+							</files>
+							<typeDescriptor>
+								<type name="Optional"/> 
+							</typeDescriptor>
+						</plugin>
+						<plugin name="Нет">
+							<description>Пропустить.</description>
+							<files>
+								
+							</files>
+							<typeDescriptor>
+								<type name="Optional"/> 
+							</typeDescriptor>
+						</plugin>
+					</plugins>
+				</group>
+			</optionalFileGroups>
+		</installStep>
+
+		<installStep name="Система нарядов">
+			<optionalFileGroups>
+				<group type="SelectExactlyOne" name="Установить систему нарядов?">
+					<plugins order="Explicit">
+						<plugin name="Да">
+							<description>Устанавливает систему визуальных нарядов, совместимую с STB.</description>
+							<files>
+								<folder source="20. OS" destination="" priority="0"/>
+							</files>
+							<typeDescriptor>
+								<type name="Optional"/> 
+							</typeDescriptor>
+						</plugin>
+						<plugin name="Нет">
+							<description>Пропустить.</description>
+							<files>
+								
+							</files>
+							<typeDescriptor>
+								<type name="Optional"/> 
+							</typeDescriptor>
+						</plugin>
+					</plugins>
+				</group>
+			</optionalFileGroups>
+		</installStep>
+		
+		<installStep name="Хвосты">
+			<optionalFileGroups>
+				<group type="SelectExactlyOne" name="Убрать хвосты зверей?">
+					<plugins order="Explicit">
+						<plugin name="Да">
+							<description>Убирает хвосты у звериных рас.</description>
+							<files>
+								<folder source="98. No Tails" destination="" priority="0"/>
+							</files>
+							<typeDescriptor>
+								<type name="Optional"/> 
+							</typeDescriptor>
+						</plugin>
+						<plugin name="Нет">
+							<description>Оставляет хвосты у звериных рас.</description>
+							<files>
+								
+							</files>
+							<typeDescriptor>
+								<type name="Optional"/> 
+							</typeDescriptor>
+						</plugin>
+					</plugins>
+				</group>
+			</optionalFileGroups>
+		</installStep>
+
+		<installStep name="Музыка">
+			<optionalFileGroups>
+				<group type="SelectExactlyOne" name="Установить музыку LORKHAN?">
+					<plugins order="Explicit">
+						<plugin name="Да">
+							<description>Добавляет новую музыку из мода LORKHAN.</description>
+							<files>
+								<folder source="99. Music" destination="" priority="0"/>
+							</files>
+							<typeDescriptor>
+								<type name="Optional"/> 
+							</typeDescriptor>
+						</plugin>
+						<plugin name="Нет">
+							<description>Оставляет оригинальную музыку. Вы можете установить мод на свой вкус, но новый плагин нужно будет поднять на 50 пунктов вверх от конца списка, и его работа не гарантируется.</description>
+							<files>
+								
+							</files>
+							<typeDescriptor>
+								<type name="Optional"/> 
+							</typeDescriptor>
+						</plugin>
+					</plugins>
+				</group>
+			</optionalFileGroups>
+		</installStep>
+		
+	</installSteps>
+</config>

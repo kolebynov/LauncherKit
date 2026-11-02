@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<IsAotCompatible>true</IsAotCompatible>
+		<EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CSharpFunctionalExtensions"/>
+		<PackageReference Include="Duende.IdentityModel.OidcClient"/>
+		<PackageReference Include="ini-parser-new"/>
+		<PackageReference Include="Microsoft.Data.Sqlite"/>
+		<PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables"/>
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json"/>
+		<PackageReference Include="Microsoft.Extensions.Http.Resilience"/>
+		<PackageReference Include="NetEscapades.EnumGenerators"/>
+		<PackageReference Include="NuGet.Versioning"/>
+		<PackageReference Include="Polly"/>
+		<PackageReference Include="R3"/>
+		<PackageReference Include="System.Security.Cryptography.ProtectedData"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\fomod-installer\InstallScripting\XmlScript\XmlScript.csproj"/>
+		<ProjectReference Include="..\LauncherKit.LogsCollector.Core\LauncherKit.LogsCollector.Core.csproj"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="LauncherKit.Core.Tests"/>
+		<InternalsVisibleTo Include="STBLauncher.App.Tests"/>
+		<InternalsVisibleTo Include="LauncherKit.Desktop.Tests"/>
+		<InternalsVisibleTo Include="LauncherKit.Desktop.Avalonia.Tests"/>
+		<!-- Required for Moq/Castle to proxy internal interfaces in tests. -->
+		<InternalsVisibleTo Include="DynamicProxyGenAssembly2"/>
+	</ItemGroup>
+</Project>

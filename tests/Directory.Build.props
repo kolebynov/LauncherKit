@@ -1,0 +1,34 @@
+<Project>
+	<Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))"/>
+
+	<PropertyGroup>
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+		<IsAotCompatible>false</IsAotCompatible>
+		<PublishAot>false</PublishAot>
+		<PublishTrimmed>false</PublishTrimmed>
+		<!-- CA1001/CA2000: fixtures own IDisposable state released in [TearDown], not in Dispose. -->
+		<!-- CA1861: inline constant arrays are the clearest form for TestCase data. -->
+		<NoWarn>$(NoWarn);CA1001;CA2000;CA1861</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="NUnit"/>
+		<PackageReference Include="NUnit.Analyzers"/>
+		<PackageReference Include="Moq"/>
+		<PackageReference Include="Moq.AutoMock"/>
+	</ItemGroup>
+
+	<!-- Test hosting bits only for the assemblies that actually contain tests; LauncherKit.TestSupport is a library. -->
+	<ItemGroup Condition="'$(IsTestProject)' == 'true'">
+		<PackageReference Include="Microsoft.NET.Test.Sdk"/>
+		<PackageReference Include="NUnit3TestAdapter"/>
+		<PackageReference Include="coverlet.collector"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="NUnit.Framework"/>
+		<Using Include="Moq"/>
+		<Using Include="Moq.AutoMock"/>
+	</ItemGroup>
+</Project>

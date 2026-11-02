@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<!--
+		Development-only HTTP API that drives the running launcher (docs/dev-automation.md). The launcher references it
+		only when built with -p:EnableDevAutomation=true, so release builds contain none of it; the solution build still
+		compiles it so it does not rot.
+	-->
+	<PropertyGroup>
+		<IsAotCompatible>true</IsAotCompatible>
+		<!--
+			Input is injected through the platform input callback (ITopLevelImpl.Input, RawPointerEventArgs), which Avalonia
+			marks as private API. The Avalonia version is pinned centrally, and this assembly never ships.
+		-->
+		<AvaloniaAccessUnstablePrivateApis>true</AvaloniaAccessUnstablePrivateApis>
+		<NoWarn>$(NoWarn);AVA3001</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LauncherKit.Core\LauncherKit.Core.csproj"/>
+	</ItemGroup>
+</Project>

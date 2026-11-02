@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+	<resheader name="version"><value>2.0</value></resheader>
+	<resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+	<resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+	<data name="ActivateMods" xml:space="preserve"><value>Activate mods</value></data>
+	<data name="ActivatePlugins" xml:space="preserve"><value>Activate plugins</value></data>
+	<data name="BetaCodeAlreadyActivated" xml:space="preserve"><value>This beta code has already been activated</value></data>
+	<data name="BetaCodeInvalid" xml:space="preserve"><value>Invalid beta code</value></data>
+	<data name="BetaCodeRequired" xml:space="preserve"><value>Enter a beta code</value></data>
+	<data name="BetaCodeSuccess" xml:space="preserve"><value>Beta code activated</value></data>
+	<data name="ComponentOptionDescription" xml:space="preserve"><value>Install {0}. {1}</value></data>
+	<data name="DeactivateMods" xml:space="preserve"><value>Deactivate mods</value></data>
+	<data name="DeactivatePlugins" xml:space="preserve"><value>Deactivate plugins</value></data>
+	<data name="DeleteAccessDenied" xml:space="preserve"><value>{0}: access denied to {1}.</value></data>
+	<data name="DeleteError" xml:space="preserve"><value>{0}: {1}</value></data>
+	<data name="DeleteFileInUse" xml:space="preserve"><value>{0}: the file is in use. Wait for its download or installation to finish, cancel the task, or close the application using it.</value></data>
+	<data name="DirectoryAppDataConflict" xml:space="preserve"><value>The launcher data directory must not overlap the Skyrim directory</value></data>
+	<data name="DirectoryNotFound" xml:space="preserve"><value>The directory does not exist</value></data>
+	<data name="DirectoryNotWritable" xml:space="preserve"><value>The directory is not writable</value></data>
+	<data name="DirectoryRequired" xml:space="preserve"><value>Select a directory</value></data>
+	<data name="DirectorySkyrimConflict" xml:space="preserve"><value>The Skyrim directory must not overlap the launcher data directory</value></data>
+	<data name="DiscordDeveloper" xml:space="preserve"><value>Developer role found; all beta versions are available</value></data>
+	<data name="DiscordMember" xml:space="preserve"><value>Server member</value></data>
+	<data name="DiscordNotMember" xml:space="preserve"><value>You are not a member of the server</value></data>
+	<data name="DiscordSponsor" xml:space="preserve"><value>Sponsor role found; beta versions are available</value></data>
+	<data name="ExceptionDeleteItem" xml:space="preserve"><value>Could not delete {0}.</value></data>
+	<data name="ExceptionDeleteMod" xml:space="preserve"><value>Could not delete mod {0}.</value></data>
+	<data name="ExceptionDeleteSave" xml:space="preserve"><value>Could not delete save {0}.</value></data>
+	<data name="ExceptionDownloadServers" xml:space="preserve"><value>Download servers are unavailable. Check your internet connection and try again later.</value></data>
+	<data name="ExceptionDownloadStalled" xml:space="preserve"><value>No download data was received for {0}. Try again.</value></data>
+	<data name="ExceptionDuplicatePlugin" xml:space="preserve"><value>Plugin {0} occurs more than once.</value></data>
+	<data name="ExceptionLocalSavesDisabled" xml:space="preserve"><value>Local saves are disabled for profile {0}.</value></data>
+	<data name="ExceptionModOrganizerRunning" xml:space="preserve"><value>Mod Organizer is already running. Close it and try again.</value></data>
+	<data name="ExceptionModpackNotInstalled" xml:space="preserve"><value>The modpack is not installed</value></data>
+	<data name="ExceptionNotEnoughSpace" xml:space="preserve"><value>There is not enough space on drive {0}. Required: {1}; available: {2}. Free space or change the launcher data directory in settings.</value></data>
+	<data name="ExceptionOAuth" xml:space="preserve"><value>Could not sign in with {0}: {1}.</value></data>
+	<data name="ExceptionOAuthCancelled" xml:space="preserve"><value>Sign-in with {0} was cancelled.</value></data>
+	<data name="ExceptionOAuthPort" xml:space="preserve"><value>The sign-in port is already in use. Sign-in may be open in another launcher window.</value></data>
+	<data name="ExceptionStoredFileAccessDenied" xml:space="preserve"><value>Access to file {0} was denied.</value></data>
+	<data name="ExceptionStoredFileInUse" xml:space="preserve"><value>File {0} is in use.</value></data>
+	<data name="ExceptionUnknown" xml:space="preserve"><value>The operation failed: {0}</value></data>
+	<data name="ExceptionUnsupportedMod" xml:space="preserve"><value>Mod {0} does not support modpack version {1}.</value></data>
+	<data name="ExtraDownloadSize" xml:space="preserve"><value>Additional download: {0}</value></data>
+	<data name="GameVariantBethIni" xml:space="preserve"><value>BethINI</value></data>
+	<data name="GameVariantGame" xml:space="preserve"><value>Skyrim</value></data>
+	<data name="GameVariantModOrganizer" xml:space="preserve"><value>Mod Organizer</value></data>
+	<data name="GraphPackStepTitle" xml:space="preserve"><value>Select a graphics pack</value></data>
+	<data name="MicroBackupArchiveFiles" xml:space="preserve"><value>Back up files from {0}</value></data>
+	<data name="MicroChangeProfile" xml:space="preserve"><value>Change profile to {0}</value></data>
+	<data name="MicroCheckFileHash" xml:space="preserve"><value>Verify file hash</value></data>
+	<data name="MicroConfigureMod" xml:space="preserve"><value>Configure mod</value></data>
+	<data name="MicroDeleteBackups" xml:space="preserve"><value>Delete backups</value></data>
+	<data name="MicroDeleteFile" xml:space="preserve"><value>Delete {0}</value></data>
+	<data name="MicroDeleteFiles" xml:space="preserve"><value>Delete files</value></data>
+	<data name="MicroDeleteModOrganizer" xml:space="preserve"><value>Delete Mod Organizer</value></data>
+	<data name="MicroDeleteOldDownloads" xml:space="preserve"><value>Delete old downloads</value></data>
+	<data name="MicroDeleteOldSaves" xml:space="preserve"><value>Delete old saves</value></data>
+	<data name="MicroDeletePreviousVersion" xml:space="preserve"><value>Delete previous version</value></data>
+	<data name="MicroDeleteTemporaryFiles" xml:space="preserve"><value>Delete temporary files</value></data>
+	<data name="MicroDeleteUnneededFiles" xml:space="preserve"><value>Delete unneeded files</value></data>
+	<data name="MicroDownloadFile" xml:space="preserve"><value>Download {0}</value></data>
+	<data name="MicroExtractArchive" xml:space="preserve"><value>Extract {0}</value></data>
+	<data name="MicroExtractModPatch" xml:space="preserve"><value>Extract mod patch {0}</value></data>
+	<data name="MicroExtractModpack" xml:space="preserve"><value>Extract modpack</value></data>
+	<data name="MicroExtractModpackPatch" xml:space="preserve"><value>Extract modpack patch</value></data>
+	<data name="MicroFinishInstallation" xml:space="preserve"><value>Finish installation</value></data>
+	<data name="MicroGameStarted" xml:space="preserve"><value>Running: {0}</value></data>
+	<data name="MicroGetDownloadSizes" xml:space="preserve"><value>Get download sizes</value></data>
+	<data name="MicroInstallMod" xml:space="preserve"><value>Install mod {0}</value></data>
+	<data name="MicroInstallPrerequisite" xml:space="preserve"><value>Install prerequisite {0}</value></data>
+	<data name="MicroInstallSevenZip" xml:space="preserve"><value>Install 7-Zip</value></data>
+	<data name="MicroInstallSkyrim" xml:space="preserve"><value>Install Skyrim</value></data>
+	<data name="MicroInstalling" xml:space="preserve"><value>Installing</value></data>
+	<data name="MicroLaunchLauncher" xml:space="preserve"><value>Launch the launcher</value></data>
+	<data name="MicroMergePlugins" xml:space="preserve"><value>Merge plugins from {0}</value></data>
+	<data name="MicroPrepareFile" xml:space="preserve"><value>Prepare file</value></data>
+	<data name="MicroPreparing" xml:space="preserve"><value>Preparing</value></data>
+	<data name="MicroPreparingInstallation" xml:space="preserve"><value>Prepare installation</value></data>
+	<data name="MicroRestoreFile" xml:space="preserve"><value>Restore {0}</value></data>
+	<data name="MicroRestoreFiles" xml:space="preserve"><value>Restore files</value></data>
+	<data name="MicroRevertArchiveExtraction" xml:space="preserve"><value>Revert extraction of {0}</value></data>
+	<data name="MicroRevertPluginsMerge" xml:space="preserve"><value>Revert plugin merge from {0}</value></data>
+	<data name="MicroRunProcess" xml:space="preserve"><value>Run {0}</value></data>
+	<data name="MicroSelectModpackComponents" xml:space="preserve"><value>Select installation components</value></data>
+	<data name="MicroSelectRequiredMod" xml:space="preserve"><value>Select a required mod</value></data>
+	<data name="MicroUninstallMod" xml:space="preserve"><value>Uninstall mod {0}</value></data>
+	<data name="MicroUpdateModMetadata" xml:space="preserve"><value>Update mod metadata</value></data>
+	<data name="MicroUpdateModpackVersion" xml:space="preserve"><value>Update modpack version</value></data>
+	<data name="ModUpdating" xml:space="preserve"><value>Updating</value></data>
+	<data name="ModpackComponentsTitle" xml:space="preserve"><value>Installation components</value></data>
+	<data name="ModpackInstallUnavailable" xml:space="preserve"><value>No modpack versions are available to install</value></data>
+	<data name="ModpackTaskQueued" xml:space="preserve"><value>A modpack operation is queued</value></data>
+	<data name="NoneOption" xml:space="preserve"><value>None</value></data>
+	<data name="OAuthMessage" xml:space="preserve"><value>You can close this browser tab and return to the launcher.</value></data>
+	<data name="OAuthTitle" xml:space="preserve"><value>Authorization complete</value></data>
+	<data name="OtherGraphPackInstalled" xml:space="preserve"><value>Graphics pack {0} is installed</value></data>
+	<data name="RequiredModsStepTitle" xml:space="preserve"><value>Required mods</value></data>
+	<data name="SelectOneModSubtitle" xml:space="preserve"><value>Select one mod</value></data>
+	<data name="SelectRequiredModTitle" xml:space="preserve"><value>Select a required mod: {0}</value></data>
+	<data name="SetupFailed" xml:space="preserve"><value>Setup failed</value></data>
+	<data name="SetupIdle" xml:space="preserve"><value>Setup is required</value></data>
+	<data name="SetupRunning" xml:space="preserve"><value>Configuring the launcher</value></data>
+	<data name="StorageDay" xml:space="preserve"><value>1 day</value></data>
+	<data name="StorageMonth" xml:space="preserve"><value>1 month</value></data>
+	<data name="StorageUnlimited" xml:space="preserve"><value>Unlimited</value></data>
+	<data name="StorageWeek" xml:space="preserve"><value>1 week</value></data>
+	<data name="StoredComplete" xml:space="preserve"><value>Complete</value></data>
+	<data name="StoredPartial" xml:space="preserve"><value>Partial</value></data>
+	<data name="TaskCleanupOldData" xml:space="preserve"><value>Clean up old data</value></data>
+	<data name="TaskDeleteOldSaves" xml:space="preserve"><value>Delete old saves</value></data>
+	<data name="TaskInstallMod" xml:space="preserve"><value>Install mod {0}</value></data>
+	<data name="TaskInstallModpack" xml:space="preserve"><value>Install modpack {0}</value></data>
+	<data name="TaskInstallModpackComponent" xml:space="preserve"><value>Install {0}</value></data>
+	<data name="TaskInstallModpackPatch" xml:space="preserve"><value>Install modpack patch {0}</value></data>
+	<data name="TaskInstallSevenZip" xml:space="preserve"><value>Install 7-Zip</value></data>
+	<data name="TaskInstallSkyrim" xml:space="preserve"><value>Install Skyrim</value></data>
+	<data name="TaskInstallVcRedist" xml:space="preserve"><value>Install Visual C++ {0}</value></data>
+	<data name="TaskRunGame" xml:space="preserve"><value>Launch game: {0}</value></data>
+	<data name="TaskSelectModpackComponents" xml:space="preserve"><value>Select installation components</value></data>
+	<data name="TaskUninstallMod" xml:space="preserve"><value>Uninstall mod {0}</value></data>
+	<data name="TaskUninstallModpack" xml:space="preserve"><value>Uninstall modpack</value></data>
+	<data name="TaskUpdateLauncher" xml:space="preserve"><value>Update launcher to {0}</value></data>
+	<data name="UnavailableFomodOption" xml:space="preserve"><value>This option is not available for this installation</value></data>
+	<data name="UnavailableGraphPackUpdating" xml:space="preserve"><value>This graphics pack is being updated</value></data>
+	<data name="YesOption" xml:space="preserve"><value>Install</value></data>
+	<data name="DirectoryInvalidPath" xml:space="preserve"><value>Invalid path</value></data>
+	<data name="DirectoryConflict" xml:space="preserve"><value>The directory must not overlap another selected directory</value></data>
+	<data name="DirectorySkyrimCharacters" xml:space="preserve"><value>The Skyrim path may contain only Latin letters, digits, spaces and []{},</value></data>
+	<data name="ComponentModOptionDescription" xml:space="preserve"><value>Install {0}</value></data>
+  <data name="SetupUnsupportedVersion" xml:space="preserve"><value>Unsupported Skyrim version {0} was detected.
+
+The modpack requires Skyrim {1}.
+
+You can select another empty directory and the launcher will download Skyrim along with the modpack.
+
+If you want to install Skyrim manually or use the Steam version, follow [these instructions]({2}).</value></data>
+</root>

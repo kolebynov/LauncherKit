@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<ItemGroup>
+		<Content Include="Fixtures\**" CopyToOutputDirectory="PreserveNewest"/>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\LauncherKit.FeedEditor\LauncherKit.FeedEditor.csproj"/>
+		<!-- The launcher's feed model is the contract the editor's output must satisfy. -->
+		<ProjectReference Include="..\..\src\LauncherKit.Core\LauncherKit.Core.csproj"/>
+		<ProjectReference Include="..\LauncherKit.TestSupport\LauncherKit.TestSupport.csproj"/>
+	</ItemGroup>
+</Project>

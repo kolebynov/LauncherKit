@@ -1,0 +1,31 @@
+@inject FeedSession Session
+
+<MudStack Spacing="2">
+	<MudTextField @bind-Value="Component.Id" Label="Идентификатор" Required="true" Variant="Variant.Outlined" Margin="Margin.Dense" />
+	<MudSelect T="InstallComponentKind" Value="Component.Kind" ValueChanged="ChangeKind" Label="Тип" Variant="Variant.Outlined" Margin="Margin.Dense">
+		<MudSelectItem Value="InstallComponentKind.GraphPack">Выбор графпака</MudSelectItem>
+		<MudSelectItem Value="InstallComponentKind.Mod">Мод</MudSelectItem>
+	</MudSelect>
+	@if (Component.Kind == InstallComponentKind.Mod)
+	{
+		<MudSelect T="string" @bind-Value="Component.ModName" Label="Мод" Required="true" Variant="Variant.Outlined" Margin="Margin.Dense">
+			@foreach (var mod in Session.Feed!.Mods)
+			{
+				<MudSelectItem Value="@mod.Name">@mod.Name</MudSelectItem>
+			}
+		</MudSelect>
+	}
+	<MudNumericField T="int" @bind-Value="Component.Order" Label="Порядок" Variant="Variant.Outlined" Margin="Margin.Dense" />
+	<MudTextField @bind-Value="Component.SupportedModpackVersion" Label="Поддерживаемые версии сборки" Required="true" Validation="@FeedRules.VersionRange" Variant="Variant.Outlined" Margin="Margin.Dense" />
+	<LocalizedField Value="Component.Title" Label="Заголовок" />
+	<LocalizedField Value="Component.Description" Label="Описание" />
+</MudStack>
+
+@code {
+	[Parameter, EditorRequired] public required InstallComponentModel Component { get; set; }
+	private void ChangeKind(InstallComponentKind kind)
+	{
+		Component.Kind = kind;
+		if (kind == InstallComponentKind.GraphPack) Component.ModName = null;
+	}
+}

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+	<PropertyGroup>
+		<!-- Server-hosted web app: not tied to the Windows-only launcher target framework. -->
+		<TargetFramework>net11.0</TargetFramework>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="AWSSDK.S3"/>
+		<PackageReference Include="MudBlazor"/>
+		<PackageReference Include="NuGet.Versioning"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="LauncherKit.FeedEditor.Tests"/>
+		<!-- Required for Moq/Castle to proxy internal interfaces in tests. -->
+		<InternalsVisibleTo Include="DynamicProxyGenAssembly2"/>
+	</ItemGroup>
+</Project>
