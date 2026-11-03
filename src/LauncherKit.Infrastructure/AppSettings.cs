@@ -6,7 +6,11 @@ public sealed class AppSettings
 
 	public string? SkyrimDirectory { get; set; }
 
-	public string Language { get; set; } = string.Empty;
+	/// <summary>
+	/// The UI language, <c>en</c> or <c>ru</c>. Any other value, including <see langword="null"/> and empty, means it
+	/// was never chosen: the first setup then asks for it.
+	/// </summary>
+	public string? Language { get; set; }
 
 	public string? GetDownloadsDirectory() => CombinePaths(AppDataDirectory, "Downloads");
 

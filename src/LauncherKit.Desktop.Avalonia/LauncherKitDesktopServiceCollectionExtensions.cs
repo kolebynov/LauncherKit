@@ -42,6 +42,7 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 		});
 		services.TryAddEnumerable(
 		[
+			ServiceDescriptor.Scoped<ISetupStepProvider, LanguageSetupStepProvider>(),
 			ServiceDescriptor.Scoped<ISetupStepProvider, SkyrimDirectorySetupStepProvider>(),
 			ServiceDescriptor.Scoped<ISetupStepProvider, AppDataDirectorySetupStepProvider>(),
 			ServiceDescriptor.Scoped<ISetupStepProvider, AvailabilitySetupStepProvider>(),

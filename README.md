@@ -279,7 +279,7 @@ View models expose typed facts and act directly. Views own the wording, confirma
 
 #### First setup steps
 
-`FirstSetupViewModel` routes through the steps of every registered `ISetupStepProvider`, in ascending `Order`. The kit registers providers for the Skyrim directory (`SetupStepOrder.SkyrimDirectory`), the data directory and the download server check. To add a step, derive from `SetupStepViewModel`: validate and apply your input to `FirstSetupContext.Settings`, then call `GoNext()`. Map the step to a view in your `IViewRegistry`, and register a provider:
+`FirstSetupViewModel` routes through the steps of every registered `ISetupStepProvider`, in ascending `Order`. The kit registers providers for the language, the Skyrim directory, the data directory and the download server check. The language step (`en`/`ru`, no operating-system option) appears until `App:Language` holds one of them, so set `App:Language` in `GetInMemoryConfiguration()` to fix the language and skip it. To add a step, derive from `SetupStepViewModel`: validate and apply your input to `FirstSetupContext.Settings`, then call `GoNext()`. Map the step to a view in your `IViewRegistry`, and register a provider:
 
 ```csharp
 public sealed class TermsSetupStepProvider(ITermsStore terms) : ISetupStepProvider

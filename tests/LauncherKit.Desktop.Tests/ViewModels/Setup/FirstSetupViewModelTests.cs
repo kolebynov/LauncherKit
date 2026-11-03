@@ -1,3 +1,4 @@
+using System.Globalization;
 using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.ViewModels;
 using LauncherKit.Desktop.ViewModels.Setup;
@@ -252,6 +253,83 @@ public sealed class FirstSetupViewModelTests
 		// Assert
 		Assert.That(sut.State, Is.EqualTo(FirstSetupState.Finished));
 		mocker.GetMock<IAppReloader>().Verify(x => x.ReloadApp(AppReloadMode.Configuration), Times.Once);
+	}
+
+	[TestCase(null, true)]
+	[TestCase("", true)]
+	[TestCase("de", true)]
+	[TestCase("en", false)]
+	[TestCase("ru", false)]
+	public void LanguageProvider_StoredLanguage_OffersStepUntilSupportedLanguageChosen(string? language, bool offered)
+	{
+		// Arrange
+		var mocker = CreateMocker(new AppSettings { Language = language });
+		var context = new FirstSetupContext(mocker.Get<ISettingsService>().GetSettings());
+
+		// Act
+		var steps = mocker.CreateInstance<LanguageSetupStepProvider>().CreateSteps(context).ToArray();
+
+		// Assert
+		Assert.That(steps.Length == 1 && steps[0] is LanguageSetupStepViewModel, Is.EqualTo(offered));
+	}
+
+	[TestCase("ru-RU", "ru")]
+	[TestCase("en-GB", "en")]
+	[TestCase("de-DE", "en")]
+	public void LanguageStep_OperatingSystemCulture_PreselectsItWhenSupportedOtherwiseEnglish(string culture, string expected)
+	{
+		// Arrange
+		var previous = CultureInfo.CurrentUICulture;
+		CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(culture);
+		try
+		{
+			var mocker = CreateMocker(new AppSettings());
+
+			// Act
+			var sut = new LanguageSetupStepViewModel(new FirstSetupContext(mocker.Get<ISettingsService>().GetSettings()),
+				mocker.Get<IAppReloader>());
+
+			// Assert
+			Assert.That(sut.SelectedLanguage, Is.EqualTo(expected));
+		}
+		finally
+		{
+			CultureInfo.CurrentUICulture = previous;
+		}
+	}
+
+	[Test]
+	public async Task LanguageStep_Next_StoresAndAppliesLanguageBeforeNextStep()
+	{
+		// Arrange
+		var previous = CultureInfo.DefaultThreadCurrentUICulture;
+		try
+		{
+			var mocker = CreateMocker(new AppSettings());
+			mocker.GetMock<IAppReloader>().Setup(x => x.ReloadApp(AppReloadMode.Language));
+			var context = new FirstSetupContext(mocker.Get<ISettingsService>().GetSettings());
+			var step = new LanguageSetupStepViewModel(context, mocker.Get<IAppReloader>());
+			var next = new TestStep();
+			var sut = CreateSut(mocker, context, [step, next]);
+			await sut.Start();
+			step.SelectedLanguage = "ru";
+
+			// Act
+			await step.NextCommand.ExecuteAsync(null);
+
+			// Assert
+			Assert.Multiple(() =>
+			{
+				Assert.That(context.Settings.App.Language, Is.EqualTo("ru"));
+				Assert.That(CultureInfo.DefaultThreadCurrentUICulture?.Name, Is.EqualTo("ru"));
+				Assert.That(sut.CurrentStep, Is.SameAs(next));
+			});
+			mocker.GetMock<IAppReloader>().Verify(x => x.ReloadApp(AppReloadMode.Language), Times.Once);
+		}
+		finally
+		{
+			CultureInfo.DefaultThreadCurrentUICulture = previous;
+		}
 	}
 
 	private static IReadOnlyList<SetupStepViewModel> CreateKitSteps(AutoMocker mocker, out FirstSetupContext context)

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using LauncherKit.Desktop.Extensions;
+using LauncherKit.Desktop.Localization;
 using LauncherKit.Desktop.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -33,8 +34,10 @@ public sealed partial class SettingsViewModel : BaseActivatableViewModel
 	[ObservableProperty]
 	public partial double MaxDownloadSpeedMegabytesPerSecond { get; set; }
 
+	/// <summary>One of <see cref="LanguageCulture.Languages"/>; settings cannot be saved without one.</summary>
 	[ObservableProperty]
-	public partial string Language { get; set; } = string.Empty;
+	[NotifyCanExecuteChangedFor(nameof(SaveSettingsCommand))]
+	public partial string? Language { get; set; }
 
 	public bool HaveUnsavedChanges { get; private set; }
 
@@ -53,7 +56,8 @@ public sealed partial class SettingsViewModel : BaseActivatableViewModel
 		};
 		SaveSettingsCommand = new AsyncRelayCommand(
 			SaveSettings,
-			() => !SkyrimDirectoryBrowserViewModel.HasErrors && !AppDataDirectoryBrowserViewModel.HasErrors);
+			() => !SkyrimDirectoryBrowserViewModel.HasErrors && !AppDataDirectoryBrowserViewModel.HasErrors
+				&& LanguageCulture.IsSupported(Language));
 
 		Observable
 			.FromEventHandler<DataErrorsChangedEventArgs>(

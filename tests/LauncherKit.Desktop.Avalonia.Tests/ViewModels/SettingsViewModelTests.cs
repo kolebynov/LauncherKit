@@ -10,7 +10,6 @@ namespace LauncherKit.Desktop.Avalonia.Tests.ViewModels;
 [TestFixture]
 public sealed class SettingsViewModelTests
 {
-	[TestCase("")]
 	[TestCase("en")]
 	[TestCase("ru")]
 	public async Task SaveSettings_ValidChangedValues_PersistsAndClearsDirtyState(string language)
@@ -73,7 +72,6 @@ public sealed class SettingsViewModelTests
 		Assert.That(sut.MaxDownloadSpeedMegabytesPerSecond, Is.EqualTo(3d));
 	}
 
-	[TestCase("")]
 	[TestCase("en")]
 	[TestCase("ru")]
 	public async Task Activate_StoredLanguage_RestoresSelection(string language)
@@ -94,6 +92,33 @@ public sealed class SettingsViewModelTests
 		Assert.That(sut.HaveUnsavedChanges, Is.False);
 	}
 
+	[TestCase(null)]
+	[TestCase("")]
+	[TestCase("de")]
+	public async Task SaveSettingsCommand_LanguageNotChosen_CannotExecuteUntilSupportedLanguageSelected(string? language)
+	{
+		// Arrange
+		using var skyrim = new TempDirectory();
+		using var appData = new TempDirectory();
+		var settings = new AllSettings
+		{
+			App = new AppSettings { SkyrimDirectory = skyrim.Path, AppDataDirectory = appData.Path, Language = language },
+			Download = new DownloadSettings(),
+			Window = new WindowSettings(),
+		};
+		var mocker = CreateMocker();
+		mocker.GetMock<ISettingsService>().Setup(x => x.GetSettings()).Returns(settings);
+		var sut = CreateSettings(mocker);
+		using var activation = await sut.Activator.Activate(CancellationToken.None);
+		Assert.That(sut.SaveSettingsCommand.CanExecute(null), Is.False);
+
+		// Act
+		sut.Language = "en";
+
+		// Assert
+		Assert.That(sut.SaveSettingsCommand.CanExecute(null), Is.True);
+	}
+
 	[Test]
 	public async Task SaveSettingsCommand_AppDataDirectoryNestedIntoSkyrimDirectory_CannotExecuteAndReportsFieldMessage()
 	{
@@ -102,7 +127,7 @@ public sealed class SettingsViewModelTests
 		using var appData = new TempDirectory();
 		var settings = new AllSettings
 		{
-			App = new AppSettings { SkyrimDirectory = skyrim.Path, AppDataDirectory = appData.Path },
+			App = new AppSettings { SkyrimDirectory = skyrim.Path, AppDataDirectory = appData.Path, Language = "ru" },
 			Download = new DownloadSettings(),
 			Window = new WindowSettings(),
 		};
@@ -137,7 +162,7 @@ public sealed class SettingsViewModelTests
 		using var other = new TempDirectory();
 		var settings = new AllSettings
 		{
-			App = new AppSettings { SkyrimDirectory = appData.Combine("Skyrim"), AppDataDirectory = appData.Path },
+			App = new AppSettings { SkyrimDirectory = appData.Combine("Skyrim"), AppDataDirectory = appData.Path, Language = "ru" },
 			Download = new DownloadSettings(),
 			Window = new WindowSettings(),
 		};

@@ -18,6 +18,7 @@ public interface ISetupStepProvider
 /// <summary><see cref="ISetupStepProvider.Order"/> values of the kit's providers.</summary>
 public static class SetupStepOrder
 {
+	public const int Language = 50;
 	public const int SkyrimDirectory = 100;
 	public const int AppDataDirectory = 200;
 	public const int Availability = 1000;
