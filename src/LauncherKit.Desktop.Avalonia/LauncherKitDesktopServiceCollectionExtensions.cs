@@ -5,6 +5,7 @@ using LauncherKit.Desktop.Avalonia.Services;
 using LauncherKit.Desktop.Localization;
 using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.ViewModels;
+using LauncherKit.Desktop.ViewModels.Setup;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Localization;
@@ -32,7 +33,19 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 			options.Title = strings[DesktopStrings.OAuthTitle];
 			options.Message = strings[DesktopStrings.OAuthMessage];
 		});
-		services.TryAddScoped<FirstSetupViewModel>();
+		services.TryAddScoped(sp =>
+		{
+			var settingsService = sp.GetRequiredService<ISettingsService>();
+			var context = new FirstSetupContext(settingsService.GetSettings());
+			return new FirstSetupViewModel(FirstSetupSteps.Create(sp.GetServices<ISetupStepProvider>(), context), context,
+				settingsService, sp.GetRequiredService<IAppReloader>());
+		});
+		services.TryAddEnumerable(
+		[
+			ServiceDescriptor.Scoped<ISetupStepProvider, SkyrimDirectorySetupStepProvider>(),
+			ServiceDescriptor.Scoped<ISetupStepProvider, AppDataDirectorySetupStepProvider>(),
+			ServiceDescriptor.Scoped<ISetupStepProvider, AvailabilitySetupStepProvider>(),
+		]);
 		services.TryAddScoped<AppTaskQueueViewModel>();
 		services.TryAddScoped<HomeViewModel>();
 		services.TryAddScoped<DownloadsViewModel>();

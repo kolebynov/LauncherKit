@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using LauncherKit.Desktop.Avalonia.Services;
 using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.ViewModels;
+using LauncherKit.Desktop.ViewModels.Setup;
 using LauncherKit.Core.Initialization;
 
 namespace LauncherKit.Desktop.Avalonia.Tests.Services;

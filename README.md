@@ -272,10 +272,28 @@ The consumer must register:
 |---|---|
 | `ILaunchersRootDirectoryManager` | A `LaunchersRootDirectoryManager` subclass describing the installation layout (step 5). |
 | `IViewRegistry` | Maps each kit or consumer view model to its view; throws for unknown models. `ViewLocator` uses it. |
-| `MainWindowViewModelBase` (scoped) | The consumer's main window model: pages, navigation, setup-versus-home selection. Kit page view models (`HomeViewModel`, `FirstSetupViewModel`, `SettingsViewModel`, `DownloadsViewModel`, `GraphPacksViewModel`, `OptionalModsViewModel`, `AppTaskQueueViewModel`, ...) are resolved from the scope. |
+| `MainWindowViewModelBase` (scoped) | The consumer's main window model: pages, navigation, setup-versus-home selection (show `FirstSetupViewModel` only when `IsRequired`, i.e. it has steps). Kit page view models (`HomeViewModel`, `FirstSetupViewModel`, `SettingsViewModel`, `DownloadsViewModel`, `GraphPacksViewModel`, `OptionalModsViewModel`, `AppTaskQueueViewModel`, ...) are resolved from the scope. |
 | `IMainView` (singleton) | The main window; it must derive from Avalonia `Window`, with any base class. |
 
 View models expose typed facts and act directly. Views own the wording, confirmations, dialogs, notifications and directory pickers, and pass collected input as command parameters. Use compiled bindings, and use `ObjectConverters.IsNull`/`IsNotNull` (never `!obj`) to bind visibility to whether an object is null. AGENTS.md "Desktop contract" lists all the rules.
+
+#### First setup steps
+
+`FirstSetupViewModel` routes through the steps of every registered `ISetupStepProvider`, in ascending `Order`. The kit registers providers for the Skyrim directory (`SetupStepOrder.SkyrimDirectory`), the data directory and the download server check. To add a step, derive from `SetupStepViewModel`: validate and apply your input to `FirstSetupContext.Settings`, then call `GoNext()`. Map the step to a view in your `IViewRegistry`, and register a provider:
+
+```csharp
+public sealed class TermsSetupStepProvider(ITermsStore terms) : ISetupStepProvider
+{
+	public int Order => SetupStepOrder.SkyrimDirectory - 50; // before the Skyrim directory
+
+	public IEnumerable<SetupStepViewModel> CreateSteps(FirstSetupContext context) =>
+		terms.IsAccepted ? [] : [new TermsSetupStepViewModel(terms)];
+}
+
+services.TryAddEnumerable(ServiceDescriptor.Scoped<ISetupStepProvider, TermsSetupStepProvider>());
+```
+
+A provider returns no steps when its settings are complete. The setup is shown only while some provider returns a step. Moving past the last step saves the settings and reloads the configuration.
 
 #### Localization
 

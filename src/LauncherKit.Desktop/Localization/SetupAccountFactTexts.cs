@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Localization;
 using LauncherKit.Desktop.ViewModels;
+using LauncherKit.Desktop.ViewModels.Setup;
 using LauncherKit.Core.Feed;
 
 namespace LauncherKit.Desktop.Localization;

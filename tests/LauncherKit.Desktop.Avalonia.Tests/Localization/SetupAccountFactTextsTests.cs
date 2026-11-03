@@ -3,6 +3,7 @@ using LauncherKit.Desktop.Avalonia.Converters;
 using LauncherKit.Desktop.Avalonia.Localization;
 using LauncherKit.Desktop.Localization;
 using LauncherKit.Desktop.ViewModels;
+using LauncherKit.Desktop.ViewModels.Setup;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using LauncherKit.Core.Feed;

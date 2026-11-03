@@ -1,6 +1,7 @@
 using System.Collections;
 using LauncherKit.Desktop.Avalonia.Localization;
 using LauncherKit.Desktop.ViewModels;
+using LauncherKit.Desktop.ViewModels.Setup;
 using System.Globalization;
 using Avalonia.Data.Converters;
 using LauncherKit.Core.Feed;
