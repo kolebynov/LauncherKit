@@ -1,6 +1,4 @@
 using Microsoft.Extensions.Localization;
-using LauncherKit.Desktop.Extensions;
-using LauncherKit.Desktop.Localization;
 using LauncherKit.Desktop.ViewModels;
 
 namespace LauncherKit.Desktop.Localization;

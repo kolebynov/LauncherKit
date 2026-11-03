@@ -1,5 +1,4 @@
 using LauncherKit.Core.Utils;
-using LauncherKit.Desktop.ViewModels;
 
 namespace LauncherKit.Desktop.ViewModels;
 

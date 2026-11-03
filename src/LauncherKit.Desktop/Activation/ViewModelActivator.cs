@@ -1,5 +1,4 @@
 ﻿using R3;
-using LauncherKit.Desktop.Activation;
 
 namespace LauncherKit.Desktop.Activation;
 

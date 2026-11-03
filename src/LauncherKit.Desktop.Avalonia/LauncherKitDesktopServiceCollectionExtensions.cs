@@ -1,9 +1,7 @@
 using Microsoft.Extensions.Configuration;
-using LauncherKit.Desktop.Avalonia.Extensions;
 using LauncherKit.Desktop.Avalonia.Initialization;
 using LauncherKit.Desktop.Avalonia.Interop;
 using LauncherKit.Desktop.Avalonia.Services;
-using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Localization;
 using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.ViewModels;

@@ -1,8 +1,6 @@
 using R3;
-using LauncherKit.Desktop.Avalonia.Initialization;
 using LauncherKit.Desktop.Avalonia.Interop;
 using LauncherKit.Desktop.Avalonia.Services;
-using LauncherKit.Desktop.Services;
 using LauncherKit.Core.AppTasks;
 using LauncherKit.Core.AppTasks.MicroTasks;
 using LauncherKit.Core.Initialization;

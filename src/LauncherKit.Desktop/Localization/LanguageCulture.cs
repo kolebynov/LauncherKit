@@ -1,5 +1,4 @@
 using System.Globalization;
-using LauncherKit.Desktop.Localization;
 
 namespace LauncherKit.Desktop.Localization;
 

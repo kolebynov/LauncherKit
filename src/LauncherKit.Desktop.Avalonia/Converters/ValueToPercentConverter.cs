@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using LauncherKit.Desktop.Avalonia.Converters;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 

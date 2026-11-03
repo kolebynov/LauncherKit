@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using LauncherKit.Desktop.Avalonia.Services;
 using Avalonia.Threading;
 using LauncherKit.Core.Services.Abstractions;
 

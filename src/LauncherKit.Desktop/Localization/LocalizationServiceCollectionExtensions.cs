@@ -1,6 +1,4 @@
 using System.Reflection;
-using LauncherKit.Desktop.Extensions;
-using LauncherKit.Desktop.Localization;
 using System.Resources;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;

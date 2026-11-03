@@ -1,7 +1,5 @@
 using System.Globalization;
-using LauncherKit.Desktop.Avalonia.Extensions;
 using LauncherKit.Desktop.Avalonia.Localization;
-using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Localization;
 using System.Resources;
 using Microsoft.Extensions.DependencyInjection;

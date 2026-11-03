@@ -1,5 +1,4 @@
 using LauncherKit.Desktop.ViewModels;
-using LauncherKit.Desktop.Avalonia;
 using LauncherKit.Core.FileStorage;
 using LauncherKit.Infrastructure;
 

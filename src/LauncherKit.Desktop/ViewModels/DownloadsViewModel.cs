@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using LauncherKit.Desktop.Extensions;
-using LauncherKit.Desktop.ViewModels;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LauncherKit.Core.FileStorage;
 

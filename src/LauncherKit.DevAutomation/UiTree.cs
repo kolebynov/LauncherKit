@@ -5,7 +5,6 @@ using Avalonia.Automation.Peers;
 using Avalonia.Automation.Provider;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
-using Avalonia.Input;
 using Avalonia.VisualTree;
 
 namespace LauncherKit.DevAutomation;

@@ -1,4 +1,3 @@
-using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.ViewModels;
 using LauncherKit.TestSupport;
 

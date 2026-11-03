@@ -1,7 +1,4 @@
 using System.Resources;
-using LauncherKit.Desktop.Avalonia.Extensions;
-using LauncherKit.Desktop.Avalonia.Localization;
-using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Localization;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.Localization;

@@ -1,5 +1,4 @@
 using R3;
-using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Services;
 
 namespace LauncherKit.Desktop.Extensions;

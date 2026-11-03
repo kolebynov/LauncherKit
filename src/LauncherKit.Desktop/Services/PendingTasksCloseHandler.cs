@@ -1,5 +1,4 @@
 ﻿using LauncherKit.Core.AppTasks;
-using LauncherKit.Desktop.Services;
 
 namespace LauncherKit.Desktop.Services;
 

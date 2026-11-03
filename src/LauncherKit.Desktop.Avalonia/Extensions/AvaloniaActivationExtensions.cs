@@ -1,7 +1,5 @@
 ﻿using Avalonia;
 using LauncherKit.Desktop.Activation;
-using LauncherKit.Desktop.Avalonia.Extensions;
-using LauncherKit.Desktop.Extensions;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;

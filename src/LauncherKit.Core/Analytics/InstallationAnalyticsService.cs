@@ -1,4 +1,3 @@
-using System.Net.Http.Json;
 using LauncherKit.Core.Services.Abstractions;
 
 namespace LauncherKit.Core.Analytics;

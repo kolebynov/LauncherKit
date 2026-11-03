@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Services;
-using LauncherKit.Desktop.ViewModels;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using R3;

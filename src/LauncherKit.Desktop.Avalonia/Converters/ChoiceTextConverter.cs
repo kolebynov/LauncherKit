@@ -1,7 +1,5 @@
 using System.Globalization;
-using LauncherKit.Desktop.Avalonia.Converters;
 using LauncherKit.Desktop.Avalonia.Localization;
-using LauncherKit.Desktop.Localization;
 using Avalonia.Data.Converters;
 using LauncherKit.Core.Choices;
 

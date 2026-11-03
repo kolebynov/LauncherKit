@@ -1,9 +1,6 @@
 using Microsoft.Extensions.Localization;
-using LauncherKit.Desktop.Extensions;
-using LauncherKit.Desktop.Localization;
 using LauncherKit.Core;
 using LauncherKit.Core.AppTasks;
-using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Desktop.Localization;
 

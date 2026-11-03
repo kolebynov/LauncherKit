@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Services;
-using LauncherKit.Desktop.ViewModels;
 using R3;
 using LauncherKit.Core.Feed;
 

@@ -13,7 +13,6 @@ using LauncherKit.Core.FileStorage;
 using LauncherKit.Core.Models;
 using LauncherKit.Core.Services;
 using LauncherKit.Core.Services.Abstractions;
-using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Core.Tests.Services;
 

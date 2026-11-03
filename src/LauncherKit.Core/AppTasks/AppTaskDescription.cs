@@ -1,6 +1,5 @@
 using NuGet.Versioning;
 using LauncherKit.Core.Feed;
-using LauncherKit.Core.Models;
 
 namespace LauncherKit.Core.AppTasks;
 

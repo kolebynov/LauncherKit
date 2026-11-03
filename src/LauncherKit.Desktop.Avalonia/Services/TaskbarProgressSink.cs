@@ -1,8 +1,5 @@
 using Avalonia.Controls;
-using LauncherKit.Desktop.Avalonia.Extensions;
 using LauncherKit.Desktop.Avalonia.Interop;
-using LauncherKit.Desktop.Avalonia.Services;
-using LauncherKit.Desktop.Extensions;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 

@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text;
-using LauncherKit.Infrastructure;
 using LauncherKit.TestSupport;
 using LauncherKit.Core.OAuth;
 using LauncherKit.Core.Services.Abstractions;

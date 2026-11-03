@@ -1,5 +1,4 @@
 using NuGet.Versioning;
-using LauncherKit.Core.Models;
 
 namespace LauncherKit.Core.AppTasks.MicroTasks;
 

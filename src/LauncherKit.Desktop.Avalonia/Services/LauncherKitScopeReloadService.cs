@@ -1,7 +1,4 @@
 using Microsoft.Extensions.Options;
-using LauncherKit.Desktop.Avalonia.Extensions;
-using LauncherKit.Desktop.Avalonia.Services;
-using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Localization;
 using LauncherKit.Desktop.Services;
 using LauncherKit.Core.Extensions;

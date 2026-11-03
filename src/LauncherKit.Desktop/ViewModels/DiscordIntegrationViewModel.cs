@@ -1,10 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using LauncherKit.Desktop.Extensions;
-using LauncherKit.Desktop.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using R3;
-using LauncherKit.Desktop.Services;
 using LauncherKit.Core.Discord;
 using LauncherKit.Core.Feed;
 

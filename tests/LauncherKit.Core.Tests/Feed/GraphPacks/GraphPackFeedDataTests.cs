@@ -2,7 +2,6 @@ using NuGet.Versioning;
 using LauncherKit.Core.Feed;
 using LauncherKit.Core.Feed.GraphPacks;
 using LauncherKit.Core.Feed.Mods;
-using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Core.Tests.Feed.GraphPacks;
 

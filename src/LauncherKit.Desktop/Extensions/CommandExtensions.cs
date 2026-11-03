@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.Input;
-using LauncherKit.Desktop.Extensions;
 using R3;
 
 namespace LauncherKit.Desktop.Extensions;

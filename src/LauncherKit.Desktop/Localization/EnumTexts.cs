@@ -1,6 +1,4 @@
 using Microsoft.Extensions.Localization;
-using LauncherKit.Desktop.Extensions;
-using LauncherKit.Desktop.Localization;
 using LauncherKit.Core.FileStorage;
 using LauncherKit.Core.UserSettings;
 

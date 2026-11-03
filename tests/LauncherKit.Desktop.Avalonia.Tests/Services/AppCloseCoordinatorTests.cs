@@ -1,6 +1,4 @@
 using Microsoft.Extensions.Logging.Abstractions;
-using LauncherKit.Desktop.Avalonia.Extensions;
-using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Services;
 using LauncherKit.Core.AppTasks;
 using LauncherKit.Core.Services.Abstractions;

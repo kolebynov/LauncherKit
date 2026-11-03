@@ -1,8 +1,5 @@
 using System.Globalization;
-using LauncherKit.Desktop.Avalonia;
-using LauncherKit.Desktop.Avalonia.Extensions;
 using LauncherKit.Desktop.Avalonia.Services;
-using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Services;
 using Microsoft.Extensions.Time.Testing;
 using LauncherKit.Infrastructure;

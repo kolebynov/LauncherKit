@@ -1,5 +1,4 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using LauncherKit.Desktop.ViewModels;
 using LauncherKit.Core.Feed.Modpacks;
 
 namespace LauncherKit.Desktop.ViewModels;

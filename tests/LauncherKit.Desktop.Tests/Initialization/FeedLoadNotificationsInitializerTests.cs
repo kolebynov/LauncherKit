@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Time.Testing;
-using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.ViewModels;
 using R3;

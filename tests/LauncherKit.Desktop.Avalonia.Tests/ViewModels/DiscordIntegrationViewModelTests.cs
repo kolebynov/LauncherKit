@@ -1,9 +1,6 @@
 using Microsoft.Extensions.Logging;
-using LauncherKit.Desktop.Avalonia.Extensions;
-using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.ViewModels;
 using Microsoft.Extensions.Logging.Abstractions;
-using LauncherKit.Desktop.Services;
 using LauncherKit.Core.Discord;
 using LauncherKit.Core.Exceptions;
 using LauncherKit.Core.Feed;

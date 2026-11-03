@@ -1,5 +1,4 @@
 using Avalonia;
-using LauncherKit.Desktop.Avalonia.Controls;
 using Avalonia.Controls;
 
 namespace LauncherKit.Desktop.Avalonia.Controls;

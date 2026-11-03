@@ -1,5 +1,4 @@
 using LauncherKit.Desktop.Extensions;
-using LauncherKit.Desktop.ViewModels;
 using LauncherKit.Core.Feed;
 
 namespace LauncherKit.Desktop.ViewModels;

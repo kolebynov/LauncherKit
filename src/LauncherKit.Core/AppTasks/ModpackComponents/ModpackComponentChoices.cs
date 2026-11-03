@@ -1,6 +1,5 @@
 using LauncherKit.Core.Choices;
 using LauncherKit.Core.Feed;
-using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Core.AppTasks.ModpackComponents;
 

@@ -1,6 +1,5 @@
 using LauncherKit.Desktop.ViewModels;
 using LauncherKit.Core.Feed;
-using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Desktop.Tests.ViewModels;
 

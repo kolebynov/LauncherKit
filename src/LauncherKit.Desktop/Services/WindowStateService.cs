@@ -1,5 +1,4 @@
 using LauncherKit.Core.Services.Abstractions;
-using LauncherKit.Desktop.Services;
 
 namespace LauncherKit.Desktop.Services;
 

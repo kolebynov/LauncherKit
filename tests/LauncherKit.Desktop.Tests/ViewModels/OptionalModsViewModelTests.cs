@@ -8,7 +8,6 @@ using LauncherKit.Core.Feed.Mods;
 using LauncherKit.Core.Models;
 using LauncherKit.Core.Services.Abstractions;
 using LauncherKit.Core.Utils;
-using LauncherKit.Infrastructure;
 using LauncherKit.TestSupport;
 
 namespace LauncherKit.Desktop.Tests.ViewModels;

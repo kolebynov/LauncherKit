@@ -1,6 +1,4 @@
 using System.Collections;
-using LauncherKit.Desktop.Extensions;
-using LauncherKit.Desktop.Localization;
 using System.Globalization;
 using System.Resources;
 using Microsoft.Extensions.Localization;

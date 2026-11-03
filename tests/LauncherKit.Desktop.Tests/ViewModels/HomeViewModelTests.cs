@@ -9,7 +9,6 @@ using LauncherKit.Core.Feed.Modpacks;
 using LauncherKit.Core.Models;
 using LauncherKit.Core.Services.Abstractions;
 using LauncherKit.Core.Update;
-using LauncherKit.Core.Utils;
 using LauncherKit.TestSupport;
 
 namespace LauncherKit.Desktop.Tests.ViewModels;

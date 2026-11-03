@@ -1,5 +1,4 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using LauncherKit.Desktop.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using R3;
 using LauncherKit.Core.Choices;

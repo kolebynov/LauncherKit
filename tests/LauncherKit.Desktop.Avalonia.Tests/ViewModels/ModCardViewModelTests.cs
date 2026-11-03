@@ -1,6 +1,4 @@
 using CommunityToolkit.Mvvm.Input;
-using LauncherKit.Desktop.Avalonia.Extensions;
-using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Localization;
 using LauncherKit.Desktop.ViewModels;
 using Microsoft.Extensions.Localization;

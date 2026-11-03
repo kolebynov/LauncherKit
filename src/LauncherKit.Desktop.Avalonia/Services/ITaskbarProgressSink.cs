@@ -1,5 +1,4 @@
 using LauncherKit.Desktop.Avalonia.Interop;
-using LauncherKit.Desktop.Avalonia.Services;
 
 namespace LauncherKit.Desktop.Avalonia.Services;
 

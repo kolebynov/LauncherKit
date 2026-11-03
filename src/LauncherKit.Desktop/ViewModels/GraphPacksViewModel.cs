@@ -1,9 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Services;
-using LauncherKit.Desktop.ViewModels;
 using CommunityToolkit.Mvvm.Input;
-using NuGet.Versioning;
 using R3;
 using LauncherKit.Core.AppTasks;
 using LauncherKit.Core.Feed;
@@ -11,7 +9,6 @@ using LauncherKit.Core.Feed.GraphPacks;
 using LauncherKit.Core.Feed.Mods;
 using LauncherKit.Core.Services.Abstractions;
 using LauncherKit.Core.Utils;
-using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Desktop.ViewModels;
 

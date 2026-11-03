@@ -1,6 +1,4 @@
 using Microsoft.Extensions.Logging;
-using LauncherKit.Desktop.Extensions;
-using LauncherKit.Desktop.Services;
 
 namespace LauncherKit.Desktop.Services;
 

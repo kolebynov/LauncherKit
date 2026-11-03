@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using LauncherKit.Desktop.Extensions;
-using LauncherKit.Desktop.ViewModels;
 using CommunityToolkit.Mvvm.Input;
 using LauncherKit.Core.Services.Abstractions;
 

@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using LauncherKit.Desktop.ViewModels;
 
 namespace LauncherKit.Desktop.ViewModels;
 

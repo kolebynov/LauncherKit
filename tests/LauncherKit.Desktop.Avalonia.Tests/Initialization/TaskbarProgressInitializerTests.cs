@@ -2,7 +2,6 @@ using R3;
 using LauncherKit.Desktop.Avalonia.Initialization;
 using LauncherKit.Desktop.Avalonia.Interop;
 using LauncherKit.Desktop.Avalonia.Services;
-using LauncherKit.Desktop.Services;
 using LauncherKit.Core.AppTasks;
 
 namespace LauncherKit.Desktop.Avalonia.Tests.Initialization;

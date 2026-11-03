@@ -1,6 +1,4 @@
 using System.Net.Sockets;
-using LauncherKit.Desktop.Extensions;
-using LauncherKit.Desktop.Localization;
 using Microsoft.Extensions.Localization;
 using LauncherKit.Core.Exceptions;
 using LauncherKit.Core.Utils;

@@ -1,5 +1,4 @@
 using R3;
-using LauncherKit.Desktop.Avalonia.Extensions;
 using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Services;
 
