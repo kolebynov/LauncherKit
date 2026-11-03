@@ -33,11 +33,10 @@ public sealed class SetupAccountFactTextsTests
 				new ActivateBetaCodeResult.InvalidBetaCode(),
 			];
 			foreach (var result in results) AssertResolved(texts.Get(result));
-			var setup = new SetupError(new Version(0, 1, 2), new Version(3, 4, 5), new Uri("https://help.example.test/setup"));
+			var setup = new SetupError(new Version(0, 1, 2), new Version(3, 4, 5));
 			var message = texts.Get(setup);
 			AssertResolved(message);
-			Assert.That(message.Value, Does.Contain("0.1.2").And.Contain("3.4.5").And.Contain(setup.HelpUri!.ToString()));
-			AssertResolved(texts.Get(setup with { HelpUri = null }));
+			Assert.That(message.Value, Does.Contain("0.1.2").And.Contain("3.4.5"));
 		}
 		finally
 		{

@@ -35,5 +35,5 @@ public sealed class SetupAccountFactTexts(IStringLocalizer<DesktopStrings> strin
 	};
 
 	public LocalizedString Get(SetupError error) => strings[DesktopStrings.SetupUnsupportedVersion,
-		error.DetectedSkyrimVersion, error.RequiredSkyrimVersion, error.HelpUri?.ToString() ?? string.Empty];
+		error.DetectedSkyrimVersion, error.RequiredSkyrimVersion];
 }

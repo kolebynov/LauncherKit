@@ -15,7 +15,7 @@ namespace LauncherKit.Desktop.ViewModels;
 
 public enum FirstSetupStep { Welcome, SkyrimDirectory, AppDataDirectory, Availability, Finished }
 public enum FirstSetupState { NotStarted, InProgress, Saving, Finished }
-public sealed record SetupError(Version DetectedSkyrimVersion, Version RequiredSkyrimVersion, Uri? HelpUri);
+public sealed record SetupError(Version DetectedSkyrimVersion, Version RequiredSkyrimVersion);
 
 public sealed partial class FirstSetupViewModel : ViewModelBase
 {
@@ -24,7 +24,6 @@ public sealed partial class FirstSetupViewModel : ViewModelBase
 	private readonly IAppReloader _appReloader;
 	private readonly AllSettings _settings;
 	private readonly Version _requiredVersion;
-	private readonly Uri? _helpUri;
 
 	[ObservableProperty]
 	public partial FirstSetupStep Step { get; private set; }
@@ -49,7 +48,6 @@ public sealed partial class FirstSetupViewModel : ViewModelBase
 		_appReloader = appReloader;
 		_settings = settingsService.GetSettings();
 		_requiredVersion = Version.Parse(product.Value.RequiredSkyrimVersion);
-		_helpUri = product.Value.FirstSetupHelpUri;
 		SkyrimDirectory = new SkyrimDirectoryBrowserViewModel(installationChecker)
 		{
 			ConflictingDirectoryError = DirectoryConflictErrors.SkyrimDirectory,
@@ -98,7 +96,7 @@ public sealed partial class FirstSetupViewModel : ViewModelBase
 			if (_installationChecker.CheckSkyrimDirectory(SkyrimDirectory.SelectedDirectory!) is
 				SkyrimDirectoryCheckResult.SkyrimDirectory(var version) && version != _requiredVersion)
 			{
-				Error = new SetupError(version, _requiredVersion, _helpUri);
+				Error = new SetupError(version, _requiredVersion);
 				return Task.CompletedTask;
 			}
 			_settings.App.SkyrimDirectory = SkyrimDirectory.SelectedDirectory;

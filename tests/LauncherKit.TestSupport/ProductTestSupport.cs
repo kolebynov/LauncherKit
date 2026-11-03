@@ -28,7 +28,6 @@ public static class ProductTestSupport
 		UserModsSeparator = "USER MODS",
 		RequiredSkyrimVersion = "1.5.97.0",
 		RegistryKey = @"HKEY_CURRENT_USER\Software\Example\Example Launcher",
-		FirstSetupHelpUri = new Uri("https://example.test/setup"),
 		GameLaunchVariants =
 		[
 			new() { Id = "Game", ExecutablePath = "example-loader.exe" },

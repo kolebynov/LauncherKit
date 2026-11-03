@@ -19,7 +19,6 @@ public sealed class LauncherProductOptions
 	public required string RequiredSkyrimVersion { get; init; }
 	/// <summary>Registry key under which the consumer's installer reads the launcher's data directories, e.g. <c>HKEY_CURRENT_USER\Software\Company\Product</c>.</summary>
 	public required string RegistryKey { get; init; }
-	public Uri? FirstSetupHelpUri { get; init; }
 	public required IReadOnlyList<GameLaunchVariant> GameLaunchVariants { get; init; }
 
 	/// <summary>Rejects an incomplete identity before configuration or installation state is accessed.</summary>
