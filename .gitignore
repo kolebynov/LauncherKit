@@ -1,0 +1,17 @@
+bin/
+obj/
+logs/
+console.log
+riderModule.iml
+/_ReSharper.Caches/
+.idea/
+/.vs
+out/
+
+appsettings.override.json
+launcher.db*
+!/tests/LauncherKit.Core.Tests/Fixtures/Db/launcher.db
+Tools/
+cache/
+Downloads/
+__pycache__/
