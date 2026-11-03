@@ -125,11 +125,45 @@ public sealed class AppDataDirectorySetupStepViewModel : DirectorySetupStepViewM
 	}
 }
 
-/// <summary>Checks the download servers; moves on once the check finished, even when no server works.</summary>
+/// <summary>
+/// Whether the first setup still needs the download server check: until a check succeeded, stored under
+/// <see cref="CheckSucceededKey"/> in the global key-value storage, so installations configured before the key existed
+/// get the check too. Continuing without downloads skips the check for the rest of the run (the setup's configuration
+/// reload would otherwise require it again at once); the next start offers it again. A singleton, as scopes are
+/// recreated on reload.
+/// </summary>
+public sealed class AvailabilityCheckState(IGlobalKeyValueStorage storage)
+{
+	public const string CheckSucceededKey = "FeedAvailabilityCheckSucceeded";
+
+	private bool _skippedThisRun;
+
+	public bool IsRequired => !_skippedThisRun && !storage.HasKey(CheckSucceededKey);
+
+	public void Succeeded() => storage.Set(CheckSucceededKey, "1");
+
+	public void ContinuedWithoutDownloads() => _skippedThisRun = true;
+}
+
+/// <summary>
+/// Checks the download servers; moves on once the check finished, even when no server works. A success is recorded in
+/// <see cref="AvailabilityCheckState"/> at once, continuing after a failure only for this run.
+/// </summary>
 public sealed class AvailabilitySetupStepViewModel : SetupStepViewModel
 {
-	public AvailabilitySetupStepViewModel(IFeedAvailabilityChecker availabilityChecker) =>
-		Availability = new CheckAvailabilityViewModel(availabilityChecker, _ => GoNext());
+	public AvailabilitySetupStepViewModel(IFeedAvailabilityChecker availabilityChecker, AvailabilityCheckState state)
+	{
+		Availability = new CheckAvailabilityViewModel(availabilityChecker, _ =>
+		{
+			if (!Availability!.IsAvailable) state.ContinuedWithoutDownloads();
+			return GoNext();
+		});
+		Availability.PropertyChanged += (_, e) =>
+		{
+			if (e.PropertyName == nameof(CheckAvailabilityViewModel.IsAvailable) && Availability.IsAvailable)
+				state.Succeeded();
+		};
+	}
 
 	public CheckAvailabilityViewModel Availability { get; }
 }
@@ -158,16 +192,12 @@ public sealed class AppDataDirectorySetupStepProvider(IUiDispatcher dispatcher) 
 			: [];
 }
 
-/// <summary>
-/// Offers the download server check while the installation is being configured, i.e. while the Skyrim or the data
-/// directory is not set. It alone never makes the setup required.
-/// </summary>
-public sealed class AvailabilitySetupStepProvider(IFeedAvailabilityChecker availabilityChecker) : ISetupStepProvider
+/// <summary>Offers the download server check while <see cref="AvailabilityCheckState.IsRequired"/>.</summary>
+public sealed class AvailabilitySetupStepProvider(IFeedAvailabilityChecker availabilityChecker, AvailabilityCheckState state)
+	: ISetupStepProvider
 {
 	public int Order => SetupStepOrder.Availability;
 
 	public IEnumerable<SetupStepViewModel> CreateSteps(FirstSetupContext context) =>
-		string.IsNullOrEmpty(context.Settings.App.SkyrimDirectory) || string.IsNullOrEmpty(context.Settings.App.AppDataDirectory)
-			? [new AvailabilitySetupStepViewModel(availabilityChecker)]
-			: [];
+		state.IsRequired ? [new AvailabilitySetupStepViewModel(availabilityChecker, state)] : [];
 }

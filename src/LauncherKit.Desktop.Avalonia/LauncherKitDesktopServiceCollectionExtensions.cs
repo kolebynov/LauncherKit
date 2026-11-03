@@ -28,6 +28,7 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 			LanguageCulture.Apply(sp.GetRequiredService<IConfiguration>()["App:Language"] ?? string.Empty));
 		services.TryAddSingleton<IUiDispatcher, AvaloniaUiDispatcher>();
 		services.TryAddSingleton<FeedLoadStatusViewModel>();
+		services.TryAddSingleton<AvailabilityCheckState>();
 		services.AddOptions<LoopbackBrowserOptions>().Configure<IStringLocalizer<DesktopStrings>>((options, strings) =>
 		{
 			options.Title = strings[DesktopStrings.OAuthTitle];

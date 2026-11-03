@@ -126,7 +126,21 @@ public sealed class FirstSetupViewModelTests
 	}
 
 	[Test]
-	public void KitProviders_BothDirectoriesSet_CreateNoSteps()
+	public void KitProviders_DirectoriesSetAndCheckSucceeded_CreateNoSteps()
+	{
+		// Arrange
+		var mocker = CreateMocker(new AppSettings { SkyrimDirectory = "Skyrim", AppDataDirectory = "Data" });
+		mocker.GetMock<IGlobalKeyValueStorage>().Setup(x => x.HasKey(AvailabilityCheckState.CheckSucceededKey)).Returns(true);
+
+		// Act
+		var steps = CreateKitSteps(mocker, out _);
+
+		// Assert
+		Assert.That(steps, Is.Empty);
+	}
+
+	[Test]
+	public void KitProviders_DirectoriesSetWithoutSucceededCheck_CreateOnlyAvailabilityStep()
 	{
 		// Arrange
 		var mocker = CreateMocker(new AppSettings { SkyrimDirectory = "Skyrim", AppDataDirectory = "Data" });
@@ -135,7 +149,7 @@ public sealed class FirstSetupViewModelTests
 		var steps = CreateKitSteps(mocker, out _);
 
 		// Assert
-		Assert.That(steps, Is.Empty);
+		Assert.That(steps.Select(x => x.GetType()), Is.EqualTo(new[] { typeof(AvailabilitySetupStepViewModel) }));
 	}
 
 	[Test]
@@ -153,6 +167,48 @@ public sealed class FirstSetupViewModelTests
 			typeof(SkyrimDirectorySetupStepViewModel), typeof(AppDataDirectorySetupStepViewModel),
 			typeof(AvailabilitySetupStepViewModel),
 		}));
+	}
+
+	[TestCase(true, 1)]
+	[TestCase(false, 0)]
+	public async Task AvailabilityStep_CheckFinished_StoresKeyOnlyAfterSuccess(bool isAvailable, int stored)
+	{
+		// Arrange
+		var mocker = CreateMocker(new AppSettings());
+		mocker.GetMock<IFeedAvailabilityChecker>().Setup(x => x.CheckFeed()).ReturnsAsync(isAvailable);
+		var sut = new AvailabilitySetupStepViewModel(mocker.Get<IFeedAvailabilityChecker>(), mocker.Get<AvailabilityCheckState>());
+
+		// Act
+		await sut.Availability.CheckAvailabilityCommand.ExecuteAsync(null);
+
+		// Assert
+		mocker.GetMock<IGlobalKeyValueStorage>().Verify(x => x.Set(AvailabilityCheckState.CheckSucceededKey, "1"), Times.Exactly(stored));
+	}
+
+	[Test]
+	public async Task AvailabilityStep_ContinueWithoutDownloads_SkipsCheckOnlyUntilNextStart()
+	{
+		// Arrange
+		var mocker = CreateMocker(new AppSettings { SkyrimDirectory = "Skyrim", AppDataDirectory = "Data" });
+		mocker.GetMock<IFeedAvailabilityChecker>().Setup(x => x.CheckFeed()).ReturnsAsync(false);
+		mocker.GetMock<ISettingsService>().Setup(x => x.SaveSettings(It.IsAny<AllSettings>())).Returns(Task.CompletedTask);
+		mocker.GetMock<IAppReloader>().Setup(x => x.ReloadApp(AppReloadMode.Configuration));
+		var steps = CreateKitSteps(mocker, out var context);
+		var sut = CreateSut(mocker, context, steps);
+		await sut.Start();
+		var availability = ((AvailabilitySetupStepViewModel)sut.CurrentStep!).Availability;
+		await availability.CheckAvailabilityCommand.ExecuteAsync(null);
+
+		// Act
+		await availability.FinishCommand.ExecuteAsync(null);
+
+		// Assert: the setup's reload creates no steps, a new run's state requires the check again.
+		Assert.Multiple(() =>
+		{
+			Assert.That(sut.State, Is.EqualTo(FirstSetupState.Finished));
+			Assert.That(CreateKitSteps(mocker, out _), Is.Empty);
+			Assert.That(new AvailabilityCheckState(mocker.Get<IGlobalKeyValueStorage>()).IsRequired, Is.True);
+		});
 	}
 
 	[Test]
@@ -355,6 +411,10 @@ public sealed class FirstSetupViewModelTests
 		var mocker = ProductTestSupport.CreateMocker();
 		mocker.Use<IUiDispatcher>(new ImmediateUiDispatcher());
 		mocker.GetMock<ISkyrimDirectoryFinder>().Setup(x => x.FindSkyrimDirectory()).Returns((string?)null);
+		var storage = mocker.GetMock<IGlobalKeyValueStorage>();
+		storage.Setup(x => x.HasKey(AvailabilityCheckState.CheckSucceededKey)).Returns(false);
+		storage.Setup(x => x.Set(AvailabilityCheckState.CheckSucceededKey, "1"));
+		mocker.Use(new AvailabilityCheckState(storage.Object));
 		mocker.GetMock<ISettingsService>().Setup(x => x.GetSettings()).Returns(CreateSettings(app));
 		return mocker;
 	}
