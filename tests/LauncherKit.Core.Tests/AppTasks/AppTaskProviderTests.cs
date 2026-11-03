@@ -187,7 +187,7 @@ public sealed class AppTaskProviderTests
 		var sut = mocker.CreateInstance<AppTaskProvider>();
 
 		// Act
-		var task = await sut.CreateRunGameTask(StartGameVariant.ModOrganizer, CancellationToken.None);
+		var task = await sut.CreateRunGameTask(new GameLaunch("Mod Organizer", null), CancellationToken.None);
 
 		// Assert
 		Assert.That(task.Dependencies, Is.Empty);

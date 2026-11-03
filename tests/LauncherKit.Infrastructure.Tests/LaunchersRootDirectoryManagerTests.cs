@@ -63,7 +63,7 @@ public sealed class LaunchersRootDirectoryManagerTests
 	public void Constructor_InvalidIdentity_ThrowsBeforeAccessingRoot()
 	{
 		var mocker = ProductTestSupport.CreateMocker();
-		mocker.Use(ProductTestSupport.CreateProduct(globalDatabaseFileName: ""));
+		mocker.Use(ProductTestSupport.CreateProduct(localDatabaseFileName: ""));
 
 		Assert.That(() => CreateSut(mocker, true), Throws.ArgumentException);
 		mocker.GetMock<IFileSystemUtils>().VerifyNoOtherCalls();

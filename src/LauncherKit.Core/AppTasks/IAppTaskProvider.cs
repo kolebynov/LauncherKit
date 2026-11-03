@@ -7,7 +7,8 @@ namespace LauncherKit.Core.AppTasks;
 
 public interface IAppTaskProvider
 {
-	ValueTask<AppTask> CreateRunGameTask(StartGameVariant startGameVariant, CancellationToken cancellationToken);
+	/// <summary>Starts <paramref name="launch"/> through Mod Organizer after installing the newest offered STB.</summary>
+	ValueTask<AppTask> CreateRunGameTask(GameLaunch launch, CancellationToken cancellationToken);
 
 	AppTask CreateUpdateLauncherTask(DownloadInfo downloadInfo, NuGetVersion version);
 

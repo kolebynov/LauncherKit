@@ -16,7 +16,7 @@ public sealed partial class TaskTexts
 		MicroTaskDescription.SelectRequiredMod => strings[DesktopStrings.MicroSelectRequiredMod],
 		MicroTaskDescription.SelectModpackComponents => strings[DesktopStrings.MicroSelectModpackComponents],
 		MicroTaskDescription.RunProcess(var fileName) => strings[DesktopStrings.MicroRunProcess, fileName],
-		MicroTaskDescription.GameStarted(var variant) => strings[DesktopStrings.MicroGameStarted, Get(variant).Value],
+		MicroTaskDescription.GameStarted(var name) => strings[DesktopStrings.MicroGameStarted, name],
 		MicroTaskDescription.RunLauncherSetup => strings[DesktopStrings.MicroRunLauncherSetup],
 		MicroTaskDescription.DeleteModOrganizer => strings[DesktopStrings.MicroDeleteModOrganizer],
 		MicroTaskDescription.DeleteOldSaves => strings[DesktopStrings.MicroDeleteOldSaves],

@@ -11,6 +11,7 @@ using LauncherKit.Core.Choices;
 using LauncherKit.Core.Exceptions;
 using LauncherKit.Core.FileStorage;
 using LauncherKit.Core.UserSettings;
+using LauncherKit.Core.Models;
 using LauncherKit.Core.Feed;
 using LauncherKit.Core.Utils;
 using LauncherKit.Infrastructure;
@@ -44,7 +45,7 @@ public sealed class DescriptionTextsTests
 				new AppTaskDescription.InstallMod("mod-marker"),
 				new AppTaskDescription.UninstallMod("mod-marker"),
 				new AppTaskDescription.UpdateLauncher(version),
-				new AppTaskDescription.RunGame(StartGameVariant.Game),
+				new AppTaskDescription.RunGame("program-marker", new SkyrimRelativePath("program.exe")),
 				AppTaskDescription.DeleteOldSaves.Instance,
 				AppTaskDescription.InstallSkyrim.Instance,
 				AppTaskDescription.SelectModpackComponents.Instance,
@@ -64,7 +65,7 @@ public sealed class DescriptionTextsTests
 				MicroTaskDescription.SelectRequiredMod.Instance,
 				MicroTaskDescription.SelectModpackComponents.Instance,
 				new MicroTaskDescription.RunProcess("argument-marker"),
-				new MicroTaskDescription.GameStarted(StartGameVariant.Game),
+				new MicroTaskDescription.GameStarted("program-marker"),
 				MicroTaskDescription.RunLauncherSetup.Instance,
 				MicroTaskDescription.DeleteModOrganizer.Instance,
 				MicroTaskDescription.DeleteOldSaves.Instance,
@@ -114,6 +115,8 @@ public sealed class DescriptionTextsTests
 			{
 				Assert.That(tasks.Get(new AppTaskDescription.InstallModpack(version)).Value, Does.Contain(version.ToString()));
 				Assert.That(tasks.Get(new MicroTaskDescription.DownloadFile("argument-marker")).Value, Does.Contain("argument-marker"));
+				Assert.That(tasks.Get(new AppTaskDescription.RunGame("program-marker", null)).Value, Does.Contain("program-marker"));
+				Assert.That(tasks.Get(new MicroTaskDescription.GameStarted("program-marker")).Value, Does.Contain("program-marker"));
 				Assert.That(choices.Get(new ChoiceText.ExtraDownloadSize(1536)).Value,
 					Does.Contain(BytesFormatter.Format(1536, BytesFormatter.Measurement.Size.Instance)));
 				Assert.That(choices.Get(new ChoiceText.SelectRequiredModTitle(["first-marker", "second-marker"])).Value,

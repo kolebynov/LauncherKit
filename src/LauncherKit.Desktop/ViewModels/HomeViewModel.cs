@@ -128,8 +128,8 @@ public sealed partial class HomeViewModel : BaseActivatableViewModel, IDisposabl
 		await UpdateModpack(await _updateProvider.GetModpackInstallInfo(version.FeedItem, cancellationToken), cancellationToken);
 
 	[RelayCommand]
-	private async Task StartGame(StartGameVariant startGameVariant, CancellationToken cancellationToken) =>
-		await _appTaskQueue.EnqueueAndWaitForCompletion(await _appTaskProvider.CreateRunGameTask(startGameVariant, cancellationToken), cancellationToken);
+	private async Task StartGame(GameLaunch launch, CancellationToken cancellationToken) =>
+		await _appTaskQueue.EnqueueAndWaitForCompletion(await _appTaskProvider.CreateRunGameTask(launch, cancellationToken), cancellationToken);
 
 	[RelayCommand]
 	private async Task UpdateLauncher(CancellationToken cancellationToken)

@@ -66,7 +66,7 @@ public union MicroTaskDescription(
 
 	public sealed record RunProcess(string FileName);
 
-	public sealed record GameStarted(StartGameVariant Variant);
+	public sealed record GameStarted(string Name);
 
 	public sealed record RunLauncherSetup;
 

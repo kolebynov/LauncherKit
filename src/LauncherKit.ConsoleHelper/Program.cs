@@ -71,7 +71,6 @@ static async Task HandleTestDownload(CancellationToken cancellationToken)
 	var appBuilder = new AppBuilder(new LauncherProductOptions
 	{
 		SkyrimDataDirectoryName = ".LauncherDownloadHelper",
-		GlobalDatabaseFileName = "helper.db",
 		LocalDatabaseFileName = "helper-installation.db",
 		OAuthTokenEntropy = "LauncherDownloadHelper.OAuthToken",
 		EnvironmentVariablePrefix = "LAUNCHER_DOWNLOAD_HELPER_",
@@ -84,11 +83,6 @@ static async Task HandleTestDownload(CancellationToken cancellationToken)
 		UserModsSeparator = "USER MODS",
 		RequiredSkyrimVersion = "1.5.97.0",
 		RegistryKey = @"HKEY_CURRENT_USER\Software\LauncherKit\DownloadHelper",
-		GameLaunchVariants =
-		[
-			new() { Id = "Game", ExecutablePath = "skse64_loader.exe" },
-			new() { Id = "ModOrganizer" },
-		],
 	});
 	// The feed to download from comes from the environment, e.g. LAUNCHER_DOWNLOAD_HELPER_Feed__FeedPath=feedV12.json,
 	// LAUNCHER_DOWNLOAD_HELPER_Urls__Feed__MainUrl and LAUNCHER_DOWNLOAD_HELPER_Urls__Feed__ProxyUrl.

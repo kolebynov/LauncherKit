@@ -43,9 +43,6 @@
 	<data name="ExceptionUnknown" xml:space="preserve"><value>The operation failed: {0}</value></data>
 	<data name="ExceptionUnsupportedMod" xml:space="preserve"><value>Mod {0} does not support modpack version {1}.</value></data>
 	<data name="ExtraDownloadSize" xml:space="preserve"><value>Additional download: {0}</value></data>
-	<data name="GameVariantBethIni" xml:space="preserve"><value>BethINI</value></data>
-	<data name="GameVariantGame" xml:space="preserve"><value>Skyrim</value></data>
-	<data name="GameVariantModOrganizer" xml:space="preserve"><value>Mod Organizer</value></data>
 	<data name="GraphPackStepTitle" xml:space="preserve"><value>Select a graphics pack</value></data>
 	<data name="MicroBackupArchiveFiles" xml:space="preserve"><value>Back up files from {0}</value></data>
 	<data name="MicroChangeProfile" xml:space="preserve"><value>Change profile to {0}</value></data>

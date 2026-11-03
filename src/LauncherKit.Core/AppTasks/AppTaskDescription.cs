@@ -1,5 +1,6 @@
 using NuGet.Versioning;
 using LauncherKit.Core.Feed;
+using LauncherKit.Core.Models;
 
 namespace LauncherKit.Core.AppTasks;
 
@@ -34,7 +35,7 @@ public union AppTaskDescription(
 
 	public sealed record UpdateLauncher(NuGetVersion Version);
 
-	public sealed record RunGame(StartGameVariant Variant);
+	public sealed record RunGame(string Name, SkyrimRelativePath? ProgramPath);
 
 	public sealed record DeleteOldSaves;
 

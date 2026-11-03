@@ -126,19 +126,17 @@ public sealed class ServiceCollectionExtensionsTests
 	}
 
 	[Test]
-	public async Task AddLauncherKitCore_IndependentProducts_IsolatesOptionsAndDatabasePaths()
+	public async Task AddLauncherKitCore_IndependentProducts_IsolatesOptionsAndLocalDatabasePaths()
 	{
 		using var temp = new TempDirectory();
 		var first = ProductTestSupport.CreateProduct();
 		var second = ProductTestSupport.CreateProduct(
 			skyrimDataDirectoryName: ".OtherLauncher",
-			globalDatabaseFileName: "other-global.db",
 			localDatabaseFileName: "other-local.db");
 		var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
 		{
 			["App:SkyrimDirectory"] = temp.Path,
 			["Product:SkyrimDataDirectoryName"] = "MustNotOverrideConsumer",
-			["Product:GlobalDatabaseFileName"] = "must-not-be-used.db",
 		}).Build();
 		foreach (var product in new[] { first, second })
 		{
@@ -152,16 +150,16 @@ public sealed class ServiceCollectionExtensionsTests
 			await using var scope = provider.CreateAsyncScope();
 			var scoped = scope.ServiceProvider;
 			Assert.That(scoped.GetRequiredService<IOptions<LauncherProductOptions>>().Value, Is.SameAs(product));
-			using (var command = scoped.GetRequiredService<GlobalDbContext>().CreateCommand("CREATE TABLE IdentityMarker (Id INTEGER)"))
+			using (var command = scoped.GetRequiredService<GlobalDbContext>().CreateCommand("CREATE TABLE IF NOT EXISTS IdentityMarker (Id INTEGER)"))
 				command.ExecuteNonQuery();
 			using (var command = scoped.GetRequiredService<SkyrimLocalDbContext>().CreateCommand("CREATE TABLE IdentityMarker (Id INTEGER)"))
 				command.ExecuteNonQuery();
 			Assert.Multiple(() =>
 			{
-				Assert.That(File.Exists(Path.Combine(temp.Path, product.GlobalDatabaseFileName)), Is.True);
+				Assert.That(File.Exists(Path.Combine(temp.Path, LauncherConstants.GlobalDatabaseFileName)), Is.True);
 				Assert.That(File.Exists(Path.Combine(temp.Path, product.SkyrimDataDirectoryName, product.LocalDatabaseFileName)), Is.True);
 			});
 		}
-		Assert.That(File.Exists(Path.Combine(temp.Path, "must-not-be-used.db")), Is.False);
+		Assert.That(File.Exists(Path.Combine(temp.Path, ".ExampleLauncher", "other-local.db")), Is.False);
 	}
 }

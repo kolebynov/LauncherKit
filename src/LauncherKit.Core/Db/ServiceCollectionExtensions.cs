@@ -21,7 +21,7 @@ internal static class ServiceCollectionExtensions
 		{
 			var launchersRootDirectoryManager = sp.GetRequiredService<ILaunchersRootDirectoryManager>();
 			return new GlobalDbContext(Path.Combine(launchersRootDirectoryManager.Directory,
-				sp.GetRequiredService<IOptions<LauncherProductOptions>>().Value.GlobalDatabaseFileName));
+				LauncherConstants.GlobalDatabaseFileName));
 		});
 
 		services.AddEarlyGlobalInitializer(sp =>

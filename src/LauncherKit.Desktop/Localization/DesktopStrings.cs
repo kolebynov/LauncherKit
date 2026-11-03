@@ -42,9 +42,6 @@ public sealed class DesktopStrings
 	public const string ExceptionUnknown = nameof(ExceptionUnknown);
 	public const string ExceptionUnsupportedMod = nameof(ExceptionUnsupportedMod);
 	public const string ExtraDownloadSize = nameof(ExtraDownloadSize);
-	public const string GameVariantBethIni = nameof(GameVariantBethIni);
-	public const string GameVariantGame = nameof(GameVariantGame);
-	public const string GameVariantModOrganizer = nameof(GameVariantModOrganizer);
 	public const string GraphPackStepTitle = nameof(GraphPackStepTitle);
 	public const string MicroBackupArchiveFiles = nameof(MicroBackupArchiveFiles);
 	public const string MicroChangeProfile = nameof(MicroChangeProfile);

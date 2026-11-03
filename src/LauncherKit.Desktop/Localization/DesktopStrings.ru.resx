@@ -44,9 +44,6 @@
 	<data name="ExceptionUnknown" xml:space="preserve"><value>Не удалось выполнить операцию: {0}</value></data>
 	<data name="ExceptionUnsupportedMod" xml:space="preserve"><value>Мод {0} не поддерживает сборку версии {1}.</value></data>
 	<data name="ExtraDownloadSize" xml:space="preserve"><value>Дополнительно будет скачано {0}</value></data>
-	<data name="GameVariantBethIni" xml:space="preserve"><value>BethINI</value></data>
-	<data name="GameVariantGame" xml:space="preserve"><value>Skyrim</value></data>
-	<data name="GameVariantModOrganizer" xml:space="preserve"><value>Mod Organizer</value></data>
 	<data name="GraphPackStepTitle" xml:space="preserve"><value>Выберите граф-пак</value></data>
 	<data name="MicroBackupArchiveFiles" xml:space="preserve"><value>Резервное копирование файлов из {0}</value></data>
 	<data name="MicroChangeProfile" xml:space="preserve"><value>Смена профиля на {0}</value></data>

@@ -21,21 +21,6 @@ public sealed class LauncherProductOptionsTests
 	}
 
 	[Test]
-	public void Validate_MissingOrInvalidLaunchVariants_ThrowsArgumentException()
-	{
-		var property = typeof(LauncherProductOptions).GetProperty(nameof(LauncherProductOptions.GameLaunchVariants))!;
-		foreach (var variants in new IReadOnlyList<GameLaunchVariant>?[]
-		{
-			null, [], [null!], [new() { Id = "" }], [new() { Id = " \t" }],
-		})
-		{
-			var product = ProductTestSupport.CreateProduct();
-			property.SetValue(product, variants);
-			Assert.That(product.Validate, Throws.ArgumentException);
-		}
-	}
-
-	[Test]
 	public void InstallationPaths_UseIndependentIdentities_WithoutChangingGenericStoragePaths()
 	{
 		var settings = new AppSettings { AppDataDirectory = @"C:\DownloadsRoot", SkyrimDirectory = @"C:\Game" };
@@ -59,8 +44,8 @@ public sealed class LauncherProductOptionsTests
 		var settings = new AppSettings { SkyrimDirectory = @"C:\Game" };
 		Assert.Multiple(() =>
 		{
-			Assert.That(() => settings.GetSkyrimAppDataDirectory(ProductTestSupport.CreateProduct(globalDatabaseFileName: "")), Throws.ArgumentException);
-			Assert.That(() => settings.GetModOrganizerDirectory(ProductTestSupport.CreateProduct(globalDatabaseFileName: "")), Throws.ArgumentException);
+			Assert.That(() => settings.GetSkyrimAppDataDirectory(ProductTestSupport.CreateProduct(localDatabaseFileName: "")), Throws.ArgumentException);
+			Assert.That(() => settings.GetModOrganizerDirectory(ProductTestSupport.CreateProduct(localDatabaseFileName: "")), Throws.ArgumentException);
 		});
 	}
 }

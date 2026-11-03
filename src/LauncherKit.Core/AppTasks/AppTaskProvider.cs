@@ -26,6 +26,7 @@ public sealed class AppTaskProvider : IAppTaskProvider
 	public const string InstallModpackPatchTaskIdPrefix = "InstallModpackPatch_";
 	public const string InstallModpackComponentTaskIdPrefix = "InstallModpackComponent_";
 	public const string UninstallModpackTaskId = "UninstallModpack";
+
 	private readonly AppSettings _appSettings;
 	private readonly LauncherProductOptions _product;
 	private readonly IApplicationLifetime _applicationLifetime;
@@ -66,27 +67,21 @@ public sealed class AppTaskProvider : IAppTaskProvider
 		taskId is SelectModpackComponentsTaskId or InstallModpackTaskId or UninstallModpackTaskId ||
 		taskId.StartsWith(InstallModpackPatchTaskIdPrefix, StringComparison.Ordinal) ||
 		taskId.StartsWith(InstallModpackComponentTaskIdPrefix, StringComparison.Ordinal);
-	public async ValueTask<AppTask> CreateRunGameTask(StartGameVariant startGameVariant, CancellationToken cancellationToken)
+
+	public async ValueTask<AppTask> CreateRunGameTask(GameLaunch launch, CancellationToken cancellationToken)
 	{
-		var variantId = startGameVariant switch
-		{
-			StartGameVariant.Game => "Game",
-			StartGameVariant.ModOrganizer => "ModOrganizer",
-			_ => "BethIni",
-		};
-		var variant = _product.GameLaunchVariants.Single(x => x.Id == variantId);
-		var pathToExecutable = variant.ExecutablePath is { } executable ? new SkyrimRelativePath(executable) : (SkyrimRelativePath?)null;
-		var microTaskDescription = new MicroTaskDescription.GameStarted(startGameVariant);
+		ArgumentNullException.ThrowIfNull(launch);
+		var microTaskDescription = new MicroTaskDescription.GameStarted(launch.Name);
 		// The feed may offer no STB to this user (e.g. only beta versions gated by a code the user has not activated);
 		// the game then runs on whatever is installed.
 		var newestModpackFeedItem = (await _feedProvider.GetModpackFeedItems(cancellationToken)).MaxBy(x => x.Version);
 
 		return new AppTask(
-			"RunGame", new AppTaskDescription.RunGame(startGameVariant),
+			"RunGame", new AppTaskDescription.RunGame(launch.Name, launch.ProgramPath),
 			context =>
 			[
 				context.MicroTasksFactory.CreateDelegateMicroTask(
-					(_, ct) => _modOrganizerService.StartModOrganizer(pathToExecutable, null, false, ct).AsValueTask(),
+					(_, ct) => _modOrganizerService.StartModOrganizer(launch.ProgramPath, null, false, ct).AsValueTask(),
 					microTaskDescription)
 			],
 			newestModpackFeedItem != null

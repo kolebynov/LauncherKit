@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using LauncherKit.Core.Db;
 using LauncherKit.TestSupport;
+using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Core.Tests.TestSupport;
 
@@ -16,7 +17,7 @@ internal sealed class SqliteDatabase : IDisposable
 	public SqliteDatabase()
 	{
 		var product = ProductTestSupport.CreateProduct();
-		GlobalDbPath = _directory.Combine(product.GlobalDatabaseFileName);
+		GlobalDbPath = _directory.Combine(LauncherConstants.GlobalDatabaseFileName);
 		SkyrimLocalDbPath = _directory.Combine(product.LocalDatabaseFileName);
 	}
 

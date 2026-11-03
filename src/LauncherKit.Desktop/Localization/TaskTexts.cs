@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Localization;
-using LauncherKit.Core;
 using LauncherKit.Core.AppTasks;
 
 namespace LauncherKit.Desktop.Localization;
@@ -15,7 +14,7 @@ public sealed partial class TaskTexts(IStringLocalizer<DesktopStrings> strings)
 		AppTaskDescription.InstallMod(var modName) => strings[DesktopStrings.TaskInstallMod, modName],
 		AppTaskDescription.UninstallMod(var modName) => strings[DesktopStrings.TaskUninstallMod, modName],
 		AppTaskDescription.UpdateLauncher(var version) => strings[DesktopStrings.TaskUpdateLauncher, version],
-		AppTaskDescription.RunGame(var variant) => strings[DesktopStrings.TaskRunGame, Get(variant).Value],
+		AppTaskDescription.RunGame(var name, _) => strings[DesktopStrings.TaskRunGame, name],
 		AppTaskDescription.DeleteOldSaves => strings[DesktopStrings.TaskDeleteOldSaves],
 		AppTaskDescription.InstallSkyrim => strings[DesktopStrings.TaskInstallSkyrim],
 		AppTaskDescription.SelectModpackComponents => strings[DesktopStrings.TaskSelectModpackComponents],
@@ -23,13 +22,5 @@ public sealed partial class TaskTexts(IStringLocalizer<DesktopStrings> strings)
 		AppTaskDescription.InstallVcRedist(var architecture) => strings[DesktopStrings.TaskInstallVcRedist, architecture],
 		AppTaskDescription.CleanupOldData => strings[DesktopStrings.TaskCleanupOldData],
 		AppTaskDescription.Custom(var text) => new LocalizedString(nameof(AppTaskDescription.Custom), text),
-	};
-
-	public LocalizedString Get(StartGameVariant variant) => variant switch
-	{
-		StartGameVariant.Game => strings[DesktopStrings.GameVariantGame],
-		StartGameVariant.ModOrganizer => strings[DesktopStrings.GameVariantModOrganizer],
-		StartGameVariant.BethIni => strings[DesktopStrings.GameVariantBethIni],
-		_ => throw new ArgumentOutOfRangeException(nameof(variant), variant, null),
 	};
 }
