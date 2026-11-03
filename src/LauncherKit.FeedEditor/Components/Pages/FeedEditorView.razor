@@ -83,7 +83,7 @@
 
 				<MudTabPanel Text="@($"Списки изменений сборки ({Feed.ModpackChangelogs.Count})")">
 					<ListEditor TItem="ModpackChangelogModel" Items="Feed.ModpackChangelogs" Factories="ChangelogFactories"
-								Title="@(changelog => $"{changelog.Version} — {changelog.Path}")">
+								Title="@(changelog => $"{changelog.Version} — {DefaultLanguageValue(changelog.Path)}")">
 						<ItemContent Context="changelog">
 							<MudGrid Spacing="2">
 								<MudItem xs="12" sm="4">
@@ -193,6 +193,10 @@
 		var latest = mod.Items.Count > 0 ? $" — последняя {mod.Items[0].Version}" : string.Empty;
 		return $"{mod.Name}{latest}";
 	}
+
+	/// <summary>The value in the feed's default language, or the first one when it is missing.</summary>
+	private string DefaultLanguageValue(IReadOnlyDictionary<string, string> values) =>
+		values.TryGetValue(Feed.DefaultLanguage, out var value) ? value : values.Values.FirstOrDefault() ?? string.Empty;
 
 	private async Task SaveAsync(bool overwrite)
 	{

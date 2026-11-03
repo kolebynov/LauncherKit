@@ -1,34 +1,34 @@
+@* One value per language, each a full-width row labelled "{Label} ({language})" with its remove button beside it,
+   followed by the row adding a language. The field has no heading of its own, so it lines up with plain fields in
+   neighbouring grid columns. *@
 @inject FeedSession Session
 
 <MudStack Spacing="2">
-	<MudText Typo="Typo.subtitle2">@Label</MudText>
-	<MudGrid Spacing="2">
-		@foreach (var language in (Value?.Keys.ToArray() ?? []))
-		{
-			<MudItem xs="12" md="6" @key="language">
-				<MudStack Spacing="1">
-					@if (IsPath)
-					{
-						<S3PathField Value="@(Value![language])" ValueChanged="@(text => SetTextAsync(language, text))" Label="@language" Required="true" />
-					}
-					else
-					{
-						<MudTextField T="string" Value="@(Value![language])" ValueChanged="@(text => SetTextAsync(language, text))" Label="@language" Required="true" Lines="2" Variant="Variant.Outlined" Margin="Margin.Dense" />
-					}
-					<MudButton Size="Size.Small" OnClick="@(() => RemoveAsync(language))">Удалить язык @language</MudButton>
-				</MudStack>
-			</MudItem>
-		}
-	</MudGrid>
-	<MudStack Row="true" AlignItems="AlignItems.Center">
-		<MudTextField @bind-Value="_language" Label="Код языка (ru, en, en-US)" Variant="Variant.Outlined" Margin="Margin.Dense" />
-		<MudButton OnClick="AddAsync">Добавить язык</MudButton>
-	</MudStack>
-	@if (_error is not null)
+	@foreach (var language in (Value?.Keys.ToArray() ?? []))
 	{
-		<MudText Color="Color.Error">@_error</MudText>
+		<MudStack Row="true" AlignItems="AlignItems.Start" Spacing="1" @key="language">
+			<div class="flex-grow-1" style="min-width: 0">
+				@if (IsPath)
+				{
+					<S3PathField Value="@(Value![language])" ValueChanged="@(text => SetTextAsync(language, text))" Label="@($"{Label} ({language})")" Required="true" />
+				}
+				else
+				{
+					<MudTextField T="string" Value="@(Value![language])" ValueChanged="@(text => SetTextAsync(language, text))" Label="@($"{Label} ({language})")" Required="true"
+								  Sizing="InputSizing.Auto" MaxLines="6" Variant="Variant.Outlined" Margin="Margin.Dense" />
+				}
+			</div>
+			<MudTooltip Text="@($"Удалить язык {language}")">
+				<MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Class="mt-1" aria-label="@($"Удалить язык {language}")"
+							   OnClick="@(() => RemoveAsync(language))" />
+			</MudTooltip>
+		</MudStack>
 	}
-	<MudText Typo="Typo.caption">@(Optional ? "Необязательное поле. Если задано, нужен" : "Обязателен") язык по умолчанию: @Session.Feed?.DefaultLanguage</MudText>
+	<MudStack Row="true" AlignItems="AlignItems.Start" Spacing="1">
+		<MudTextField @bind-Value="_language" Label="@($"{Label}: код нового языка (ru, en, en-US)")" Variant="Variant.Outlined" Margin="Margin.Dense"
+					  Class="flex-grow-1" HelperText="@HelperText" Error="@(_error is not null)" ErrorText="@_error" />
+		<MudButton StartIcon="@Icons.Material.Filled.Add" Class="flex-shrink-0 mt-1" OnClick="AddAsync">Добавить язык</MudButton>
+	</MudStack>
 </MudStack>
 
 @code {
@@ -41,6 +41,8 @@
 	private string? _language;
 	private string? _error;
 
+	private string HelperText =>
+		$"{(Optional ? "Необязательное поле. Если задано, нужен" : "Обязателен")} язык по умолчанию: {Session.Feed?.DefaultLanguage}";
 
 	// Required fields retain one mutable dictionary; optional maps may be replaced to enable/disable the field.
 	private Dictionary<string, string> EditableValues() =>
