@@ -5,7 +5,7 @@ using LauncherKit.Core.Choices;
 
 namespace LauncherKit.Desktop.ViewModels;
 
-public sealed partial class ChoiceSelectionViewModel : ViewModelBase
+public partial class ChoiceSelectionViewModel : ViewModelBase
 {
 	private readonly ChoiceSelectionContext _context;
 	private int _currentStepIndex;

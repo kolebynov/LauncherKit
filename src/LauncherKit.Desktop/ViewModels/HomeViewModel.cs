@@ -16,7 +16,7 @@ namespace LauncherKit.Desktop.ViewModels;
 
 public enum ModpackInstallUnavailableReason { NoAvailableVersions }
 
-public sealed partial class HomeViewModel : BaseActivatableViewModel, IDisposable
+public partial class HomeViewModel : BaseActivatableViewModel, IDisposable
 {
 	private readonly IAppTaskProvider _appTaskProvider;
 	private readonly IAppTaskQueue _appTaskQueue;
@@ -108,6 +108,14 @@ public sealed partial class HomeViewModel : BaseActivatableViewModel, IDisposabl
 
 	public void Dispose()
 	{
+		Dispose(true);
+		GC.SuppressFinalize(this);
+	}
+
+	protected virtual void Dispose(bool disposing)
+	{
+		if (!disposing)
+			return;
 		_appTaskQueueSubscription.Dispose();
 		_oldSavesDeleted.Dispose();
 	}

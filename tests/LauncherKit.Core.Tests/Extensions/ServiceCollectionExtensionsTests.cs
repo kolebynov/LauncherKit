@@ -162,4 +162,77 @@ public sealed class ServiceCollectionExtensionsTests
 		}
 		Assert.That(File.Exists(Path.Combine(temp.Path, ".ExampleLauncher", "other-local.db")), Is.False);
 	}
+
+	[Test]
+	public async Task ReplaceService_ScopedRegistration_ResolvesReplacementPerScopeInSamePosition()
+	{
+		var services = new ServiceCollection();
+		services.AddSingleton<OtherService>();
+		services.AddScoped<BaseService>();
+		services.AddSingleton<OtherService>();
+
+		services.ReplaceService<BaseService, DerivedService>();
+
+		Assert.Multiple(() =>
+		{
+			Assert.That(services[1].ServiceType, Is.EqualTo(typeof(BaseService)));
+			Assert.That(services[1].Lifetime, Is.EqualTo(ServiceLifetime.Scoped));
+		});
+		await using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+		await using var first = provider.CreateAsyncScope();
+		await using var second = provider.CreateAsyncScope();
+		var resolved = first.ServiceProvider.GetRequiredService<BaseService>();
+		Assert.Multiple(() =>
+		{
+			Assert.That(resolved, Is.TypeOf<DerivedService>());
+			Assert.That(first.ServiceProvider.GetRequiredService<BaseService>(), Is.SameAs(resolved));
+			Assert.That(second.ServiceProvider.GetRequiredService<BaseService>(), Is.Not.SameAs(resolved));
+		});
+	}
+
+	[Test]
+	public async Task ReplaceService_FactoryForTransientRegistration_CreatesNewReplacementEachTime()
+	{
+		var services = new ServiceCollection();
+		services.AddTransient<BaseService>();
+
+		services.ReplaceService<BaseService>(_ => new DerivedService());
+
+		await using var provider = services.BuildServiceProvider();
+		var resolved = provider.GetRequiredService<BaseService>();
+		Assert.Multiple(() =>
+		{
+			Assert.That(resolved, Is.TypeOf<DerivedService>());
+			Assert.That(provider.GetRequiredService<BaseService>(), Is.Not.SameAs(resolved));
+		});
+	}
+
+	[Test]
+	public void ReplaceService_NotRegistered_Throws()
+	{
+		var services = new ServiceCollection();
+		services.AddKeyedScoped<BaseService>("key");
+
+		Assert.That(() => services.ReplaceService<BaseService, DerivedService>(), Throws.InvalidOperationException);
+	}
+
+	[Test]
+	public void ReplaceService_SeveralRegistrations_ThrowsWithoutChangingThem()
+	{
+		var services = new ServiceCollection();
+		services.AddScoped<BaseService>();
+		services.AddScoped<BaseService>();
+
+		Assert.Multiple(() =>
+		{
+			Assert.That(() => services.ReplaceService<BaseService>(_ => new DerivedService()), Throws.InvalidOperationException);
+			Assert.That(services.Select(x => x.ImplementationType), Has.All.EqualTo(typeof(BaseService)));
+		});
+	}
+
+	private sealed class OtherService;
+
+	private class BaseService;
+
+	private sealed class DerivedService : BaseService;
 }

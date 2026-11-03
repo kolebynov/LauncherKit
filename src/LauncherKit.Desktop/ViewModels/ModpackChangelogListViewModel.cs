@@ -3,7 +3,7 @@ using LauncherKit.Core.Feed.Modpacks;
 
 namespace LauncherKit.Desktop.ViewModels;
 
-public sealed partial class ModpackChangelogListViewModel : ViewModelBase
+public partial class ModpackChangelogListViewModel : ViewModelBase
 {
 	[ObservableProperty]
 	public partial IReadOnlyList<ModpackChangelogFeedItem> ModpackChangelogs { get; set; } = [];

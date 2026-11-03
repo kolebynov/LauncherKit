@@ -10,7 +10,7 @@ namespace LauncherKit.Desktop.ViewModels.Setup;
 /// Chooses the UI language among <see cref="LanguageCulture.Languages"/>. The choice applies at once, so the rest of
 /// the setup is shown in it; it defaults to the operating system's language when supported, otherwise English.
 /// </summary>
-public sealed partial class LanguageSetupStepViewModel : SetupStepViewModel
+public partial class LanguageSetupStepViewModel : SetupStepViewModel
 {
 	private readonly FirstSetupContext _context;
 	private readonly IAppReloader _appReloader;

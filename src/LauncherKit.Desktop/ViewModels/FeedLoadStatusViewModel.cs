@@ -15,7 +15,7 @@ public closed record FeedLoadStatus
 }
 
 /// <summary>Projects feed availability without requesting notifications or choosing their presentation.</summary>
-public sealed partial class FeedLoadStatusViewModel : ViewModelBase, IDisposable
+public partial class FeedLoadStatusViewModel : ViewModelBase, IDisposable
 {
 	public static readonly TimeSpan ProgressDelay = TimeSpan.FromMilliseconds(500);
 	private readonly SerialDisposable _delay = new();
@@ -53,6 +53,14 @@ public sealed partial class FeedLoadStatusViewModel : ViewModelBase, IDisposable
 
 	public void Dispose()
 	{
+		Dispose(true);
+		GC.SuppressFinalize(this);
+	}
+
+	protected virtual void Dispose(bool disposing)
+	{
+		if (!disposing)
+			return;
 		_subscription.Dispose();
 		_delay.Dispose();
 	}

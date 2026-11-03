@@ -12,7 +12,7 @@ using LauncherKit.Core.Utils;
 
 namespace LauncherKit.Desktop.ViewModels;
 
-public sealed partial class GraphPacksViewModel : BaseActivatableViewModel, IDisposable
+public partial class GraphPacksViewModel : BaseActivatableViewModel, IDisposable
 {
 	private readonly IInstallAppTaskProvider _installAppTaskProvider;
 	private readonly IAppTaskQueue _appTaskQueue;
@@ -102,7 +102,14 @@ public sealed partial class GraphPacksViewModel : BaseActivatableViewModel, IDis
 
 	public void Dispose()
 	{
-		_appTaskQueueSubscription.Dispose();
+		Dispose(true);
+		GC.SuppressFinalize(this);
+	}
+
+	protected virtual void Dispose(bool disposing)
+	{
+		if (disposing)
+			_appTaskQueueSubscription.Dispose();
 	}
 
 	/// <summary>

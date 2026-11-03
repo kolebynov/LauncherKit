@@ -8,7 +8,7 @@ using LauncherKit.Core.Services.Abstractions;
 
 namespace LauncherKit.Desktop.ViewModels;
 
-public sealed partial class AppTaskQueueViewModel : ViewModelBase, IDisposable
+public partial class AppTaskQueueViewModel : ViewModelBase, IDisposable
 {
 	private readonly IAppLogsCollector _appLogsCollector;
 	private readonly IAppTaskQueue _appTaskQueue;
@@ -56,7 +56,14 @@ public sealed partial class AppTaskQueueViewModel : ViewModelBase, IDisposable
 
 	public void Dispose()
 	{
-		_appTaskQueueSubscription.Dispose();
+		Dispose(true);
+		GC.SuppressFinalize(this);
+	}
+
+	protected virtual void Dispose(bool disposing)
+	{
+		if (disposing)
+			_appTaskQueueSubscription.Dispose();
 	}
 
 	[RelayCommand]

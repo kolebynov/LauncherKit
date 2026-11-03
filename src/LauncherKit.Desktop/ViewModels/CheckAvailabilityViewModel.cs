@@ -10,7 +10,7 @@ namespace LauncherKit.Desktop.ViewModels;
 /// one. The setup can continue once the check finishes, even when no server works: the user is then warned that
 /// nothing can be downloaded or updated.
 /// </summary>
-public sealed partial class CheckAvailabilityViewModel : BaseActivatableViewModel
+public partial class CheckAvailabilityViewModel : BaseActivatableViewModel
 {
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(IsAvailable), nameof(IsUnavailable))]

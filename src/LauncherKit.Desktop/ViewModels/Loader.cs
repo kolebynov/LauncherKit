@@ -4,7 +4,7 @@ using R3;
 namespace LauncherKit.Desktop.ViewModels;
 
 /// <summary>Tracks overlapping loading operations on the UI thread.</summary>
-public sealed partial class Loader : ViewModelBase
+public partial class Loader : ViewModelBase
 {
 	private int _loadingCount;
 

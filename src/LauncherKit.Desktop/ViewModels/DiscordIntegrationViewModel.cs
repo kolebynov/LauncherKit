@@ -8,7 +8,7 @@ using LauncherKit.Core.Feed;
 
 namespace LauncherKit.Desktop.ViewModels;
 
-public sealed partial class DiscordIntegrationViewModel : BaseActivatableViewModel
+public partial class DiscordIntegrationViewModel : BaseActivatableViewModel
 {
 	private readonly IDiscordAccountService _discordAccountService;
 	private readonly IFeedProvider _feedProvider;

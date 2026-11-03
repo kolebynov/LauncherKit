@@ -51,7 +51,7 @@ public sealed record SetupError(Version DetectedSkyrimVersion, Version RequiredS
 /// <summary>
 /// Chooses the Skyrim directory, an existing installation of the required version or a directory to install into.
 /// </summary>
-public sealed partial class SkyrimDirectorySetupStepViewModel : DirectorySetupStepViewModel
+public partial class SkyrimDirectorySetupStepViewModel : DirectorySetupStepViewModel
 {
 	private readonly FirstSetupContext _context;
 	private readonly ISkyrimInstallationChecker _installationChecker;
@@ -97,7 +97,7 @@ public sealed partial class SkyrimDirectorySetupStepViewModel : DirectorySetupSt
 }
 
 /// <summary>Chooses the directory of downloads and temporary files; defaults to the launchers root.</summary>
-public sealed class AppDataDirectorySetupStepViewModel : DirectorySetupStepViewModel
+public class AppDataDirectorySetupStepViewModel : DirectorySetupStepViewModel
 {
 	private readonly FirstSetupContext _context;
 
@@ -149,7 +149,7 @@ public sealed class AvailabilityCheckState(IGlobalKeyValueStorage storage)
 /// Checks the download servers; moves on once the check finished, even when no server works. A success is recorded in
 /// <see cref="AvailabilityCheckState"/> at once, continuing after a failure only for this run.
 /// </summary>
-public sealed class AvailabilitySetupStepViewModel : SetupStepViewModel
+public class AvailabilitySetupStepViewModel : SetupStepViewModel
 {
 	public AvailabilitySetupStepViewModel(IFeedAvailabilityChecker availabilityChecker, AvailabilityCheckState state)
 	{

@@ -5,7 +5,7 @@ using LauncherKit.Core.FileStorage;
 
 namespace LauncherKit.Desktop.ViewModels;
 
-public sealed partial class DownloadsViewModel : BaseActivatableViewModel
+public partial class DownloadsViewModel : BaseActivatableViewModel
 {
 	private readonly IFileStorageService _fileStorageService;
 
@@ -53,7 +53,7 @@ public sealed partial class DownloadsViewModel : BaseActivatableViewModel
 
 	public sealed record FileDeleteResult(string FileName, IFileStorageService.DeleteResult Result);
 
-	public sealed class FileInfoViewModel : ViewModelBase
+	public class FileInfoViewModel : ViewModelBase
 	{
 		public required string FileName { get; init; }
 		public required long Size { get; init; }

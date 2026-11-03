@@ -4,7 +4,7 @@ using LauncherKit.Core.Choices;
 
 namespace LauncherKit.Desktop.ViewModels;
 
-public sealed partial class ChoiceStepViewModel : ViewModelBase
+public partial class ChoiceStepViewModel : ViewModelBase
 {
 
 	public ChoiceStep Step { get; }
@@ -86,7 +86,7 @@ public sealed partial class ChoiceStepViewModel : ViewModelBase
 		}
 	}
 
-	public sealed partial class ChoiceOptionViewModel : ViewModelBase
+	public partial class ChoiceOptionViewModel : ViewModelBase
 	{
 		private readonly Func<ChoiceOptionViewModel, bool> _canDeselect;
 		private bool _isSelected;

@@ -11,7 +11,7 @@ using LauncherKit.Core.UserSettings;
 
 namespace LauncherKit.Desktop.ViewModels;
 
-public sealed partial class SettingsViewModel : BaseActivatableViewModel
+public partial class SettingsViewModel : BaseActivatableViewModel
 {
 	private const long BytesPerMegabyte = 1024 * 1024;
 

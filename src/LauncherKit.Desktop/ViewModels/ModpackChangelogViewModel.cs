@@ -3,7 +3,7 @@ using LauncherKit.Core.Feed;
 
 namespace LauncherKit.Desktop.ViewModels;
 
-public sealed class ModpackChangelogViewModel : BaseActivatableViewModel
+public class ModpackChangelogViewModel : BaseActivatableViewModel
 {
 	public ModpackChangelogListViewModel ModpackChangelogListViewModel { get; } = new();
 

@@ -6,7 +6,7 @@ using LauncherKit.Core.Models;
 
 namespace LauncherKit.Desktop.ViewModels;
 
-public sealed partial class ModCardViewModel : ViewModelBase
+public partial class ModCardViewModel : ViewModelBase
 {
 	public closed record InstallUnavailableReason
 	{

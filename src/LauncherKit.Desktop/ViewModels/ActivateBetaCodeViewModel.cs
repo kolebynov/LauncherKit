@@ -4,7 +4,7 @@ using LauncherKit.Core.Feed;
 
 namespace LauncherKit.Desktop.ViewModels;
 
-public sealed partial class ActivateBetaCodeViewModel : ViewModelBase
+public partial class ActivateBetaCodeViewModel : ViewModelBase
 {
 	private readonly IFeedProvider _feedProvider;
 

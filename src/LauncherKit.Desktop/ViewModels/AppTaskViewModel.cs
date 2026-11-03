@@ -12,7 +12,7 @@ using LauncherKit.Core.Services.Abstractions;
 namespace LauncherKit.Desktop.ViewModels;
 
 #pragma warning disable CA1001
-public sealed partial class AppTaskViewModel : ViewModelBase
+public partial class AppTaskViewModel : ViewModelBase
 #pragma warning restore CA1001
 {
 	private readonly IAppLogsCollector _appLogsCollector;
@@ -85,7 +85,7 @@ public sealed partial class AppTaskViewModel : ViewModelBase
 
 }
 
-public sealed class UnknownProgressViewModel : ViewModelBase
+public class UnknownProgressViewModel : ViewModelBase
 {
 	public static UnknownProgressViewModel Instance { get; } = new();
 	public MicroTaskDescription? Operation { get; init; }
@@ -113,7 +113,7 @@ public partial class OperationProgressViewModel : ViewModelBase
 	}
 }
 
-public sealed partial class DownloadFileProgressViewModel : OperationProgressViewModel
+public partial class DownloadFileProgressViewModel : OperationProgressViewModel
 {
 	private readonly IDownloadProgress _downloadProgress;
 

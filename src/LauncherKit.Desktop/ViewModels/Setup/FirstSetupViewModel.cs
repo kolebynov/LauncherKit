@@ -12,7 +12,7 @@ public enum FirstSetupState { NotStarted, InProgress, Saving, Finished }
 /// <see cref="FirstSetupContext.Settings"/> and moves the setup with the next/back callbacks it is shown with. Moving
 /// past the last step saves the settings and reloads the configuration. The setup is needed only when it has steps.
 /// </summary>
-public sealed partial class FirstSetupViewModel : ViewModelBase
+public partial class FirstSetupViewModel : ViewModelBase
 {
 	private readonly FirstSetupContext _context;
 	private readonly ISettingsService _settingsService;

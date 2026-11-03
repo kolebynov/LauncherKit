@@ -2,7 +2,7 @@ using LauncherKit.Core.Utils;
 
 namespace LauncherKit.Desktop.ViewModels;
 
-public sealed class SkyrimDirectoryBrowserViewModel : DirectoryBrowserViewModel
+public class SkyrimDirectoryBrowserViewModel : DirectoryBrowserViewModel
 {
 	private readonly ISkyrimInstallationChecker? _installationChecker;
 

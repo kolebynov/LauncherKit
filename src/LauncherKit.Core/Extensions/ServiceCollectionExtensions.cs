@@ -256,6 +256,56 @@ public static class ServiceCollectionExtensions
 		return services;
 	}
 
+	/// <summary>
+	/// Replaces the only registration of <typeparamref name="TService"/> (e.g. a kit view model registered before the
+	/// consumer's services) with <typeparamref name="TImplementation"/>, keeping its lifetime and position.
+	/// </summary>
+	/// <exception cref="InvalidOperationException">
+	/// <typeparamref name="TService"/> has no registration or several (non-keyed) ones.
+	/// </exception>
+	public static IServiceCollection ReplaceService<TService,
+		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>(
+		this IServiceCollection services)
+		where TService : class
+		where TImplementation : class, TService =>
+		services.ReplaceService(typeof(TService),
+			lifetime => new ServiceDescriptor(typeof(TService), typeof(TImplementation), lifetime));
+
+	/// <summary>
+	/// Replaces the only registration of <typeparamref name="TService"/> with <paramref name="factory"/>, keeping its
+	/// lifetime and position; for replacements whose constructor needs values the container does not provide.
+	/// </summary>
+	/// <exception cref="InvalidOperationException">
+	/// <typeparamref name="TService"/> has no registration or several (non-keyed) ones.
+	/// </exception>
+	public static IServiceCollection ReplaceService<TService>(
+		this IServiceCollection services, Func<IServiceProvider, TService> factory)
+		where TService : class
+	{
+		ArgumentNullException.ThrowIfNull(factory);
+		return services.ReplaceService(typeof(TService), lifetime => new ServiceDescriptor(typeof(TService), factory, lifetime));
+	}
+
+	private static IServiceCollection ReplaceService(this IServiceCollection services, Type serviceType,
+		Func<ServiceLifetime, ServiceDescriptor> createDescriptor)
+	{
+		ArgumentNullException.ThrowIfNull(services);
+		var index = -1;
+		for (var i = 0; i < services.Count; i++)
+		{
+			if (services[i].ServiceType != serviceType || services[i].IsKeyedService)
+				continue;
+			if (index >= 0)
+				throw new InvalidOperationException($"'{serviceType.FullName}' has several registrations; only a single one can be replaced.");
+			index = i;
+		}
+
+		if (index < 0)
+			throw new InvalidOperationException($"'{serviceType.FullName}' is not registered, so it cannot be replaced.");
+		services[index] = createDescriptor(services[index].Lifetime);
+		return services;
+	}
+
 	private static void ConfigureCloudflareClient(HttpClient client, IAppVersionProvider versionProvider,
 		IServiceProvider services, string urlName)
 	{

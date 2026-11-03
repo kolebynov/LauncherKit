@@ -10,7 +10,7 @@ using LauncherKit.Core.Utils;
 
 namespace LauncherKit.Desktop.ViewModels;
 
-public sealed partial class OptionalModsViewModel : BaseActivatableViewModel
+public partial class OptionalModsViewModel : BaseActivatableViewModel
 {
 	[ObservableProperty]
 	public partial IReadOnlyList<ModCardViewModel> OptionalMods { get; private set; } = [];

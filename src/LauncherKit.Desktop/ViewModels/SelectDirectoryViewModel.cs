@@ -1,6 +1,6 @@
 ﻿namespace LauncherKit.Desktop.ViewModels;
 
-public sealed class SelectDirectoryViewModel : ViewModelBase
+public class SelectDirectoryViewModel : ViewModelBase
 {
 	public string Title { get; }
 
