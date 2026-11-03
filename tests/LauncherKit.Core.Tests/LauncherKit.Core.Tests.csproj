@@ -9,10 +9,8 @@
 		<Content Include="..\..\fomod-installer\tests\testcase1\fomod\ModuleConfig.xml"
 				 Link="Fixtures\ModuleConfig.xml"
 				 CopyToOutputDirectory="PreserveNewest"/>
-		<!-- feedV11.json: the real feedV10.json converted to the closed-hierarchy ($type) format. -->
-		<Content Include="Fixtures\Feed\*.json" CopyToOutputDirectory="PreserveNewest"/>
-		<Content Include="..\LauncherKit.FeedEditor.Tests\Fixtures\feedV12.json"
-				 Link="Fixtures\Feed\feedV12.json"
+		<Content Include="..\LauncherKit.FeedEditor.Tests\Fixtures\feedV11.json"
+				 Link="Fixtures\Feed\feedV11.json"
 				 CopyToOutputDirectory="PreserveNewest"/>
 		<!-- launcher.db: written by the Linq2DB data access the launcher used before Microsoft.Data.Sqlite. -->
 		<Content Include="Fixtures\Db\*.db" CopyToOutputDirectory="PreserveNewest"/>

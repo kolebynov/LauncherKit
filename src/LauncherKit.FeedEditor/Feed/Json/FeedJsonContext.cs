@@ -3,7 +3,6 @@ using System.Text.Json.Serialization;
 namespace LauncherKit.FeedEditor.Feed.Json;
 
 [JsonSerializable(typeof(FeedModel))]
-[JsonSerializable(typeof(LegacyFeedModel))]
 [JsonSerializable(typeof(InstallModAction))]
 [JsonSerializable(typeof(SelectRequiredModAction))]
 [JsonSerializable(typeof(ActivateModsAction))]

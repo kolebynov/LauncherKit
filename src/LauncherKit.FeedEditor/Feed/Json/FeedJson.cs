@@ -21,13 +21,6 @@ public static class FeedJson
 
 	public static string Serialize(FeedModel feed) => JsonSerializer.Serialize(feed, Options.GetTypeInfo<FeedModel>());
 
-	public static LegacyFeedModel DeserializeLegacy(string json) =>
-		JsonSerializer.Deserialize(json, Options.GetTypeInfo<LegacyFeedModel>())
-		?? throw new JsonException("The legacy feed must be a JSON object.");
-
-	public static string SerializeLegacy(LegacyFeedModel feed) =>
-		JsonSerializer.Serialize(feed, Options.GetTypeInfo<LegacyFeedModel>());
-
 	/// <summary>Deep-copies any feed object through its JSON form, so the copy is exactly what would be saved.</summary>
 	public static T Clone<T>(T value)
 		where T : class

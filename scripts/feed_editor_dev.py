@@ -4,7 +4,7 @@ The fake bucket is an in-memory S3 subset served on localhost (the requests Feed
 GetObject, HeadObject, PutObject with If-Match, ListObjectsV2, multipart uploads and CORS preflights; signatures are
 not checked). Each run starts from the same data:
 
-- V12 under `feedV12.json` (--feed), plus frozen V11 under `feedV11.json` (--legacy-feed);
+- the feed under `feedV11.json` (--feed);
 - an object for every bucket path the feed names (downloads, logos, descriptions, changelogs) with small fixed content
   and `x-amz-meta-checksum-sha256` metadata holding that content's SHA-256, so picking such a path fills its hash;
 - `Smoke/` objects for the other cases: `no-checksum.7z` (no metadata), `invalid-checksum.7z` (metadata that is not a
@@ -35,10 +35,8 @@ from xml.sax.saxutils import escape
 SCRIPT_DIR = Path(__file__).resolve().parent
 KIT_DIR = SCRIPT_DIR.parent
 EDITOR_PROJECT = KIT_DIR / 'src' / 'LauncherKit.FeedEditor'
-DEFAULT_FEED = KIT_DIR / 'tests' / 'LauncherKit.FeedEditor.Tests' / 'Fixtures' / 'feedV12.json'
-DEFAULT_LEGACY_FEED = KIT_DIR / 'tests' / 'LauncherKit.FeedEditor.Tests' / 'Fixtures' / 'feed.json'
-FEED_KEY = 'feedV12.json'
-LEGACY_FEED_KEY = 'feedV11.json'
+DEFAULT_FEED = KIT_DIR / 'tests' / 'LauncherKit.FeedEditor.Tests' / 'Fixtures' / 'feedV11.json'
+FEED_KEY = 'feedV11.json'
 DEFAULT_EDITOR_PORT = 5090
 DEFAULT_R2_PORT = 5005
 DENIED_ACCESS_KEY = 'denied'
@@ -50,16 +48,16 @@ S3_NAMESPACE = 'http://s3.amazonaws.com/doc/2006-03-01/'
 def main() -> int:
     sys.stdout.reconfigure(encoding='utf-8')
     args = parse_args()
-    store = seed_store(args.feed, args.legacy_feed, args.bucket)
+    store = seed_store(args.feed, args.bucket)
     server = ThreadingHTTPServer(('127.0.0.1', args.r2_port), lambda *a: FakeR2Handler(store, *a))
     threading.Thread(target=server.serve_forever, daemon=True).start()
     r2_url = f'http://127.0.0.1:{args.r2_port}'
-    print(f'Fake R2: {r2_url} (bucket {args.bucket}, {len(store.objects)} objects, feeds {FEED_KEY}, {LEGACY_FEED_KEY})')
+    print(f'Fake R2: {r2_url} (bucket {args.bucket}, {len(store.objects)} objects, feed {FEED_KEY})')
     print(f'Sign in with any access key and secret; access key "{DENIED_ACCESS_KEY}" is rejected.')
     try:
         if args.no_editor:
             print(f'Point the editor at it: R2__ServiceUrl={r2_url} R2__BucketName={args.bucket} '
-                  f'R2__FeedKey={FEED_KEY} R2__LegacyFeedKey={LEGACY_FEED_KEY}')
+                  f'R2__FeedKey={FEED_KEY}')
             print('Press Ctrl+C to stop.')
             threading.Event().wait()
             return 0
@@ -71,7 +69,6 @@ def main() -> int:
             'R2__ServiceUrl': r2_url,
             'R2__BucketName': args.bucket,
             'R2__FeedKey': FEED_KEY,
-            'R2__LegacyFeedKey': LEGACY_FEED_KEY,
         }
         print(f'Feed editor: {editor_url}')
         return subprocess.call(['dotnet', 'run', '--project', str(EDITOR_PROJECT), '--no-launch-profile'], env=env)
@@ -86,9 +83,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--bucket', required=True, help='consumer bucket name for the fake R2 service')
     parser.add_argument('--port', type=int, default=DEFAULT_EDITOR_PORT, help='feed editor port (default %(default)s)')
     parser.add_argument('--r2-port', type=int, default=DEFAULT_R2_PORT, help='fake R2 port (default %(default)s)')
-    parser.add_argument('--feed', type=Path, default=DEFAULT_FEED, help='V12 feed JSON (default: the editor V12 fixture)')
-    parser.add_argument('--legacy-feed', type=Path, default=DEFAULT_LEGACY_FEED,
-                        help='V11 feed JSON (default: the frozen editor fixture)')
+    parser.add_argument('--feed', type=Path, default=DEFAULT_FEED, help='V11 feed JSON (default: the editor V11 fixture)')
     parser.add_argument('--no-editor', action='store_true', help='serve only the fake bucket')
     return parser.parse_args()
 
@@ -122,14 +117,11 @@ class Store:
         self.uploads: dict[str, MultipartUpload] = {}
 
 
-def seed_store(feed_path: Path, legacy_feed_path: Path, bucket: str) -> Store:
+def seed_store(feed_path: Path, bucket: str) -> Store:
     store = Store(bucket)
-    paths: set[str] = set()
-    for key, path in ((FEED_KEY, feed_path), (LEGACY_FEED_KEY, legacy_feed_path)):
-        feed_bytes = path.read_bytes()
-        feed = json.loads(feed_bytes)
-        store.objects[key] = StoredObject(feed_bytes, 'application/json', cache_control='no-cache')
-        paths.update(bucket_paths(feed))
+    feed_bytes = feed_path.read_bytes()
+    store.objects[FEED_KEY] = StoredObject(feed_bytes, 'application/json', cache_control='no-cache')
+    paths = bucket_paths(json.loads(feed_bytes))
     for key in sorted(paths):
         body = fake_content(key)
         store.objects[key] = StoredObject(

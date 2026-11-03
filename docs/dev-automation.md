@@ -57,13 +57,13 @@ python scripts\launcher_flows.py start --fresh
 python scripts\launcher_flows.py start --aot
 python scripts\launcher_flows.py snapshot save configured
 python scripts\launcher_flows.py start --snapshot configured --no-build
-python scripts\launcher_flows.py start --feed feedV12-stb-3.3.0.json
+python scripts\launcher_flows.py start --feed feedV11-stb-3.3.0.json
 python scripts\launcher_flows.py log -n 50
 python scripts\launcher_flows.py stop --mock
 ```
 
 The consumer CLI uses `scripts/Sandbox` and `scripts/Mock`. Its stage-feed example installs an older STB; restarting
-with default `feedV12.json` offers the update. See [Mock install archives](../../AGENTS.md#mock-install-archives).
+with default `feedV11.json` offers the update. See [Mock install archives](../../AGENTS.md#mock-install-archives).
 The NativeAOT automation output now belongs to the selected sandbox build directory, not `out/dev-automation`.
 
 ## Commands
@@ -185,7 +185,7 @@ default selection, and one without a default fails with the list of its options.
 options it was left with and warns about given steps that no dialog showed. A failed task raises
 `TaskFailedError` with the error shown in the queue, leaving it there for `resume_task`/`cancel_task`.
 
-V12 component titles follow the launcher's current UI culture (then parent cultures, then the feed's default).
+Component titles follow the launcher's current UI culture (then parent cultures, then the feed's default).
 Use the titles actually printed by the flow: the bilingual mocks show `English voices` and `Graphics pack`
 on an English host, so their overrides are `--choice "English voices=Install"` and
 `--choice "Graphics pack=MD's Graphics Lite"`. The example below uses Russian feed titles. FOMOD titles
@@ -226,10 +226,10 @@ action.
 
 Check feed editor changes without R2 credentials with `kit/scripts/feed_editor_dev.py`. It serves a fake R2 bucket (an in-memory S3 subset on `http://127.0.0.1:5005`, explicit `--bucket` (STB uses `stb`): `GetObject`, `HeadObject`, `PutObject` with `If-Match`, `ListObjectsV2`, multipart uploads through presigned URLs, and CORS for the browser upload; signatures are not checked) and runs the editor on `http://127.0.0.1:5090` pointed at it (`--port`, `--r2-port`; `--no-editor` serves only the bucket for an editor started elsewhere).
 
-Every run serves V12 `feedV12.json` from `kit/tests/LauncherKit.FeedEditor.Tests/Fixtures/feedV12.json` (`--feed`) and frozen V11 `feedV11.json` from that directory's `feed.json` (`--legacy-feed`). The editor's `/` page edits V12; `/legacy` edits only V11 launchers. Both object keys are configured separately through `R2:FeedKey` and `R2:LegacyFeedKey`. Every bucket path named in either feed, including each localized markdown path, exists with small fixed content and SHA-256 metadata. `Smoke/no-checksum.7z`, `Smoke/invalid-checksum.7z` and `Smoke/uppercase-checksum.7z` cover other metadata cases. Any access key signs in except `denied`. Saves and uploads live in memory until restart. The script uses only the Python standard library.
+Every run serves the feed `feedV11.json` from `kit/tests/LauncherKit.FeedEditor.Tests/Fixtures/feedV11.json` (`--feed`; its object key is `R2:FeedKey`). Every bucket path named in the feed, including each localized markdown path, exists with small fixed content and SHA-256 metadata. `Smoke/no-checksum.7z`, `Smoke/invalid-checksum.7z` and `Smoke/uppercase-checksum.7z` cover other metadata cases. Any access key signs in except `denied`. Saves and uploads live in memory until restart. The script uses only the Python standard library.
 
 ```powershell
 python kit\scripts\feed_editor_dev.py --bucket stb
 ```
 
-Browser smoke after integration: run the sandbox, open `http://127.0.0.1:5090`, sign in with any nonempty credentials except access key `denied`, and edit `DefaultLanguage` plus both language columns of mod names/descriptions, recommendations and changelog paths. Add/remove component and prerequisite entries, choose each component kind/mod reference, change numeric order and support ranges, and save/reload. Confirm missing default translations, unknown mod references, duplicate IDs, invalid ranges and invalid download hashes block saving. Open a second browser context on the same page, save a change there, then save in the first to exercise conflict cancel/overwrite/reload. Visit `/legacy`, sign in again, edit launcher scalars/downloads, save and reload; compare the JSON preview's non-`Launchers` properties with the frozen V11 fixture. Repeat conflict/sign-out/discard behavior on this page. Page switches must warn about unsaved changes and require fresh sign-in; legacy opaque fields must never appear as editable or cause validation errors.
+Browser smoke after integration: run the sandbox, open `http://127.0.0.1:5090`, sign in with any nonempty credentials except access key `denied`, and edit `DefaultLanguage` plus both language columns of mod names/descriptions, recommendations and changelog paths. Add/remove component and prerequisite entries, choose each component kind/mod reference, change numeric order and support ranges, and save/reload. Confirm missing default translations, unknown mod references, duplicate IDs, invalid ranges and invalid download hashes block saving. Open a second browser context on the same page, save a change there, then save in the first to exercise conflict cancel/overwrite/reload. Reloading or leaving the page must warn about unsaved changes.

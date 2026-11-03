@@ -43,14 +43,6 @@
 		@* Every field edit re-renders the editor, so summaries in collapsed entries and tab badges stay current. *@
 		<MudForm FieldChanged="@((MudBlazor.Utilities.FormFieldChangedEventArgs _) => { })">
 			<MudTabs Outlined="true" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-4">
-				@if (Session.IsLegacy)
-				{
-					<MudTabPanel Text="@($"Лаунчеры V11 ({Session.LegacyFeed!.Launchers.Count})")">
-						<LegacyLaunchersEditor Feed="Session.LegacyFeed" />
-					</MudTabPanel>
-				}
-				else
-				{
 				<MudTabPanel Text="Общие">
 					<MudTextField @bind-Value="Feed.DefaultLanguage" Label="Язык по умолчанию" Required="true" Validation="@FeedRules.Language" Variant="Variant.Outlined" Margin="Margin.Dense" />
 				</MudTabPanel>
@@ -151,7 +143,6 @@
 					<BetaVersionsEditor BetaVersions="Feed.BetaVersions" SponsorRoleIds="Feed.SponsorRoleIds"
 										DeveloperRoleIds="Feed.DeveloperRoleIds" />
 				</MudTabPanel>
-				}
 
 				<MudTabPanel Text="JSON">
 					<MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">Предпросмотр того, что загрузит «Сохранить» (только чтение).</MudText>

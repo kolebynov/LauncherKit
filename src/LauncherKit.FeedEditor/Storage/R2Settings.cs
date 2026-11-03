@@ -16,7 +16,4 @@ public sealed class R2Settings
 
 	[Required]
 	public required string FeedKey { get; set; }
-
-	[Required]
-	public string LegacyFeedKey { get; set; } = "feedV11.json";
 }

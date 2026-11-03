@@ -74,23 +74,9 @@ public sealed class FeedSession(IR2ClientFactory clientFactory, IOptions<R2Setti
 
 	public FeedModel? Feed { get; private set; }
 
-	public LegacyFeedModel? LegacyFeed { get; private set; }
+	public IReadOnlyList<FeedValidationError> Validate() => FeedValidator.Validate(Feed!);
 
-	public bool IsLegacy { get; private set; }
-
-	public void UseLegacy(bool legacy)
-	{
-		if (IsSignedIn) throw new InvalidOperationException("Sign out before switching feed pages.");
-		IsLegacy = legacy;
-	}
-
-	private string FeedKey => IsLegacy ? _settings.LegacyFeedKey : _settings.FeedKey;
-
-	public IReadOnlyList<FeedValidationError> Validate() =>
-		IsLegacy ? FeedValidator.ValidateLegacy(LegacyFeed!) : FeedValidator.Validate(Feed!);
-
-	public string Serialize() =>
-		IsLegacy ? FeedJson.SerializeLegacy(LegacyFeed!) : FeedJson.Serialize(Feed!);
+	public string Serialize() => FeedJson.Serialize(Feed!);
 
 	/// <summary>
 	/// Keys of every object in the bucket, sorted ordinally; feed paths are relative to the bucket root, so these are
@@ -100,10 +86,10 @@ public sealed class FeedSession(IR2ClientFactory clientFactory, IOptions<R2Setti
 
 	public bool IsSignedIn => _client is not null;
 
-	public string FeedLocation => $"{_settings.BucketName}/{FeedKey}";
+	public string FeedLocation => $"{_settings.BucketName}/{_settings.FeedKey}";
 
 	/// <summary>Whether the feed differs from what was last loaded or saved, compared by its serialized form.</summary>
-	public bool HasUnsavedChanges => (Feed is not null || LegacyFeed is not null) && _stored is not null && Serialize() != _stored.Json;
+	public bool HasUnsavedChanges => Feed is not null && _stored is not null && Serialize() != _stored.Json;
 
 	/// <exception cref="FeedStorageException">R2 is unreachable or the stored feed cannot be read.</exception>
 	public async Task<SignInResult> SignInAsync(string accessKeyId, string secretAccessKey, CancellationToken cancellationToken)
@@ -177,7 +163,7 @@ public sealed class FeedSession(IR2ClientFactory clientFactory, IOptions<R2Setti
 		var request = new PutObjectRequest
 		{
 			BucketName = _settings.BucketName,
-			Key = FeedKey,
+			Key = _settings.FeedKey,
 			ContentBody = json,
 			ContentType = stored.ContentType ?? DefaultContentType,
 			IfMatch = overwrite ? null : stored.ETag,
@@ -402,7 +388,6 @@ public sealed class FeedSession(IR2ClientFactory clientFactory, IOptions<R2Setti
 		_client = null;
 		_stored = null;
 		Feed = null;
-		LegacyFeed = null;
 		ObjectKeys = [];
 	}
 
@@ -417,7 +402,7 @@ public sealed class FeedSession(IR2ClientFactory clientFactory, IOptions<R2Setti
 		try
 		{
 			using var response = await client.GetObjectAsync(
-				new GetObjectRequest { BucketName = _settings.BucketName, Key = FeedKey }, cancellationToken);
+				new GetObjectRequest { BucketName = _settings.BucketName, Key = _settings.FeedKey }, cancellationToken);
 			using var reader = new StreamReader(response.ResponseStream);
 			content = await reader.ReadToEndAsync(cancellationToken);
 			stored = new StoredFeed(string.Empty, response.ETag, response.Headers.ContentType, response.Headers.CacheControl);
@@ -435,12 +420,10 @@ public sealed class FeedSession(IR2ClientFactory clientFactory, IOptions<R2Setti
 			throw new FeedStorageException($"Не удалось загрузить {FeedLocation}: {e.Message}", e);
 		}
 
-		FeedModel? feed = null;
-		LegacyFeedModel? legacyFeed = null;
+		FeedModel feed;
 		try
 		{
-			if (IsLegacy) legacyFeed = FeedJson.DeserializeLegacy(content);
-			else feed = FeedJson.Deserialize(content);
+			feed = FeedJson.Deserialize(content);
 		}
 		catch (JsonException e)
 		{
@@ -449,7 +432,6 @@ public sealed class FeedSession(IR2ClientFactory clientFactory, IOptions<R2Setti
 
 		var objectKeys = await ListObjectKeysAsync(client, cancellationToken);
 		Feed = feed;
-		LegacyFeed = legacyFeed;
 		ObjectKeys = objectKeys;
 		_stored = stored with { Json = Serialize() };
 	}

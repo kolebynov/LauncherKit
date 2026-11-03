@@ -164,7 +164,7 @@ def cmd_start(args) -> int:
         f'{prefix}Window__PositionY': '80',
     })
     if args.mock_dir is not None and not args.real_feed:
-        feed = args.feed or 'feedV12.json'
+        feed = args.feed or 'feedV11.json'
         mock_url = ensure_mock_server(args.mock_port, state, args.mock_dir.resolve(), feed)
         for key in ('Feed', 'Analytics'):
             env[f'{prefix}Urls__{key}__MainUrl'] = mock_url
@@ -406,7 +406,7 @@ def parse_args(configure=None):
     start.add_argument('--state-name', action='append', default=[], help='runtime filename/glob excluded from builds')
     start.add_argument('--mock-dir', type=Path, help='consumer mock feed directory (otherwise use configured servers)')
     start.add_argument('--real-feed', action='store_true', help='use configured servers even when --mock-dir is set')
-    start.add_argument('--feed', help='mock feed file (default: feedV12.json)')
+    start.add_argument('--feed', help='mock feed file (default: feedV11.json)')
     start.add_argument('--port', type=int, default=DEFAULT_PORT, help=f'automation API port ({DEFAULT_PORT})')
     start.add_argument('--mock-port', type=int, default=DEFAULT_MOCK_PORT, help=f'mock feed port ({DEFAULT_MOCK_PORT})')
     start.add_argument('--width', type=int, default=DEFAULT_WIDTH)

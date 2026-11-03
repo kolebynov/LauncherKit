@@ -7,10 +7,10 @@ using LauncherKit.FeedEditor.Feed.Json;
 namespace LauncherKit.FeedEditor.Tests.Feed.Json;
 
 [TestFixture]
-public sealed class FeedV12ContractTests
+public sealed class FeedV11ContractTests
 {
 	[Test]
-	public void Serialize_V12Fixture_WritesGenericNamesComponentsAndPrerequisites()
+	public void Serialize_Fixture_WritesGenericNamesComponentsAndPrerequisites()
 	{
 		var feed = FeedJson.Deserialize(FeedFixtures.StoredFeedJson());
 		var result = JsonNode.Parse(FeedJson.Serialize(feed))!.AsObject();

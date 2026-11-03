@@ -144,19 +144,6 @@ public static class FeedValidator
 		return errors;
 	}
 
-	public static IReadOnlyList<FeedValidationError> ValidateLegacy(LegacyFeedModel feed)
-	{
-		var errors = new Errors(string.Empty);
-		errors.UniqueVersions("Лаунчеры", feed.Launchers.Select(x => x.Version));
-		foreach (var launcher in feed.Launchers)
-		{
-			var location = $"Лаунчер {launcher.Version}";
-			errors.Check(location, "Версия", FeedRules.Version, launcher.Version);
-			errors.DownloadInfo(location, launcher.DownloadInfo);
-		}
-		return errors;
-	}
-
 	private static string Label(string name, int index) => string.IsNullOrWhiteSpace(name) ? $"#{index + 1}" : name;
 
 	private static void CheckRoleIds(Errors errors, List<string> roleIds, string listLocation, string itemLocation)

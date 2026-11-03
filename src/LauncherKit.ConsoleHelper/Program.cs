@@ -84,7 +84,7 @@ static async Task HandleTestDownload(CancellationToken cancellationToken)
 		RequiredSkyrimVersion = "1.5.97.0",
 		RegistryKey = @"HKEY_CURRENT_USER\Software\LauncherKit\DownloadHelper",
 	});
-	// The feed to download from comes from the environment, e.g. LAUNCHER_DOWNLOAD_HELPER_Feed__FeedPath=feedV12.json,
+	// The feed to download from comes from the environment, e.g. LAUNCHER_DOWNLOAD_HELPER_Feed__FeedPath=feedV11.json,
 	// LAUNCHER_DOWNLOAD_HELPER_Urls__Feed__MainUrl and LAUNCHER_DOWNLOAD_HELPER_Urls__Feed__ProxyUrl.
 	var configuration = appBuilder.Configuration;
 	configuration.AddInMemoryCollection(new Dictionary<string, string?>

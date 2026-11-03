@@ -16,8 +16,7 @@ namespace LauncherKit.FeedEditor.Tests.Storage;
 public sealed class FeedSessionTests
 {
 	private const string Bucket = "stb";
-	private const string FeedKey = "feedV12.json";
-	private const string LegacyFeedKey = "frozen-feedV11.json";
+	private const string FeedKey = "feedV11.json";
 	private const string ETag = "\"etag-1\"";
 
 	[Test]
@@ -542,81 +541,6 @@ public sealed class FeedSessionTests
 		Assert.That(result, Is.Null);
 	}
 
-	[Test]
-	public async Task SignInAsync_LegacySelection_LoadsConfiguredV11KeyWithoutExposingV12Model()
-	{
-		var mocker = CreateMocker();
-		SetupStoredFeed(mocker, cacheControl: null, legacy: true);
-		using var sut = mocker.CreateInstance<FeedSession>();
-		sut.UseLegacy(true);
-
-		var result = await sut.SignInAsync("key", "secret", CancellationToken.None);
-
-		Assert.Multiple(() =>
-		{
-			Assert.That(result, Is.EqualTo(SignInResult.SignedIn));
-			Assert.That(sut.IsLegacy, Is.True);
-			Assert.That(sut.FeedLocation, Is.EqualTo($"{Bucket}/{LegacyFeedKey}"));
-			Assert.That(sut.Feed, Is.Null);
-			Assert.That(sut.LegacyFeed!.Launchers[0].Version, Is.EqualTo("1.19.1"));
-			Assert.That(sut.HasUnsavedChanges, Is.False);
-		});
-	}
-
-	[Test]
-	public async Task SaveAsync_LegacyLauncherEdit_UsesLegacyKeyAndPreservesAllOtherV11Data()
-	{
-		var mocker = CreateMocker();
-		SetupStoredFeed(mocker, cacheControl: "max-age=60", legacy: true);
-		PutObjectRequest? request = null;
-		mocker.GetMock<IAmazonS3>()
-			.Setup(x => x.PutObjectAsync(It.IsAny<PutObjectRequest>(), It.IsAny<CancellationToken>()))
-			.Callback<PutObjectRequest, CancellationToken>((value, _) => request = value)
-			.ReturnsAsync(new PutObjectResponse { ETag = "\"legacy-etag-2\"" });
-		using var sut = mocker.CreateInstance<FeedSession>();
-		sut.UseLegacy(true);
-		await sut.SignInAsync("key", "secret", CancellationToken.None);
-		sut.LegacyFeed!.Launchers[0].Version = "9.9.9";
-		Assert.That(sut.HasUnsavedChanges, Is.True);
-
-		var result = await sut.SaveAsync(overwrite: false, CancellationToken.None);
-
-		var original = JsonNode.Parse(FeedFixtures.LegacyFeedJson())!.AsObject();
-		var saved = JsonNode.Parse(request!.ContentBody)!.AsObject();
-		Assert.Multiple(() =>
-		{
-			Assert.That(result, Is.EqualTo(SaveResult.Saved));
-			Assert.That(request.Key, Is.EqualTo(LegacyFeedKey));
-			Assert.That(request.IfMatch, Is.EqualTo(ETag));
-			Assert.That(request.Headers.CacheControl, Is.EqualTo("max-age=60"));
-			Assert.That(saved["Launchers"]![0]!["Version"]!.GetValue<string>(), Is.EqualTo("9.9.9"));
-			Assert.That(sut.HasUnsavedChanges, Is.False);
-		});
-		original.Remove("Launchers");
-		saved.Remove("Launchers");
-		Assert.That(JsonNode.DeepEquals(saved, original), Is.True);
-	}
-
-	[Test]
-	public async Task UseLegacy_SignedIn_CannotSwitchFeedUntilSignOut()
-	{
-		var mocker = CreateMocker();
-		SetupStoredFeed(mocker, cacheControl: null);
-		using var sut = mocker.CreateInstance<FeedSession>();
-		await sut.SignInAsync("key", "secret", CancellationToken.None);
-
-		Assert.That(() => sut.UseLegacy(true), Throws.InvalidOperationException);
-		Assert.That(sut.IsLegacy, Is.False);
-		sut.SignOut();
-		sut.UseLegacy(true);
-		Assert.Multiple(() =>
-		{
-			Assert.That(sut.Feed, Is.Null);
-			Assert.That(sut.LegacyFeed, Is.Null);
-			Assert.That(sut.FeedLocation, Is.EqualTo($"{Bucket}/{LegacyFeedKey}"));
-		});
-	}
-
 	private static void SetupObjectMetadata(AutoMocker mocker, string key, string? sha256Metadata)
 	{
 		var response = new GetObjectMetadataResponse();
@@ -634,7 +558,7 @@ public sealed class FeedSessionTests
 	private static AutoMocker CreateMocker()
 	{
 		var mocker = new AutoMocker(MockBehavior.Strict);
-		OptionsStubs.Options(mocker, new R2Settings { ServiceUrl = new Uri("https://account.r2.test"), BucketName = Bucket, FeedKey = FeedKey, LegacyFeedKey = LegacyFeedKey });
+		OptionsStubs.Options(mocker, new R2Settings { ServiceUrl = new Uri("https://account.r2.test"), BucketName = Bucket, FeedKey = FeedKey });
 		mocker.Use<ILogger<FeedSession>>(NullLogger<FeedSession>.Instance);
 		mocker.GetMock<IR2ClientFactory>()
 			.Setup(x => x.Create(It.IsAny<string>(), It.IsAny<string>()))
@@ -642,18 +566,17 @@ public sealed class FeedSessionTests
 		return mocker;
 	}
 
-	private static void SetupStoredFeed(AutoMocker mocker, string? cacheControl, bool legacy = false)
+	private static void SetupStoredFeed(AutoMocker mocker, string? cacheControl)
 	{
 		var client = mocker.GetMock<IAmazonS3>();
-		var key = legacy ? LegacyFeedKey : FeedKey;
 		client.Setup(x => x.GetObjectAsync(
-				It.Is<GetObjectRequest>(r => r.BucketName == Bucket && r.Key == key), It.IsAny<CancellationToken>()))
+				It.Is<GetObjectRequest>(r => r.BucketName == Bucket && r.Key == FeedKey), It.IsAny<CancellationToken>()))
 			.ReturnsAsync(() =>
 			{
 				var response = new GetObjectResponse
 				{
 					ETag = ETag,
-					ResponseStream = new MemoryStream(Encoding.UTF8.GetBytes(legacy ? FeedFixtures.LegacyFeedJson() : FeedFixtures.StoredFeedJson())),
+					ResponseStream = new MemoryStream(Encoding.UTF8.GetBytes(FeedFixtures.StoredFeedJson())),
 				};
 				response.Headers.ContentType = "application/json; charset=utf-8";
 				response.Headers.CacheControl = cacheControl;
@@ -661,7 +584,7 @@ public sealed class FeedSessionTests
 			});
 		client.Setup(x => x.Dispose());
 		client.Setup(x => x.ListObjectsV2Async(It.IsAny<ListObjectsV2Request>(), It.IsAny<CancellationToken>()))
-			.ReturnsAsync(() => Listing([key], nextToken: null));
+			.ReturnsAsync(() => Listing([FeedKey], nextToken: null));
 	}
 
 	private static ListObjectsV2Response Listing(IReadOnlyList<string> keys, string? nextToken) => new()
