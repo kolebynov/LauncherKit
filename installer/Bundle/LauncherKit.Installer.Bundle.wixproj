@@ -1,0 +1,38 @@
+<Project Sdk="WixToolset.Sdk/7.0.1">
+	<!--
+	The launcher setup the feed and releases distribute: a per-user Burn bundle chaining the launcher package, built by
+	the LauncherKit.Build PublishInstaller target from the consumer's product props (LauncherProductProps). An exe rather
+	than the MSI itself, because launchers released with the former bootstrapper start the downloaded update with the
+	shell's "runas" verb, which .msi files do not have. The package is the consumer's LauncherInstallerProject: a
+	WixToolset.Sdk project importing LauncherKit.Installer.props whose own .wxs defines the launcher's layout.
+	-->
+	<Import Project="$(LauncherProductProps)" Condition="'$(LauncherProductProps)' != ''"/>
+	<Import Project="..\LauncherKit.Installer.Shared.props"/>
+
+	<PropertyGroup>
+		<OutputType>Bundle</OutputType>
+		<OutputName>$(LauncherInstallerOutputName)</OutputName>
+		<!--
+		The launcher version, shown in Programs and Features. Burn refuses to install a bundle older than the installed
+		one (error 1638); the launcher only ever offers newer versions (UpdateProvider), compared by the same SemVer
+		ordering, so only a hand-run older setup is refused. Released setups before this one all had 1.0.0.
+		-->
+		<BundleVersion>$(VersionPrefix)</BundleVersion>
+		<BundleVersion Condition="'$(VersionSuffix)' != ''">$(VersionPrefix)-$(VersionSuffix)</BundleVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Named, so Bundle.wxs finds the package as $(var.LauncherInstaller.TargetPath) whatever the project's name. -->
+		<ProjectReference Include="$(LauncherInstallerProject)" Name="LauncherInstaller"/>
+		<PackageReference Include="WixToolset.Bal.wixext"/>
+		<PackageReference Include="WixToolset.Util.wixext"/>
+		<LauncherInstallerConstant Include="BundleVersion" Value="$(BundleVersion)"/>
+		<LauncherInstallerConstant Include="LauncherInstallerBundleId" Value="$(LauncherInstallerBundleId)"/>
+		<LauncherInstallerConstant Include="LauncherInstallerLogoFile" Value="$(LauncherInstallerLogoFile)"/>
+	</ItemGroup>
+
+	<Target Name="LauncherKitCheckInstallerProject" BeforeTargets="ResolveProjectReferences;_CreateProjectDefineConstants">
+		<Error Condition="'$(LauncherInstallerProject)' == '' Or !Exists('$(LauncherInstallerProject)')"
+		       Text="LauncherInstallerProject must name the consumer's launcher package project, not '$(LauncherInstallerProject)'."/>
+	</Target>
+</Project>

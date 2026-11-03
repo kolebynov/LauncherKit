@@ -1,3 +1,4 @@
+using System.Xml.Linq;
 using Nuke.Common;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
@@ -7,9 +8,9 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 namespace LauncherKit.Build;
 
 /// <summary>
-/// Reusable NUKE publish, test and editor components. Consumers provide all project and product names and their own
-/// installer packaging; this project neither imports consumer product properties nor supplies a fallback product
-/// identity.
+/// Reusable NUKE publish, test, installer and editor components. Consumers provide their project names and product
+/// props (<see cref="ProductPropsFile"/>); the version and installer output name are read from those props, and the
+/// installer is built from them by the kit's WiX projects (kit/installer). No fallback product identity is supplied.
 /// </summary>
 public abstract class LauncherBuild : NukeBuild
 {
@@ -29,7 +30,17 @@ public abstract class LauncherBuild : NukeBuild
 	protected abstract string CollectorProjectName { get; }
 	protected abstract string CollectorExecutableName { get; }
 	protected abstract string FeedEditorProjectName { get; }
-	protected abstract string VersionPrefix { get; }
+
+	/// <summary>
+	/// The consumer's product props (kit/msbuild/LauncherKit.Product.props), with literal <c>VersionPrefix</c> and
+	/// <c>LauncherInstallerOutputName</c> values.
+	/// </summary>
+	protected abstract AbsolutePath ProductPropsFile { get; }
+
+	/// <summary>The LauncherKit checkout.</summary>
+	protected virtual AbsolutePath KitDirectory => RootDirectory / "kit";
+
+	protected string VersionPrefix => ProductProperty("VersionPrefix");
 
 	protected static string Runtime => OperatingSystem.IsWindows() ? "win-x64" : "linux-x64";
 	protected string Version => string.IsNullOrWhiteSpace(VersionSuffix)
@@ -80,6 +91,33 @@ public abstract class LauncherBuild : NukeBuild
 			}
 		});
 
+	/// <summary>
+	/// Builds the launcher's per-user MSI (the consumer's LauncherInstallerProject or the kit's default) and the Burn
+	/// bundle chaining it from the launcher publish output, and copies them to <c>out/{name}_{version}.msi</c> and
+	/// <c>out/{name}_{version}.exe</c> (the setup the feed and the releases distribute), where {name} is the product's
+	/// <c>LauncherInstallerOutputName</c>.
+	/// </summary>
+	public Target PublishInstaller => _ => _
+		.DependsOn(CleanLauncherSymbols)
+		.Executes(() =>
+		{
+			var outputName = ProductProperty("LauncherInstallerOutputName");
+			var installerOutputDirectory = PublishDirectory / "Installer";
+			DotNetBuild(settings => settings
+				.SetProjectFile(KitDirectory / "installer" / "Bundle" / "LauncherKit.Installer.Bundle.wixproj")
+				.SetConfiguration(Configuration)
+				// WiX's up-to-date check does not see a changed publish output, so a stale package could be reused.
+				.EnableNoIncremental()
+				.SetVersionSuffix(VersionSuffix)
+				.SetProperty("LauncherProductProps", ProductPropsFile)
+				.SetProperty("LauncherPublishDirectory", LauncherPublishDirectory)
+				.SetProperty("OutDir", installerOutputDirectory + Path.DirectorySeparatorChar));
+			(installerOutputDirectory / $"{outputName}.msi").Copy(
+				ArtifactsDirectory / $"{outputName}_{Version}.msi", ExistsPolicy.FileOverwrite);
+			(installerOutputDirectory / $"{outputName}.exe").Copy(
+				ArtifactsDirectory / $"{outputName}_{Version}.exe", ExistsPolicy.FileOverwrite);
+		});
+
 	public Target PublishConsoleCollector => _ => _
 		.DependsOn(Clean)
 		.Executes(() =>
@@ -123,6 +161,9 @@ public abstract class LauncherBuild : NukeBuild
 
 	protected AbsolutePath GetProjectPath(string projectName) =>
 		Solution.AllProjects.First(project => project.Name == projectName).Path;
+
+	protected string ProductProperty(string name) =>
+		XDocument.Load(ProductPropsFile).Descendants(name).Single().Value.Trim();
 
 	private static string GetExecutableName(string name) => OperatingSystem.IsWindows() ? $"{name}.exe" : name;
 }

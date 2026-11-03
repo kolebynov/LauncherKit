@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Per-user, like its only package, so it never asks for elevation. The launcher's MSI starts the launcher once installed,
+so the bundle has no launch button of its own. The setup window is in Russian (Theme.ru-ru.wxl) with the consumer's
+logo (LauncherInstallerLogoFile, 64x64, the size the theme shows) and the shortcut checkboxes of Theme.xml.
+
+Each checkbox starts from the choice of the installed launcher, which the MSI keeps in the registry, or from its
+default (both shortcuts) when there is none, so an upgrade without UI (the launcher's /passive update) keeps what the
+user chose.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+	<Bundle Id="$(var.LauncherInstallerBundleId)" Name="$(var.LauncherDisplayName)" Manufacturer="$(var.LauncherManufacturer)"
+	        Version="$(var.BundleVersion)" IconSourceFile="$(var.LauncherIconFile)" DisableModify="yes">
+		<BootstrapperApplication>
+			<bal:WixStandardBootstrapperApplication Theme="hyperlinkLicense" ThemeFile="Theme.xml" LicenseUrl="" SuppressOptionsUI="yes"
+			                                        ShowVersion="yes" LocalizationFile="Theme.ru-ru.wxl" LogoFile="$(var.LauncherInstallerLogoFile)" />
+		</BootstrapperApplication>
+
+		<Variable Name="DesktopShortcut" Type="numeric" Value="1" />
+		<Variable Name="StartMenuShortcut" Type="numeric" Value="1" />
+		<!-- Also settable on the command line: <setup>.exe /uninstall /quiet RemoveAllData=1 -->
+		<Variable Name="RemoveAllData" Type="numeric" Value="0" bal:Overridable="yes" />
+		<!-- The installed launchers root, shown in the RemoveAllData checkbox text (Theme.ru-ru.wxl). -->
+		<util:RegistrySearch Id="LaunchersRootSearch" Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Value="LaunchersRoot"
+		                     Variable="LaunchersRoot" />
+
+		<util:RegistrySearch Id="DesktopShortcutSavedSearch" Root="HKCU" Key="$(var.LauncherRegistryKeyPath)"
+		                     Value="DesktopShortcut" Result="exists" Variable="DesktopShortcutSaved" />
+		<util:RegistrySearch Id="DesktopShortcutSearch" After="DesktopShortcutSavedSearch" Condition="DesktopShortcutSaved"
+		                     Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Value="DesktopShortcut" Variable="DesktopShortcut" />
+		<util:RegistrySearch Id="StartMenuShortcutSavedSearch" Root="HKCU" Key="$(var.LauncherRegistryKeyPath)"
+		                     Value="StartMenuShortcut" Result="exists" Variable="StartMenuShortcutSaved" />
+		<util:RegistrySearch Id="StartMenuShortcutSearch" After="StartMenuShortcutSavedSearch" Condition="StartMenuShortcutSaved"
+		                     Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Value="StartMenuShortcut" Variable="StartMenuShortcut" />
+
+		<Chain>
+			<MsiPackage SourceFile="$(var.LauncherInstaller.TargetPath)">
+				<MsiProperty Name="DESKTOPSHORTCUT" Value="[DesktopShortcut]" />
+				<MsiProperty Name="STARTMENUSHORTCUT" Value="[StartMenuShortcut]" />
+				<MsiProperty Name="REMOVEALLDATA" Value="[RemoveAllData]" />
+			</MsiPackage>
+		</Chain>
+	</Bundle>
+</Wix>

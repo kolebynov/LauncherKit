@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+The launcher's per-user MSI (no elevation): the launcher publish output goes into LAUNCHERDIR, and the launchers root
+LAUNCHERSROOT is recorded as LaunchersRoot. Both directories belong to the consumer's layout: a .wxs of the importing
+project defines them (and may add its own components to the Launcher feature through FeatureRef), so where the launcher
+is installed is the consumer's choice. The launcher's own files there and everything else in the root (the global
+database, Tools\, the user's appsettings.override.json and logs) are written by the launcher, not owned by the package,
+so upgrades and uninstalling keep them unless the user removes all data.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+	<Package Id="$(var.LauncherInstallerPackageId)" Name="$(var.LauncherDisplayName)" Manufacturer="$(var.LauncherManufacturer)"
+	         Version="$(var.ProductVersion)" Scope="perUser">
+		<!-- The launcher decides which version is newer (prereleases included), so any installed version is replaced. -->
+		<MajorUpgrade AllowDowngrades="yes" />
+		<MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+		<Icon Id="LauncherIcon" SourceFile="$(var.LauncherIconFile)" />
+		<Property Id="ARPPRODUCTICON" Value="LauncherIcon" />
+		<Property Id="ARPNOMODIFY" Value="1" />
+
+		<!-- Asks a running launcher to close (its own close confirmation still applies) before its files are replaced. -->
+		<util:CloseApplication Target="$(var.LauncherAppExecutableName)" CloseMessage="yes" RebootPrompt="no" />
+
+		<!--
+		The setup bundle passes the user's choices; these defaults apply to the MSI run on its own. Kept in the registry
+		(written below), where the bundle reads them back for the next upgrade.
+		-->
+		<Property Id="DESKTOPSHORTCUT" Value="1" Secure="yes" />
+		<Property Id="STARTMENUSHORTCUT" Value="1" Secure="yes" />
+
+		<!--
+		REMOVEALLDATA=1 (the bundle's "remove all data" checkbox) makes uninstalling delete the whole launchers root
+		(the global database, Tools\, the user's settings and logs) and the Downloads and Temp folders of the user-chosen
+		data directory with everything in them, then that directory if it is left empty, instead of leaving what the
+		launcher wrote. Never on a major upgrade, which uninstalls the previous version. RemoveFolderEx needs its paths
+		before CostInitialize, earlier than directories resolve, and the data directory is only in
+		appsettings.override.json, which Windows Installer cannot read: the MSI keeps the installed root and the launcher
+		writes the data folders (DataDirectoriesRegistrationInitializer) in the registry, read back by AppSearch.
+		-->
+		<Property Id="REMOVEALLDATA" Secure="yes" />
+		<Property Id="INSTALLEDLAUNCHERSROOT">
+			<RegistrySearch Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="LaunchersRoot" Type="raw" />
+		</Property>
+		<Property Id="LAUNCHERDOWNLOADSDIRECTORY">
+			<RegistrySearch Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="DownloadsDirectory" Type="raw" />
+		</Property>
+		<Property Id="LAUNCHERTEMPDATADIRECTORY">
+			<RegistrySearch Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="TempDataDirectory" Type="raw" />
+		</Property>
+		<Property Id="LAUNCHERAPPDATADIRECTORY">
+			<RegistrySearch Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="AppDataDirectory" Type="raw" />
+		</Property>
+		<!-- Set only when removing all data, so the data directory is never touched otherwise, even when empty. -->
+		<SetProperty Id="APPDATADIRECTORYTOREMOVE" Value="[LAUNCHERAPPDATADIRECTORY]" Before="CostInitialize" Sequence="execute"
+		             Condition='LAUNCHERAPPDATADIRECTORY AND REMOVEALLDATA = 1 AND REMOVE ~= "ALL" AND NOT UPGRADINGPRODUCTCODE' />
+
+		<Feature Id="Launcher">
+			<Files Directory="LAUNCHERDIR" Include="!(bindpath.Launcher)\**" />
+
+			<!-- LaunchersRoot is the root the launcher's log collector reads (LaunchersRootDirectoryManager). -->
+			<Component Directory="LAUNCHERSROOT">
+				<RegistryValue Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+				<RegistryValue Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="DesktopShortcut" Type="string" Value="[DESKTOPSHORTCUT]" />
+				<RegistryValue Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="StartMenuShortcut" Type="string" Value="[STARTMENUSHORTCUT]" />
+				<RegistryValue Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="LaunchersRoot" Type="string" Value="[LAUNCHERSROOT]" />
+				<RemoveFolder Directory="LAUNCHERDIR" On="uninstall" />
+				<RemoveFolder On="uninstall" />
+				<util:RemoveFolderEx On="uninstall" Property="INSTALLEDLAUNCHERSROOT"
+				                     Condition='REMOVEALLDATA = 1 AND REMOVE ~= "ALL" AND NOT UPGRADINGPRODUCTCODE' />
+				<util:RemoveFolderEx On="uninstall" Property="LAUNCHERDOWNLOADSDIRECTORY"
+				                     Condition='REMOVEALLDATA = 1 AND REMOVE ~= "ALL" AND NOT UPGRADINGPRODUCTCODE' />
+				<util:RemoveFolderEx On="uninstall" Property="LAUNCHERTEMPDATADIRECTORY"
+				                     Condition='REMOVEALLDATA = 1 AND REMOVE ~= "ALL" AND NOT UPGRADINGPRODUCTCODE' />
+				<RemoveFolder Property="APPDATADIRECTORYTOREMOVE" On="uninstall" />
+				<!-- Also the values the launcher writes, which no component owns. -->
+				<RemoveRegistryKey Action="removeOnUninstall" Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" />
+			</Component>
+
+			<!-- The Start menu shortcut is also what Windows Search finds the launcher by. -->
+			<Component Directory="ProgramMenuFolder" Condition="STARTMENUSHORTCUT = 1">
+				<Shortcut Name="$(var.LauncherDisplayName)" Target="[LAUNCHERDIR]$(var.LauncherAppExecutableName)" WorkingDirectory="LAUNCHERDIR" Icon="LauncherIcon" />
+				<RegistryValue Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="StartMenuShortcutCreated" Type="integer" Value="1" KeyPath="yes" />
+			</Component>
+
+			<Component Directory="DesktopFolder" Condition="DESKTOPSHORTCUT = 1">
+				<Shortcut Name="$(var.LauncherDisplayName)" Target="[LAUNCHERDIR]$(var.LauncherAppExecutableName)" WorkingDirectory="LAUNCHERDIR" Icon="LauncherIcon" />
+				<RegistryValue Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="DesktopShortcutCreated" Type="integer" Value="1" KeyPath="yes" />
+			</Component>
+		</Feature>
+
+		<!--
+		Starts the launcher after it is installed or upgraded, so the launcher's own update restarts it. The launcher
+		resolves its files from the working directory.
+		-->
+		<CustomAction Id="LaunchLauncher" Directory="LAUNCHERDIR" ExeCommand="&quot;[LAUNCHERDIR]$(var.LauncherAppExecutableName)&quot;" Return="asyncNoWait" />
+		<InstallExecuteSequence>
+			<Custom Action="LaunchLauncher" After="InstallFinalize" Condition="NOT Installed" />
+		</InstallExecuteSequence>
+	</Package>
+</Wix>

@@ -1,0 +1,30 @@
+<Project>
+	<!--
+	Shared by the launcher package (LauncherKit.Installer.props) and the setup bundle: checks the consumer's product
+	properties both need and passes them to the WiX preprocessor as $(var.<Name>). The package is per-user, so the
+	product registry key must be under HKEY_CURRENT_USER; WiX gets its path as LauncherRegistryKeyPath.
+	-->
+	<PropertyGroup>
+		<!-- Accepts the WiX 7 Open Source Maintenance Fee EULA. -->
+		<AcceptEula>wix7</AcceptEula>
+	</PropertyGroup>
+
+	<Target Name="LauncherKitInstallerSharedConstants" BeforeTargets="_CreateProjectDefineConstants">
+		<Error Condition="!$(LauncherRegistryKey.StartsWith('HKEY_CURRENT_USER\'))"
+		       Text="LauncherRegistryKey must be a key under HKEY_CURRENT_USER for the per-user installer, not '$(LauncherRegistryKey)'."/>
+		<ItemGroup>
+			<_LauncherInstallerConstant Include="LauncherDisplayName" Value="$(LauncherDisplayName)"/>
+			<_LauncherInstallerConstant Include="LauncherManufacturer" Value="$(LauncherManufacturer)"/>
+			<_LauncherInstallerConstant Include="LauncherRegistryKeyPath" Value="$(LauncherRegistryKey.Substring(18))"/>
+			<_LauncherInstallerConstant Include="LauncherIconFile" Value="$(LauncherIconFile)"/>
+			<_LauncherInstallerConstant Include="@(LauncherInstallerConstant)"/>
+		</ItemGroup>
+		<Error Condition="'%(_LauncherInstallerConstant.Value)' == ''"
+		       Text="LauncherKit installer property '%(_LauncherInstallerConstant.Identity)' is required."/>
+		<Error Condition="$([System.String]::Copy('%(_LauncherInstallerConstant.Value)').Contains(';'))"
+		       Text="LauncherKit installer property '%(_LauncherInstallerConstant.Identity)' must not contain ';'."/>
+		<PropertyGroup>
+			<DefineConstants>$(DefineConstants);@(_LauncherInstallerConstant->'%(Identity)=%(Value)')</DefineConstants>
+		</PropertyGroup>
+	</Target>
+</Project>

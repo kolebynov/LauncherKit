@@ -1,0 +1,26 @@
+<!-- The launcher's AOT publish passes PublishAot=true globally; this compiler component is never published. -->
+<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="PublishAot">
+
+	<!--
+	Source generator emitting the consumer's ProductIdentity from its Launcher* MSBuild properties (see
+	LauncherKit.Product.props). Referenced as an analyzer only, so it targets netstandard2.0 for the compiler.
+	-->
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<IsRoslynComponent>true</IsRoslynComponent>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		<IsAotCompatible>false</IsAotCompatible>
+		<PublishAot>false</PublishAot>
+		<!-- RS2008: release tracking is for analyzers shipped as packages; this one is built with its consumer. -->
+		<NoWarn>$(NoWarn);RS2008</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="LauncherKit.ProductIdentity.Generator.Tests"/>
+	</ItemGroup>
+
+</Project>

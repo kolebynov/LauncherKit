@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp"/>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\LauncherKit.ProductIdentity.Generator\LauncherKit.ProductIdentity.Generator.csproj"/>
+		<ProjectReference Include="..\..\src\LauncherKit.Infrastructure\LauncherKit.Infrastructure.csproj"/>
+	</ItemGroup>
+</Project>

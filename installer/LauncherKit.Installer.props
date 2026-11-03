@@ -1,0 +1,35 @@
+<Project>
+	<!--
+	Makes the importing WixToolset.Sdk project the launcher's per-user MSI (Package.wxs) from the consumer's product
+	properties (import the product props first) and the launcher publish output in LauncherPublishDirectory (set by the
+	LauncherKit.Build PublishInstaller target). The project's own .wxs defines the layout: the LAUNCHERSROOT and
+	LAUNCHERDIR directories, and any components it adds to the Launcher feature.
+	-->
+	<Import Project="LauncherKit.Installer.Shared.props"/>
+
+	<PropertyGroup>
+		<OutputName>$(LauncherInstallerOutputName)</OutputName>
+		<!--
+		ICE38/ICE91: the files go into the user's profile, where ICE38 wants every component keyed by an HKCU value and
+		ICE91 warns that the files are per-user; both are what this per-user package intends.
+		ICE60: third-party native DLLs of the publish output have a version resource without a language.
+		ICE61: MajorUpgrade AllowDowngrades removes newer versions too, which is intended (see Package.wxs).
+		-->
+		<SuppressIces>ICE38;ICE60;ICE61;ICE91</SuppressIces>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="$(MSBuildThisFileDirectory)Package.wxs"/>
+		<BindPath Include="$(LauncherPublishDirectory)" BindName="Launcher"/>
+		<PackageReference Include="WixToolset.Util.wixext"/>
+		<!-- MSI versions are numeric, so prereleases share their release's ProductVersion; MajorUpgrade allows that. -->
+		<LauncherInstallerConstant Include="ProductVersion" Value="$(VersionPrefix)"/>
+		<LauncherInstallerConstant Include="LauncherInstallerPackageId" Value="$(LauncherInstallerPackageId)"/>
+		<LauncherInstallerConstant Include="LauncherAppExecutableName" Value="$(LauncherAppExecutableName)"/>
+	</ItemGroup>
+
+	<Target Name="LauncherKitCheckPublishDirectory" BeforeTargets="_CreateProjectDefineConstants">
+		<Error Condition="'$(LauncherPublishDirectory)' == '' Or !Exists('$(LauncherPublishDirectory)')"
+		       Text="LauncherPublishDirectory must name the launcher publish output, not '$(LauncherPublishDirectory)'."/>
+	</Target>
+</Project>

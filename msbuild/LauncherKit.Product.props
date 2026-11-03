@@ -1,0 +1,27 @@
+<Project>
+	<!--
+	Imported at the end of the consumer's product props, which set the Launcher* identity properties. In the C# projects
+	importing those props (the launcher and the log collector), LauncherKit.ProductIdentity.Generator emits
+	$(LauncherProductNamespace).ProductIdentity with a constant per value and CreateOptions(); a missing or blank value
+	fails the build (LKPI001). The installer projects read the same properties (kit/installer).
+	Keep the list in sync with ProductIdentityGenerator.OptionNames.
+	-->
+	<ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+		<CompilerVisibleProperty Include="LauncherProductNamespace"/>
+		<CompilerVisibleProperty Include="LauncherSkyrimDataDirectoryName"/>
+		<CompilerVisibleProperty Include="LauncherLocalDatabaseFileName"/>
+		<CompilerVisibleProperty Include="LauncherOAuthTokenEntropy"/>
+		<CompilerVisibleProperty Include="LauncherEnvironmentVariablePrefix"/>
+		<CompilerVisibleProperty Include="LauncherAppExecutableName"/>
+		<CompilerVisibleProperty Include="LauncherDisplayName"/>
+		<CompilerVisibleProperty Include="LauncherUserAgentProduct"/>
+		<CompilerVisibleProperty Include="LauncherModOrganizerDirectoryName"/>
+		<CompilerVisibleProperty Include="LauncherModpackProfileName"/>
+		<CompilerVisibleProperty Include="LauncherModpackVersionFile"/>
+		<CompilerVisibleProperty Include="LauncherUserModsSeparator"/>
+		<CompilerVisibleProperty Include="LauncherRequiredSkyrimVersion"/>
+		<CompilerVisibleProperty Include="LauncherRegistryKey"/>
+		<ProjectReference Include="$(MSBuildThisFileDirectory)..\src\LauncherKit.ProductIdentity.Generator\LauncherKit.ProductIdentity.Generator.csproj"
+		                  OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+	</ItemGroup>
+</Project>
