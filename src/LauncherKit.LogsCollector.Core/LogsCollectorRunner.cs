@@ -5,14 +5,18 @@ namespace LauncherKit.LogsCollector.Core;
 
 public static class LogsCollectorRunner
 {
-	public static async Task Run(LauncherProductOptions product, Func<Exception, string> errorMessage,
-		string completionPrompt, CancellationToken cancellationToken = default)
+	/// <param name="createRootDirectoryManager">
+	/// Creates the consumer's root directory manager reading the root from the registry (not from the current directory).
+	/// </param>
+	public static async Task Run(
+		Func<IFileSystemUtils, IRegistryManager, ILaunchersRootDirectoryManager> createRootDirectoryManager,
+		Func<Exception, string> errorMessage, string completionPrompt, CancellationToken cancellationToken = default)
 	{
-		product.Validate();
+		ArgumentNullException.ThrowIfNull(createRootDirectoryManager);
 
 		using var loggerFactory = new SimpleConsoleLoggerFactory(TimeProvider.System);
 		var fileSystemUtils = new FileSystemUtils(loggerFactory.CreateLogger<FileSystemUtils>());
-		var rootDirectoryManager = new LaunchersRootDirectoryManager(false, fileSystemUtils, product);
+		var rootDirectoryManager = createRootDirectoryManager(fileSystemUtils, new RegistryManager());
 		var collector = new LogsCollector(fileSystemUtils,
 			[new LauncherLogsSource(rootDirectoryManager), new SkseLogsSource(fileSystemUtils), new ModOrganizerLogsSource()],
 			loggerFactory.CreateLogger<LogsCollector>(), TimeProvider.System);

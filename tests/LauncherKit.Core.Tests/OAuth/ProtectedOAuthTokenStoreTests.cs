@@ -93,7 +93,7 @@ public sealed class ProtectedOAuthTokenStoreTests
 	{
 		var mocker = ProductTestSupport.CreateMocker();
 		var storage = mocker.GetMock<IGlobalKeyValueStorage>();
-		OptionsStubs.Options(mocker, ProductTestSupport.CreateProduct(rootDirectoryName: ""));
+		OptionsStubs.Options(mocker, ProductTestSupport.CreateProduct(skyrimDataDirectoryName: ""));
 		Assert.That(() => mocker.CreateInstance<ProtectedOAuthTokenStore>(enablePrivate: true),
 			Throws.Exception.Matches<Exception>(error => error?.GetBaseException() is ArgumentException));
 		storage.VerifyNoOtherCalls();

@@ -180,6 +180,8 @@ public class FileSystemUtils : IFileSystemUtils
 
 	public string GetSpecialFolderPath(Environment.SpecialFolder folder) => Environment.GetFolderPath(folder);
 
+	public string GetCurrentDirectory() => Directory.GetCurrentDirectory();
+
 	public union SafeDeleteResult(SafeDeleteResult.Success, SafeDeleteResult.NotExist, SafeDeleteResult.Error)
 	{
 		public sealed record Success;

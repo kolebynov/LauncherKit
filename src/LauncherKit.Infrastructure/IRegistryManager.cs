@@ -1,4 +1,4 @@
-namespace LauncherKit.Core.Services.Abstractions;
+namespace LauncherKit.Infrastructure;
 
 public interface IRegistryManager
 {

@@ -5,113 +5,86 @@ namespace LauncherKit.Infrastructure.Tests;
 [TestFixture]
 public sealed class LaunchersRootDirectoryManagerTests
 {
+	private const string CurrentDirectory = @"C:\Launchers\1.0.0";
+	private const string RegisteredRoot = @"D:\Installed\Launchers";
+
 	[Test]
-	public void TryGetInstalledLauncherDirectory_VersionFile_ReturnsDirectoryNamedByVersion()
+	public void Directory_UseCurrentDirectory_UsesConsumerRootOfCurrentDirectory()
 	{
 		// Arrange
-		using var temp = new TempDirectory();
-		var child = temp.CreateDirectory("current");
-		temp.CreateFile(".version", "2.3.4-beta.1");
-		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.GetMock<IFileSystemUtils>().Setup(x => x.EnsureDirectoryExists(temp.Path, true));
-		var sut = CreateSut(mocker, true, child);
+		var mocker = ProductTestSupport.CreateMocker();
+		mocker.GetMock<IFileSystemUtils>().Setup(x => x.GetCurrentDirectory()).Returns(CurrentDirectory);
+		mocker.GetMock<IFileSystemUtils>().Setup(x => x.EnsureDirectoryExists(@"C:\Launchers", true));
+		var sut = CreateSut(mocker, true);
 
 		// Act
-		var result = sut.TryGetInstalledLauncherDirectory();
+		var result = sut.Directory;
 
 		// Assert
-		Assert.That(result, Is.EqualTo(temp.Combine("2.3.4-beta.1")));
+		Assert.That(result, Is.EqualTo(@"C:\Launchers"));
 	}
 
 	[Test]
-	public void TryGetInstalledLauncherDirectory_MissingVersionFile_ReturnsNull()
+	public void Directory_UseRegistry_UsesRootRegisteredUnderProductKey()
 	{
 		// Arrange
-		using var temp = new TempDirectory();
-		var child = temp.CreateDirectory("current");
-		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.GetMock<IFileSystemUtils>().Setup(x => x.EnsureDirectoryExists(temp.Path, true));
-		var sut = CreateSut(mocker, true, child);
+		var mocker = ProductTestSupport.CreateMocker();
+		var product = mocker.Get<LauncherProductOptions>();
+		mocker.GetMock<IRegistryManager>()
+			.Setup(x => x.GetValue(product.RegistryKey, LaunchersRootDirectoryManager.RootRegistryValueName))
+			.Returns(RegisteredRoot);
+		mocker.GetMock<IFileSystemUtils>().Setup(x => x.EnsureDirectoryExists(RegisteredRoot, true));
+		var sut = CreateSut(mocker, false);
 
 		// Act
-		var result = sut.TryGetInstalledLauncherDirectory();
+		var result = sut.Directory;
 
 		// Assert
-		Assert.That(result, Is.Null);
+		Assert.That(result, Is.EqualTo(RegisteredRoot));
 	}
 
-	[Test]
-	public void TryGetInstalledLauncherDirectory_GarbageVersionFile_Throws()
+	[TestCase(null)]
+	[TestCase("")]
+	public void Directory_UseRegistryWithoutRegisteredRoot_ThrowsWithoutCreatingDirectory(string? registered)
 	{
 		// Arrange
-		using var temp = new TempDirectory();
-		var child = temp.CreateDirectory("current");
-		temp.CreateFile(".version", "not-a-version");
-		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.GetMock<IFileSystemUtils>().Setup(x => x.EnsureDirectoryExists(temp.Path, true));
-		var sut = CreateSut(mocker, true, child);
+		var mocker = ProductTestSupport.CreateMocker();
+		mocker.GetMock<IRegistryManager>()
+			.Setup(x => x.GetValue(It.IsAny<string>(), LaunchersRootDirectoryManager.RootRegistryValueName))
+			.Returns(registered);
+		var sut = CreateSut(mocker, false);
 
 		// Act + Assert
-		Assert.That(sut.TryGetInstalledLauncherDirectory, Throws.InstanceOf<InvalidOperationException>());
+		Assert.That(() => sut.Directory, Throws.InvalidOperationException);
+		mocker.GetMock<IFileSystemUtils>().VerifyNoOtherCalls();
 	}
 
 	[Test]
-	public void Constructor_UseCurrentDirectoryDisabled_UsesLocalApplicationData()
-	{
-		// Arrange
-		var expected = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ExampleLauncher");
-		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.GetMock<IFileSystemUtils>().Setup(x => x.EnsureDirectoryExists(expected, true));
-
-		// Act
-		var sut = CreateSut(mocker, false, @"Z:\ignored\child");
-
-		// Assert
-		Assert.That(sut.Directory, Is.EqualTo(expected));
-	}
-
-	[Test]
-	public void IndependentIdentities_UseSeparateRootStateDirectories()
-	{
-		var first = ProductTestSupport.CreateProduct();
-		var second = ProductTestSupport.CreateProduct(rootDirectoryName: "OtherLauncher");
-		var mocker = ProductTestSupport.CreateMocker();
-		var fileSystem = mocker.GetMock<IFileSystemUtils>();
-		var basePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-		fileSystem.Setup(x => x.EnsureDirectoryExists(Path.Combine(basePath, first.RootDirectoryName), true));
-		fileSystem.Setup(x => x.EnsureDirectoryExists(Path.Combine(basePath, second.RootDirectoryName), true));
-
-		mocker.Use(false);
-		mocker.Use("unused");
-		mocker.Use(first);
-		var firstManager = mocker.CreateInstance<LaunchersRootDirectoryManager>();
-		mocker.Use(second);
-		var secondManager = mocker.CreateInstance<LaunchersRootDirectoryManager>();
-
-		Assert.That(firstManager.Directory, Is.Not.EqualTo(secondManager.Directory));
-	}
-
-	[Test]
-	public void InvalidIdentity_ThrowsBeforeCreatingRootStateDirectory()
+	public void Constructor_InvalidIdentity_ThrowsBeforeAccessingRoot()
 	{
 		var mocker = ProductTestSupport.CreateMocker();
-		var fileSystem = mocker.GetMock<IFileSystemUtils>();
-		mocker.Use(false);
-		mocker.Use("unused");
-		mocker.Use(ProductTestSupport.CreateProduct(rootDirectoryName: ""));
-		Assert.That(() => mocker.CreateInstance<LaunchersRootDirectoryManager>(),
-			Throws.Exception.Matches<Exception>(error => error?.GetBaseException() is ArgumentException));
-		fileSystem.VerifyNoOtherCalls();
+		mocker.Use(ProductTestSupport.CreateProduct(globalDatabaseFileName: ""));
+
+		Assert.That(() => CreateSut(mocker, true), Throws.ArgumentException);
+		mocker.GetMock<IFileSystemUtils>().VerifyNoOtherCalls();
+		mocker.GetMock<IRegistryManager>().VerifyNoOtherCalls();
 	}
 
-	private static LaunchersRootDirectoryManager CreateSut(
-		AutoMocker mocker,
+	private static TestRootDirectoryManager CreateSut(AutoMocker mocker, bool useCurrentDirectory) =>
+		new(useCurrentDirectory, mocker.Get<IFileSystemUtils>(), mocker.Get<IRegistryManager>(),
+			mocker.Get<LauncherProductOptions>());
+
+	// A layout whose root is the parent of the launcher's directory.
+	private sealed class TestRootDirectoryManager(
 		bool useCurrentDirectory,
-		string currentDirectory)
+		IFileSystemUtils fileSystemUtils,
+		IRegistryManager registryManager,
+		LauncherProductOptions product)
+		: LaunchersRootDirectoryManager(useCurrentDirectory, fileSystemUtils, registryManager, product)
 	{
-		mocker.Use(useCurrentDirectory);
-		mocker.Use(currentDirectory);
-		mocker.Use(ProductTestSupport.CreateProduct());
-		return mocker.CreateInstance<LaunchersRootDirectoryManager>();
+		public override string? TryGetInstalledLauncherDirectory() => throw new NotSupportedException();
+
+		protected override string RootFromCurrentDirectory(string currentDirectory) =>
+			Path.GetDirectoryName(currentDirectory)!;
 	}
 }

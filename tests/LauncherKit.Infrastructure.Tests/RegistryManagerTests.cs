@@ -1,7 +1,6 @@
 using Microsoft.Win32;
-using LauncherKit.Core.Services;
 
-namespace LauncherKit.Core.Tests.Services;
+namespace LauncherKit.Infrastructure.Tests;
 
 [TestFixture]
 public sealed class RegistryManagerTests

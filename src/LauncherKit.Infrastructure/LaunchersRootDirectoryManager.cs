@@ -1,38 +1,59 @@
-﻿using NuGet.Versioning;
+﻿namespace LauncherKit.Infrastructure;
 
-namespace LauncherKit.Infrastructure;
-
-public sealed class LaunchersRootDirectoryManager : ILaunchersRootDirectoryManager
+/// <summary>
+/// Resolves the launchers root. The launcher itself derives it from its working directory through the consumer's
+/// <see cref="RootFromCurrentDirectory"/>, so development and sandbox runs never use an installed launcher's root;
+/// hosts outside the launcher (the log collector) read it from the <see cref="RootRegistryValueName"/> value that the
+/// consumer's installer writes under <see cref="LauncherProductOptions.RegistryKey"/>. The root is resolved and created
+/// on first access.
+/// </summary>
+public abstract class LaunchersRootDirectoryManager : ILaunchersRootDirectoryManager
 {
-	public string Directory { get; }
+	/// <summary>The registry value, under the product's registry key, holding the installed launchers root.</summary>
+	public const string RootRegistryValueName = "LaunchersRoot";
 
-	public LaunchersRootDirectoryManager(
+	private readonly bool _useCurrentDirectory;
+	private readonly IFileSystemUtils _fileSystemUtils;
+	private readonly IRegistryManager _registryManager;
+	private readonly string _registryKey;
+	private string? _directory;
+
+	protected LaunchersRootDirectoryManager(
 		bool useCurrentDirectory,
 		IFileSystemUtils fileSystemUtils,
-		LauncherProductOptions product,
-		string? currentDirectory = null)
+		IRegistryManager registryManager,
+		LauncherProductOptions product)
 	{
 		ArgumentNullException.ThrowIfNull(product);
 		product.Validate();
-		Directory = !useCurrentDirectory
-			? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), product.RootDirectoryName)
-			: Path.GetDirectoryName(currentDirectory ?? System.IO.Directory.GetCurrentDirectory())!;
-		fileSystemUtils.EnsureDirectoryExists(Directory);
+		_useCurrentDirectory = useCurrentDirectory;
+		_fileSystemUtils = fileSystemUtils;
+		_registryManager = registryManager;
+		_registryKey = product.RegistryKey;
 	}
 
-	public string? TryGetInstalledLauncherDirectory()
+	/// <exception cref="InvalidOperationException">
+	/// The root is read from the registry and the installer has not written it.
+	/// </exception>
+	public string Directory => _directory ??= ResolveDirectory();
+
+	public abstract string? TryGetInstalledLauncherDirectory();
+
+	/// <summary>The launchers root of a launcher running from <paramref name="currentDirectory"/>.</summary>
+	protected abstract string RootFromCurrentDirectory(string currentDirectory);
+
+	private string ResolveDirectory()
 	{
-		var filePath = Path.Combine(Directory, ".version");
-		if (!File.Exists(filePath))
-		{
-			return null;
-		}
-
-		var content = File.ReadAllText(filePath);
-		// Parsed rather than used as is, so the file cannot name a path outside the root.
-		return NuGetVersion.TryParse(content, out var version)
-			? Path.Combine(Directory, version.ToString())
-			: throw new InvalidOperationException(
-				$"Installed version marker '{filePath}' contains invalid version '{content}'.");
+		var directory = _useCurrentDirectory
+			? RootFromCurrentDirectory(_fileSystemUtils.GetCurrentDirectory())
+			: ReadRootFromRegistry();
+		_fileSystemUtils.EnsureDirectoryExists(directory);
+		return directory;
 	}
+
+	private string ReadRootFromRegistry() =>
+		_registryManager.GetValue(_registryKey, RootRegistryValueName) is string { Length: > 0 } directory
+			? directory
+			: throw new InvalidOperationException(
+				$"Registry value '{RootRegistryValueName}' under '{_registryKey}' does not name the launchers root.");
 }

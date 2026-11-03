@@ -43,4 +43,6 @@ public interface IFileSystemUtils
 	string GetFullPath(string path, string basePath);
 
 	string GetSpecialFolderPath(Environment.SpecialFolder folder);
+
+	string GetCurrentDirectory();
 }

@@ -74,7 +74,7 @@ public sealed class LauncherKitConfigurationExtensionsTests
 		using var temp = new TempDirectory();
 		using var configuration = new ConfigurationManager();
 		var originalSources = configuration.Sources.ToArray();
-		Assert.That(() => configuration.AddLauncherKitConfiguration(temp.Path, ProductTestSupport.CreateProduct(rootDirectoryName: "")),
+		Assert.That(() => configuration.AddLauncherKitConfiguration(temp.Path, ProductTestSupport.CreateProduct(skyrimDataDirectoryName: "")),
 			Throws.ArgumentException);
 		Assert.That(configuration.Sources, Is.EqualTo(originalSources));
 	}

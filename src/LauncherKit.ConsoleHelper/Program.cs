@@ -70,7 +70,6 @@ static async Task HandleTestDownload(CancellationToken cancellationToken)
 {
 	var appBuilder = new AppBuilder(new LauncherProductOptions
 	{
-		RootDirectoryName = "LauncherDownloadHelper",
 		SkyrimDataDirectoryName = ".LauncherDownloadHelper",
 		GlobalDatabaseFileName = "helper.db",
 		LocalDatabaseFileName = "helper-installation.db",
@@ -108,6 +107,9 @@ static async Task HandleTestDownload(CancellationToken cancellationToken)
 		return;
 	}
 
+	appBuilder.Services.AddSingleton<ILaunchersRootDirectoryManager>(services => new HelperRootDirectoryManager(
+		services.GetRequiredService<IFileSystemUtils>(), services.GetRequiredService<IRegistryManager>(),
+		appBuilder.Product));
 	using var app = appBuilder.Build();
 	var sp = app.ServiceProvider;
 	var feedSourceFactory = sp.GetRequiredService<IFeedFileSourceFactory>();
@@ -140,4 +142,15 @@ static async Task HandleTestDownload(CancellationToken cancellationToken)
 
 	fileStorage.Complete("Skyrim.7z");
 	Console.WriteLine("Download finished");
+}
+
+// The helper is never installed: like a launcher run from its build output, its root is its working directory's parent.
+internal sealed class HelperRootDirectoryManager(
+	IFileSystemUtils fileSystemUtils, IRegistryManager registryManager, LauncherProductOptions product)
+	: LaunchersRootDirectoryManager(true, fileSystemUtils, registryManager, product)
+{
+	public override string? TryGetInstalledLauncherDirectory() => null;
+
+	protected override string RootFromCurrentDirectory(string currentDirectory) =>
+		Path.GetDirectoryName(currentDirectory) ?? currentDirectory;
 }

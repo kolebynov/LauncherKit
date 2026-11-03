@@ -156,6 +156,27 @@ public sealed class LogsCollectorTests
 	}
 
 	[Test]
+	public async Task CollectLogs_UnknownLaunchersRoot_StillArchivesSkseLogs()
+	{
+		// Arrange
+		using var temp = new TempDirectory();
+		using var documents = new TempDirectory();
+		documents.CreateFile(
+			Path.Combine("My Games", "Skyrim Special Edition", "SKSE", "skse64.log"), "skse");
+		var output = temp.Combine("output");
+		var sut = CreateSut(null, null, output, documents.Path);
+
+		// Act
+		var exception = await sut.CollectLogs(output, null, CancellationToken.None);
+
+		// Assert
+		Assert.That(exception, Is.Null);
+		using var archive = ZipFile.OpenRead(Path.Combine(output, "collected_logs.zip"));
+		Assert.That(archive.Entries.Select(x => x.FullName),
+			Is.EquivalentTo(new[] { Path.Combine("skse", "skse64.log"), "logs-collector.log" }));
+	}
+
+	[Test]
 	public async Task CollectLogs_ConsumerSource_ArchivesActualBytesAndCollectorLog()
 	{
 		using var temp = new TempDirectory();
@@ -186,8 +207,9 @@ public sealed class LogsCollectorTests
 		}
 	}
 
+	// A null launcherRoot is a root the installer has not registered.
 	private static LogsCollector CreateSut(
-		string launcherRoot,
+		string? launcherRoot,
 		string? installedLauncherDirectory,
 		string output,
 		string documentsDirectory,
@@ -196,7 +218,16 @@ public sealed class LogsCollectorTests
 		var mocker = new AutoMocker(MockBehavior.Strict);
 		mocker.Use<ILogger<LogsCollector>>(NullLogger<LogsCollector>.Instance);
 		mocker.Use<TimeProvider>(new FakeTimeProvider(new DateTimeOffset(2026, 9, 8, 12, 0, 0, TimeSpan.Zero)));
-		mocker.GetMock<ILaunchersRootDirectoryManager>().SetupGet(x => x.Directory).Returns(launcherRoot);
+		var root = mocker.GetMock<ILaunchersRootDirectoryManager>().SetupGet(x => x.Directory);
+		if (launcherRoot == null)
+		{
+			root.Throws(new InvalidOperationException("Launchers root is not registered."));
+		}
+		else
+		{
+			root.Returns(launcherRoot);
+		}
+
 		mocker.GetMock<ILaunchersRootDirectoryManager>().Setup(x => x.TryGetInstalledLauncherDirectory()).Returns(installedLauncherDirectory);
 		mocker.GetMock<IFileSystemUtils>()
 			.Setup(x => x.GetSpecialFolderPath(Environment.SpecialFolder.MyDocuments))

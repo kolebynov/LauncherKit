@@ -3,7 +3,6 @@ namespace LauncherKit.Infrastructure;
 /// <summary>Required consumer-supplied local product identity. No product names are inferred.</summary>
 public sealed class LauncherProductOptions
 {
-	public required string RootDirectoryName { get; init; }
 	public required string SkyrimDataDirectoryName { get; init; }
 	public required string GlobalDatabaseFileName { get; init; }
 	public required string LocalDatabaseFileName { get; init; }
@@ -17,14 +16,16 @@ public sealed class LauncherProductOptions
 	public required string ModpackVersionFile { get; init; }
 	public required string UserModsSeparator { get; init; }
 	public required string RequiredSkyrimVersion { get; init; }
-	/// <summary>Registry key under which the consumer's installer reads the launcher's data directories, e.g. <c>HKEY_CURRENT_USER\Software\Company\Product</c>.</summary>
+	/// <summary>
+	/// Registry key under which the consumer's installer writes the launchers root and reads the launcher's data
+	/// directories, e.g. <c>HKEY_CURRENT_USER\Software\Company\Product</c>.
+	/// </summary>
 	public required string RegistryKey { get; init; }
 	public required IReadOnlyList<GameLaunchVariant> GameLaunchVariants { get; init; }
 
 	/// <summary>Rejects an incomplete identity before configuration or installation state is accessed.</summary>
 	public void Validate()
 	{
-		Require(RootDirectoryName, nameof(RootDirectoryName));
 		Require(SkyrimDataDirectoryName, nameof(SkyrimDataDirectoryName));
 		Require(GlobalDatabaseFileName, nameof(GlobalDatabaseFileName));
 		Require(LocalDatabaseFileName, nameof(LocalDatabaseFileName));

@@ -121,7 +121,7 @@ public sealed class ServiceCollectionExtensionsTests
 	{
 		var services = new ServiceCollection();
 		var configuration = new ConfigurationBuilder().Build();
-		Assert.That(() => services.AddLauncherKitCore(configuration, ProductTestSupport.CreateProduct(rootDirectoryName: "")), Throws.ArgumentException);
+		Assert.That(() => services.AddLauncherKitCore(configuration, ProductTestSupport.CreateProduct(skyrimDataDirectoryName: "")), Throws.ArgumentException);
 		Assert.That(services, Is.Empty);
 	}
 
@@ -137,7 +137,7 @@ public sealed class ServiceCollectionExtensionsTests
 		var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
 		{
 			["App:SkyrimDirectory"] = temp.Path,
-			["Product:RootDirectoryName"] = "MustNotOverrideConsumer",
+			["Product:SkyrimDataDirectoryName"] = "MustNotOverrideConsumer",
 			["Product:GlobalDatabaseFileName"] = "must-not-be-used.db",
 		}).Build();
 		foreach (var product in new[] { first, second })

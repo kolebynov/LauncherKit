@@ -1,8 +1,7 @@
 ﻿using System.Runtime.Versioning;
 using Microsoft.Win32;
-using LauncherKit.Core.Services.Abstractions;
 
-namespace LauncherKit.Core.Services;
+namespace LauncherKit.Infrastructure;
 
 [SupportedOSPlatform("Windows")]
 public sealed class RegistryManager : IRegistryManager

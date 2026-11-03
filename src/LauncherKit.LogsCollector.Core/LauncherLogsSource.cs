@@ -7,7 +7,23 @@ public sealed class LauncherLogsSource(ILaunchersRootDirectoryManager launchersR
 {
 	public IEnumerable<LogFile> GetFiles(string? modOrganizerDirectory, ILogger logger)
 	{
-		var root = launchersRootDirectoryManager.Directory;
+		string root;
+		try
+		{
+			root = launchersRootDirectoryManager.Directory;
+		}
+		catch (InvalidOperationException e)
+		{
+			// No installed launcher (e.g. one installed before the installer recorded its root): other sources still run.
+			logger.LogWarning(e, "Launchers root directory is unknown");
+			return [];
+		}
+
+		return GetLauncherFiles(root, logger);
+	}
+
+	private IEnumerable<LogFile> GetLauncherFiles(string root, ILogger logger)
+	{
 		foreach (var file in Directory.EnumerateFiles(root))
 		{
 			yield return new LogFile(file, Path.GetRelativePath(root, file));

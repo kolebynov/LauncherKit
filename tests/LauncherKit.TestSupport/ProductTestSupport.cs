@@ -5,7 +5,6 @@ namespace LauncherKit.TestSupport;
 public static class ProductTestSupport
 {
 	public static LauncherProductOptions CreateProduct(
-		string rootDirectoryName = "ExampleLauncher",
 		string skyrimDataDirectoryName = ".ExampleLauncher",
 		string globalDatabaseFileName = "example-global.db",
 		string localDatabaseFileName = "example-local.db",
@@ -13,7 +12,6 @@ public static class ProductTestSupport
 		string environmentVariablePrefix = "EXAMPLE_LAUNCHER_",
 		string modOrganizerDirectoryName = "Example MO") => new()
 	{
-		RootDirectoryName = rootDirectoryName,
 		SkyrimDataDirectoryName = skyrimDataDirectoryName,
 		GlobalDatabaseFileName = globalDatabaseFileName,
 		LocalDatabaseFileName = localDatabaseFileName,

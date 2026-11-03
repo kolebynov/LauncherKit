@@ -59,8 +59,8 @@ public sealed class LauncherProductOptionsTests
 		var settings = new AppSettings { SkyrimDirectory = @"C:\Game" };
 		Assert.Multiple(() =>
 		{
-			Assert.That(() => settings.GetSkyrimAppDataDirectory(ProductTestSupport.CreateProduct(rootDirectoryName: "")), Throws.ArgumentException);
-			Assert.That(() => settings.GetModOrganizerDirectory(ProductTestSupport.CreateProduct(rootDirectoryName: "")), Throws.ArgumentException);
+			Assert.That(() => settings.GetSkyrimAppDataDirectory(ProductTestSupport.CreateProduct(globalDatabaseFileName: "")), Throws.ArgumentException);
+			Assert.That(() => settings.GetModOrganizerDirectory(ProductTestSupport.CreateProduct(globalDatabaseFileName: "")), Throws.ArgumentException);
 		});
 	}
 }
