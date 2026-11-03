@@ -370,6 +370,8 @@ The package and bundle provide:
 - The registry values the launcher and logs collector read.
 - A "remove all data" option when uninstalling, which deletes the launchers root and the registered download and temp folders.
 
+To let the user choose the install folder, set `LauncherInstallerDefaultFolder` in the product props to the layout's default root as a formatted path, e.g. `<LauncherInstallerDefaultFolder>[LocalAppDataFolder]Programs\MyLauncher</LauncherInstallerDefaultFolder>`. The setup then has an Options button with a folder page starting from it (`<setup>.exe /quiet InstallFolder=D:\Games\MyLauncher` on the command line; `msiexec /i <package>.msi LAUNCHERSROOT=...` for the MSI alone). Once a launcher is installed its folder is kept: the Options button is hidden and upgrades stay in the installed root. Because the chosen folder may hold other files, "remove all data" then deletes only the launcher directory, `Tools\` and `launcher.db`, and the root only if it is left empty. Without the property the root is the layout's fixed folder and the setup shows no folder choice.
+
 The setup window is in Russian (`installer/Bundle/Theme.ru-ru.wxl`).
 
 The bundle version is `VersionPrefix[-VersionSuffix]` and is shown in Programs and Features. Burn refuses to install an older setup over a newer one. The launcher offers only newer versions from the feed, so this only affects a manually run older setup. A launcher update downloads the setup from the feed, starts it with `/passive` and exits; the setup restarts the launcher.

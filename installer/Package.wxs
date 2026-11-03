@@ -54,6 +54,31 @@ so upgrades and uninstalling keep them unless the user removes all data.
 		<SetProperty Id="APPDATADIRECTORYTOREMOVE" Value="[LAUNCHERAPPDATADIRECTORY]" Before="CostInitialize" Sequence="execute"
 		             Condition='LAUNCHERAPPDATADIRECTORY AND REMOVEALLDATA = 1 AND REMOVE ~= "ALL" AND NOT UPGRADINGPRODUCTCODE' />
 
+<?if $(var.LauncherInstallerFolderChoice) = "yes" ?>
+		<!--
+		The launchers root is user-chosen (the bundle passes LAUNCHERSROOT; the MSI run on its own takes it on the command
+		line) and may be a folder holding other files, so removing all data deletes only what the launcher owns there:
+		its launcher directory, Tools\ and launcher.db*, then the root if it is left empty. The MSI keeps both directories
+		in the registry for that. An upgrade without LAUNCHERSROOT stays in the installed root.
+		-->
+		<Property Id="INSTALLEDLAUNCHERDIRECTORY">
+			<RegistrySearch Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="LauncherDirectory" Type="raw" />
+		</Property>
+		<Property Id="INSTALLEDTOOLSDIRECTORY">
+			<RegistrySearch Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="ToolsDirectory" Type="raw" />
+		</Property>
+		<SetProperty Id="ROOTFILESTOREMOVE" Value="[INSTALLEDLAUNCHERSROOT]" Before="CostInitialize" Sequence="execute"
+		             Condition='INSTALLEDLAUNCHERSROOT AND REMOVEALLDATA = 1 AND REMOVE ~= "ALL" AND NOT UPGRADINGPRODUCTCODE' />
+		<!--
+		SetDirectory runs after CostFinalize, which has already given LAUNCHERSROOT the layout's default, so whether the
+		root was passed (bundle or command line) is recorded before costing.
+		-->
+		<Property Id="LAUNCHERSROOTREQUESTED" Secure="yes" />
+		<SetProperty Id="LAUNCHERSROOTREQUESTED" Value="1" Before="CostInitialize" Sequence="both" Condition="LAUNCHERSROOT" />
+		<SetDirectory Id="LAUNCHERSROOT" Value="[INSTALLEDLAUNCHERSROOT]" Sequence="both"
+		              Condition="INSTALLEDLAUNCHERSROOT AND NOT LAUNCHERSROOTREQUESTED" />
+<?endif?>
+
 		<Feature Id="Launcher">
 			<Files Directory="LAUNCHERDIR" Include="!(bindpath.Launcher)\**" />
 
@@ -65,8 +90,18 @@ so upgrades and uninstalling keep them unless the user removes all data.
 				<RegistryValue Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="LaunchersRoot" Type="string" Value="[LAUNCHERSROOT]" />
 				<RemoveFolder Directory="LAUNCHERDIR" On="uninstall" />
 				<RemoveFolder On="uninstall" />
+<?if $(var.LauncherInstallerFolderChoice) = "yes" ?>
+				<RegistryValue Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="LauncherDirectory" Type="string" Value="[LAUNCHERDIR]" />
+				<RegistryValue Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="ToolsDirectory" Type="string" Value="[LAUNCHERSROOT]Tools\" />
+				<util:RemoveFolderEx On="uninstall" Property="INSTALLEDLAUNCHERDIRECTORY"
+				                     Condition='REMOVEALLDATA = 1 AND REMOVE ~= "ALL" AND NOT UPGRADINGPRODUCTCODE' />
+				<util:RemoveFolderEx On="uninstall" Property="INSTALLEDTOOLSDIRECTORY"
+				                     Condition='REMOVEALLDATA = 1 AND REMOVE ~= "ALL" AND NOT UPGRADINGPRODUCTCODE' />
+				<RemoveFile Property="ROOTFILESTOREMOVE" Name="launcher.db*" On="uninstall" />
+<?else?>
 				<util:RemoveFolderEx On="uninstall" Property="INSTALLEDLAUNCHERSROOT"
 				                     Condition='REMOVEALLDATA = 1 AND REMOVE ~= "ALL" AND NOT UPGRADINGPRODUCTCODE' />
+<?endif?>
 				<util:RemoveFolderEx On="uninstall" Property="LAUNCHERDOWNLOADSDIRECTORY"
 				                     Condition='REMOVEALLDATA = 1 AND REMOVE ~= "ALL" AND NOT UPGRADINGPRODUCTCODE' />
 				<util:RemoveFolderEx On="uninstall" Property="LAUNCHERTEMPDATADIRECTORY"

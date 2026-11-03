@@ -3,7 +3,8 @@
 <!--
 WiX 7.0.1's HyperlinkTheme.xml, kept as is (spaces included, to compare with new WiX versions) except for the
 DesktopShortcut and StartMenuShortcut checkboxes of the Install page and the RemoveAllData checkbox of the Modify page
-(the page uninstalling starts from). A named checkbox shows and sets the numeric Burn variable of its name (1 checked,
+(the page uninstalling starts from), and the Options button's VisibleCondition, which also hides it once a launcher is
+installed (LaunchersRoot, Bundle.wxs). A named checkbox shows and sets the numeric Burn variable of its name (1 checked,
 0 not), which Bundle.wxs passes to the MSI.
 -->
 
@@ -34,7 +35,7 @@ DesktopShortcut and StartMenuShortcut checkboxes of the Install page and the Rem
             <Checkbox Name="StartMenuShortcut" X="11" Y="145" Width="-11" Height="17" TabStop="yes" FontId="3">#(loc.InstallStartMenuShortcutCheckbox)</Checkbox>
             <Checkbox Name="EulaAcceptCheckbox" X="-11" Y="-41" Width="260" Height="17" TabStop="yes" FontId="3" HideWhenDisabled="yes">#(loc.InstallAcceptCheckbox)</Checkbox>
             <Button Name="InstallUpdateButton" X="11" Y="-11" Width="200" Height="23" TabStop="yes" FontId="0" EnableCondition="WixStdBAUpdateAvailable" HideWhenDisabled="yes">#(loc.UpdateButton)</Button>
-            <Button Name="OptionsButton" X="-171" Y="-11" Width="75" Height="23" TabStop="yes" FontId="0" VisibleCondition="NOT WixStdBASuppressOptionsUI">
+            <Button Name="OptionsButton" X="-171" Y="-11" Width="75" Height="23" TabStop="yes" FontId="0" VisibleCondition="NOT WixStdBASuppressOptionsUI AND NOT LaunchersRoot">
                 <Text>#(loc.InstallOptionsButton)</Text>
                 <ChangePageAction Page="Options" />
             </Button>

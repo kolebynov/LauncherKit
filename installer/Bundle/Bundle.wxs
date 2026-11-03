@@ -7,14 +7,24 @@ logo (LauncherInstallerLogoFile, 64x64, the size the theme shows) and the shortc
 Each checkbox starts from the choice of the installed launcher, which the MSI keeps in the registry, or from its
 default (both shortcuts) when there is none, so an upgrade without UI (the launcher's /passive update) keeps what the
 user chose.
+
+With the consumer's LauncherInstallerDefaultFolder (LauncherInstallerFolderChoice), the Install page's Options button
+lets the user choose the launchers root (InstallFolder, starting from that folder), passed to the MSI as LAUNCHERSROOT.
+Once a launcher is installed the root is fixed: InstallFolder is the installed root and the theme hides the Options
+button, so upgrades (also /passive ones) never move the launcher away from its launcher.db, Tools\ and settings.
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
 	<Bundle Id="$(var.LauncherInstallerBundleId)" Name="$(var.LauncherDisplayName)" Manufacturer="$(var.LauncherManufacturer)"
 	        Version="$(var.BundleVersion)" IconSourceFile="$(var.LauncherIconFile)" DisableModify="yes">
 		<BootstrapperApplication>
+<?if $(var.LauncherInstallerFolderChoice) = "yes" ?>
+			<bal:WixStandardBootstrapperApplication Theme="hyperlinkLicense" ThemeFile="Theme.xml" LicenseUrl="" SuppressOptionsUI="no"
+			                                        ShowVersion="yes" LocalizationFile="Theme.ru-ru.wxl" LogoFile="$(var.LauncherInstallerLogoFile)" />
+<?else?>
 			<bal:WixStandardBootstrapperApplication Theme="hyperlinkLicense" ThemeFile="Theme.xml" LicenseUrl="" SuppressOptionsUI="yes"
 			                                        ShowVersion="yes" LocalizationFile="Theme.ru-ru.wxl" LogoFile="$(var.LauncherInstallerLogoFile)" />
+<?endif?>
 		</BootstrapperApplication>
 
 		<Variable Name="DesktopShortcut" Type="numeric" Value="1" />
@@ -24,6 +34,13 @@ user chose.
 		<!-- The installed launchers root, shown in the RemoveAllData checkbox text (Theme.ru-ru.wxl). -->
 		<util:RegistrySearch Id="LaunchersRootSearch" Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Value="LaunchersRoot"
 		                     Variable="LaunchersRoot" />
+
+<?if $(var.LauncherInstallerFolderChoice) = "yes" ?>
+		<!-- The Options page's folder; also settable on the command line: <setup>.exe /quiet InstallFolder=D:\Games\Launcher -->
+		<Variable Name="InstallFolder" Type="formatted" Value="$(var.LauncherInstallerDefaultFolder)" bal:Overridable="yes" />
+		<util:RegistrySearch Id="InstallFolderSearch" After="LaunchersRootSearch" Condition="LaunchersRoot"
+		                     Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Value="LaunchersRoot" Variable="InstallFolder" />
+<?endif?>
 
 		<util:RegistrySearch Id="DesktopShortcutSavedSearch" Root="HKCU" Key="$(var.LauncherRegistryKeyPath)"
 		                     Value="DesktopShortcut" Result="exists" Variable="DesktopShortcutSaved" />
@@ -39,6 +56,9 @@ user chose.
 				<MsiProperty Name="DESKTOPSHORTCUT" Value="[DesktopShortcut]" />
 				<MsiProperty Name="STARTMENUSHORTCUT" Value="[StartMenuShortcut]" />
 				<MsiProperty Name="REMOVEALLDATA" Value="[RemoveAllData]" />
+<?if $(var.LauncherInstallerFolderChoice) = "yes" ?>
+				<MsiProperty Name="LAUNCHERSROOT" Value="[InstallFolder]" />
+<?endif?>
 			</MsiPackage>
 		</Chain>
 	</Bundle>

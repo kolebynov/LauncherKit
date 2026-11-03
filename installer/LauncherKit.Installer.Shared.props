@@ -18,6 +18,14 @@
 			<_LauncherInstallerConstant Include="LauncherRegistryKeyPath" Value="$(LauncherRegistryKey.Substring(18))"/>
 			<_LauncherInstallerConstant Include="LauncherIconFile" Value="$(LauncherIconFile)"/>
 			<_LauncherInstallerConstant Include="@(LauncherInstallerConstant)"/>
+			<!--
+			Optional: LauncherInstallerDefaultFolder (a Burn/MSI formatted path such as
+			[LocalAppDataFolder]Programs\MyLauncher) lets the user choose the launchers root on the setup's Options page,
+			starting from that folder. Without it the root is the layout's fixed LAUNCHERSROOT.
+			-->
+			<_LauncherInstallerConstant Include="LauncherInstallerFolderChoice" Value="no" Condition="'$(LauncherInstallerDefaultFolder)' == ''"/>
+			<_LauncherInstallerConstant Include="LauncherInstallerFolderChoice" Value="yes" Condition="'$(LauncherInstallerDefaultFolder)' != ''"/>
+			<_LauncherInstallerConstant Include="LauncherInstallerDefaultFolder" Value="$(LauncherInstallerDefaultFolder)" Condition="'$(LauncherInstallerDefaultFolder)' != ''"/>
 		</ItemGroup>
 		<Error Condition="'%(_LauncherInstallerConstant.Value)' == ''"
 		       Text="LauncherKit installer property '%(_LauncherInstallerConstant.Identity)' is required."/>
