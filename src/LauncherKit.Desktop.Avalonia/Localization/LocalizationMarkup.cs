@@ -1,43 +1,43 @@
-using System.Resources;
 using LauncherKit.Desktop.Localization;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.Localization;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace LauncherKit.Desktop.Avalonia.Localization;
 
-/// <summary>The application's single composition bridge for XAML text; configure before loading views.</summary>
+/// <summary>
+/// The application's single composition bridge for XAML text. <see cref="Configure"/> must run before any view or
+/// converter reads text; there is no fallback localizer.
+/// </summary>
 public static class LocalizationMarkup
 {
-	private static IStringLocalizer<DesktopStrings> _desktop = new ExactResourceStringLocalizer<DesktopStrings>(
-		new ResourceManager("LauncherKit.Desktop.Localization.DesktopStrings", typeof(DesktopStrings).Assembly), null, NullLogger.Instance);
+	private static Texts? _texts;
 
-	public static IStringLocalizer<DesktopStrings> DesktopStrings => _desktop;
+	private static Texts Current => _texts ?? throw new InvalidOperationException(
+		$"{nameof(LocalizationMarkup)}.{nameof(Configure)} must be called before localized text is used.");
 
+	public static IStringLocalizer<DesktopStrings> DesktopStrings => Current.Desktop;
 
-	public static TaskTexts TaskTexts { get; private set; } = new(_desktop);
+	public static TaskTexts TaskTexts => Current.Tasks;
 
-	public static ChoiceTexts ChoiceTexts { get; private set; } = new(_desktop);
+	public static ChoiceTexts ChoiceTexts => Current.Choices;
 
-	public static ExceptionTexts ExceptionTexts { get; private set; } = new(_desktop);
+	public static ExceptionTexts ExceptionTexts => Current.Exceptions;
 
-	public static EnumTexts EnumTexts { get; private set; } = new(_desktop);
+	public static EnumTexts EnumTexts => Current.Enums;
 
-	public static SetupAccountFactTexts SetupAccountFactTexts { get; private set; } = new(_desktop);
+	public static SetupAccountFactTexts SetupAccountFactTexts => Current.SetupAccountFacts;
 
 	public static void Configure(IStringLocalizer<DesktopStrings> desktop)
 	{
 		ArgumentNullException.ThrowIfNull(desktop);
-		_desktop = desktop;
-		TaskTexts = new TaskTexts(desktop);
-		ChoiceTexts = new ChoiceTexts(desktop);
-		ExceptionTexts = new ExceptionTexts(desktop);
-		EnumTexts = new EnumTexts(desktop);
-		SetupAccountFactTexts = new SetupAccountFactTexts(desktop);
+		_texts = new Texts(desktop, new TaskTexts(desktop), new ChoiceTexts(desktop), new ExceptionTexts(desktop),
+			new EnumTexts(desktop), new SetupAccountFactTexts(desktop));
 	}
 
 	internal static string Desktop(string key) => DesktopStrings[key].Value;
 
+	private sealed record Texts(IStringLocalizer<DesktopStrings> Desktop, TaskTexts Tasks, ChoiceTexts Choices,
+		ExceptionTexts Exceptions, EnumTexts Enums, SetupAccountFactTexts SetupAccountFacts);
 }
 
 public sealed class DesktopStringExtension : MarkupExtension
