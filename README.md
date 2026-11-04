@@ -293,7 +293,7 @@ public sealed class TermsSetupStepProvider(ITermsStore terms) : ISetupStepProvid
 services.TryAddEnumerable(ServiceDescriptor.Scoped<ISetupStepProvider, TermsSetupStepProvider>());
 ```
 
-A provider returns no steps when its settings are complete. The setup is shown only while some provider returns a step. Moving past the last step saves the settings and reloads the configuration.
+A provider returns no steps when its settings are complete. The setup is shown only while some provider returns a step. Moving past the last step saves the settings and sets `State` to `Finished`. The application scope belongs to the Skyrim directory and is replaced only when `App:SkyrimDirectory` changes, so a setup that sets it gets a new scope with the consumer's normal pages; after a setup that does not, the consumer replaces the setup page itself on `Finished`.
 
 #### Localization
 

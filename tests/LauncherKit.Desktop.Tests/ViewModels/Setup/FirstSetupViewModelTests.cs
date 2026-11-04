@@ -82,15 +82,14 @@ public sealed class FirstSetupViewModelTests
 	}
 
 	[Test]
-	public async Task GoNext_LastStep_SavesEditedSettingsAndReloadsConfiguration()
+	public async Task GoNext_LastStep_SavesEditedSettingsAndFinishes()
 	{
 		// Arrange
 		var mocker = CreateMocker(new AppSettings());
 		var step = new TestStep();
 		var context = new FirstSetupContext(mocker.Get<ISettingsService>().GetSettings());
 		mocker.GetMock<ISettingsService>().Setup(x => x.SaveSettings(context.Settings)).Returns(Task.CompletedTask);
-		mocker.GetMock<IAppReloader>().Setup(x => x.ReloadApp(AppReloadMode.Configuration));
-		var sut = new FirstSetupViewModel([step], context, mocker.Get<ISettingsService>(), mocker.Get<IAppReloader>());
+		var sut = new FirstSetupViewModel([step], context, mocker.Get<ISettingsService>());
 		await sut.Start();
 
 		// Act
@@ -103,7 +102,6 @@ public sealed class FirstSetupViewModelTests
 			Assert.That(step.IsShown, Is.False);
 		});
 		mocker.GetMock<ISettingsService>().Verify(x => x.SaveSettings(context.Settings), Times.Once);
-		mocker.GetMock<IAppReloader>().Verify(x => x.ReloadApp(AppReloadMode.Configuration), Times.Once);
 	}
 
 	[Test]
@@ -192,7 +190,6 @@ public sealed class FirstSetupViewModelTests
 		var mocker = CreateMocker(new AppSettings { SkyrimDirectory = "Skyrim", AppDataDirectory = "Data" });
 		mocker.GetMock<IFeedAvailabilityChecker>().Setup(x => x.CheckFeed()).ReturnsAsync(false);
 		mocker.GetMock<ISettingsService>().Setup(x => x.SaveSettings(It.IsAny<AllSettings>())).Returns(Task.CompletedTask);
-		mocker.GetMock<IAppReloader>().Setup(x => x.ReloadApp(AppReloadMode.Configuration));
 		var steps = CreateKitSteps(mocker, out var context);
 		var sut = CreateSut(mocker, context, steps);
 		await sut.Start();
@@ -295,7 +292,6 @@ public sealed class FirstSetupViewModelTests
 		var mocker = CreateMocker(new AppSettings { SkyrimDirectory = "Skyrim" });
 		mocker.GetMock<IFeedAvailabilityChecker>().Setup(x => x.CheckFeed()).ReturnsAsync(false);
 		mocker.GetMock<ISettingsService>().Setup(x => x.SaveSettings(It.IsAny<AllSettings>())).Returns(Task.CompletedTask);
-		mocker.GetMock<IAppReloader>().Setup(x => x.ReloadApp(AppReloadMode.Configuration));
 		var steps = CreateKitSteps(mocker, out var context);
 		var sut = CreateSut(mocker, context, steps);
 		await sut.Start();
@@ -308,7 +304,6 @@ public sealed class FirstSetupViewModelTests
 
 		// Assert
 		Assert.That(sut.State, Is.EqualTo(FirstSetupState.Finished));
-		mocker.GetMock<IAppReloader>().Verify(x => x.ReloadApp(AppReloadMode.Configuration), Times.Once);
 	}
 
 	[TestCase(null, true)]
@@ -362,7 +357,7 @@ public sealed class FirstSetupViewModelTests
 		try
 		{
 			var mocker = CreateMocker(new AppSettings());
-			mocker.GetMock<IAppReloader>().Setup(x => x.ReloadApp(AppReloadMode.Language));
+			mocker.GetMock<IAppReloader>().Setup(x => x.ReloadViews());
 			var context = new FirstSetupContext(mocker.Get<ISettingsService>().GetSettings());
 			var step = new LanguageSetupStepViewModel(context, mocker.Get<IAppReloader>());
 			var next = new TestStep();
@@ -380,7 +375,7 @@ public sealed class FirstSetupViewModelTests
 				Assert.That(CultureInfo.DefaultThreadCurrentUICulture?.Name, Is.EqualTo("ru"));
 				Assert.That(sut.CurrentStep, Is.SameAs(next));
 			});
-			mocker.GetMock<IAppReloader>().Verify(x => x.ReloadApp(AppReloadMode.Language), Times.Once);
+			mocker.GetMock<IAppReloader>().Verify(x => x.ReloadViews(), Times.Once);
 		}
 		finally
 		{
@@ -404,7 +399,7 @@ public sealed class FirstSetupViewModelTests
 
 	private static FirstSetupViewModel CreateSut(AutoMocker mocker, FirstSetupContext context,
 		IReadOnlyList<SetupStepViewModel> steps) =>
-		new(steps, context, mocker.Get<ISettingsService>(), mocker.Get<IAppReloader>());
+		new(steps, context, mocker.Get<ISettingsService>());
 
 	private static AutoMocker CreateMocker(AppSettings app)
 	{

@@ -39,7 +39,7 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 			var settingsService = sp.GetRequiredService<ISettingsService>();
 			var context = new FirstSetupContext(settingsService.GetSettings());
 			return new FirstSetupViewModel(FirstSetupSteps.Create(sp.GetServices<ISetupStepProvider>(), context), context,
-				settingsService, sp.GetRequiredService<IAppReloader>());
+				settingsService);
 		});
 		services.TryAddEnumerable(
 		[
@@ -77,7 +77,6 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 			sp.GetRequiredService<ILogger<TaskbarProgressSink>>()));
 		services.TryAddSingleton<LauncherKitScopeReloadService>();
 		services.TryAddSingleton<IAppReloader>(sp => new AppReloader(
-			sp.GetRequiredService<LauncherKitScopeReloadService>().RequestConfigurationReload,
 			() => sp.GetRequiredService<IUiDispatcher>().Post(() =>
 			{
 				LanguageCulture.ApplyToCurrentThread();

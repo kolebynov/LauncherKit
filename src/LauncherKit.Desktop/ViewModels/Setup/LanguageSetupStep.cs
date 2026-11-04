@@ -39,7 +39,7 @@ public partial class LanguageSetupStepViewModel : SetupStepViewModel
 		var language = SelectedLanguage!;
 		_context.Settings.App.Language = language;
 		LanguageCulture.Apply(language);
-		_appReloader.ReloadApp(AppReloadMode.Language);
+		_appReloader.ReloadViews();
 		return GoNext();
 	}
 }

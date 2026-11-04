@@ -1,6 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using LauncherKit.Core.Services.Abstractions;
-using LauncherKit.Desktop.Services;
 
 namespace LauncherKit.Desktop.ViewModels.Setup;
 
@@ -10,13 +9,14 @@ public enum FirstSetupState { NotStarted, InProgress, Saving, Finished }
 /// Routes the first setup through its steps, built from every registered <see cref="ISetupStepProvider"/> by
 /// <see cref="FirstSetupSteps.Create"/>. Each step validates and applies its own input to
 /// <see cref="FirstSetupContext.Settings"/> and moves the setup with the next/back callbacks it is shown with. Moving
-/// past the last step saves the settings and reloads the configuration. The setup is needed only when it has steps.
+/// past the last step saves the settings and sets <see cref="FirstSetupState.Finished"/>. The application scope is
+/// replaced only when the saved settings change the Skyrim directory; otherwise the consumer leaves the setup in the
+/// current scope once it is finished. The setup is needed only when it has steps.
 /// </summary>
 public partial class FirstSetupViewModel : ViewModelBase
 {
 	private readonly FirstSetupContext _context;
 	private readonly ISettingsService _settingsService;
-	private readonly IAppReloader _appReloader;
 
 	[ObservableProperty]
 	public partial SetupStepViewModel? CurrentStep { get; private set; }
@@ -32,12 +32,11 @@ public partial class FirstSetupViewModel : ViewModelBase
 	public bool IsFinished => State is FirstSetupState.Saving or FirstSetupState.Finished;
 
 	public FirstSetupViewModel(IReadOnlyList<SetupStepViewModel> steps, FirstSetupContext context,
-		ISettingsService settingsService, IAppReloader appReloader)
+		ISettingsService settingsService)
 	{
 		Steps = steps;
 		_context = context;
 		_settingsService = settingsService;
-		_appReloader = appReloader;
 	}
 
 	/// <summary>Shows the first step; later calls do nothing. Without steps the setup finishes at once.</summary>
@@ -65,6 +64,5 @@ public partial class FirstSetupViewModel : ViewModelBase
 		State = FirstSetupState.Saving;
 		await _settingsService.SaveSettings(_context.Settings);
 		State = FirstSetupState.Finished;
-		_appReloader.ReloadApp(AppReloadMode.Configuration);
 	}
 }

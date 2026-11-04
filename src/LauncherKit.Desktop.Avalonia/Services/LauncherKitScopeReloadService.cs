@@ -6,7 +6,10 @@ using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Desktop.Avalonia.Services;
 
-/// <summary>Owns settings-driven scope replacement, preserving execution ownership for language-only reloads.</summary>
+/// <summary>
+/// Owns the application scope, which belongs to the Skyrim directory: the scope is replaced only when
+/// <see cref="AppSettings.SkyrimDirectory"/> changes. A language change only reloads the views.
+/// </summary>
 public sealed class LauncherKitScopeReloadService : IDisposable
 {
 	private readonly IOptionsMonitor<AppSettings> _settings;
@@ -56,12 +59,10 @@ public sealed class LauncherKitScopeReloadService : IDisposable
 			if (settings.SkyrimDirectory != oldSkyrimDirectory)
 			{
 				oldSkyrimDirectory = settings.SkyrimDirectory;
-				RequestConfigurationReload();
+				_requestConfigurationReload();
 			}
 		});
 	}
-
-	public void RequestConfigurationReload() => _requestConfigurationReload();
 
 	internal static void PostConfigurationReload(IUiDispatcher dispatcher, Action replaceScope, Action refreshMainWindow)
 	{
