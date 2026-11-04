@@ -43,6 +43,9 @@
 	<data name="ExceptionUnknown" xml:space="preserve"><value>The operation failed: {0}</value></data>
 	<data name="ExceptionUnsupportedMod" xml:space="preserve"><value>Mod {0} does not support modpack version {1}.</value></data>
 	<data name="ExtraDownloadSize" xml:space="preserve"><value>Additional download: {0}</value></data>
+	<data name="FeedLoadFailed" xml:space="preserve"><value>Could not load server data</value></data>
+	<data name="FeedLoading" xml:space="preserve"><value>Loading server data…</value></data>
+	<data name="FeedUnavailableFeatures" xml:space="preserve"><value>Installing and updating the modpack, graphics packs, mods and launcher is unavailable until the data has loaded.</value></data>
 	<data name="GraphPackStepTitle" xml:space="preserve"><value>Select a graphics pack</value></data>
 	<data name="MicroBackupArchiveFiles" xml:space="preserve"><value>Back up files from {0}</value></data>
 	<data name="MicroChangeProfile" xml:space="preserve"><value>Change profile to {0}</value></data>

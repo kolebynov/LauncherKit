@@ -42,6 +42,9 @@ public sealed class DesktopStrings
 	public const string ExceptionUnknown = nameof(ExceptionUnknown);
 	public const string ExceptionUnsupportedMod = nameof(ExceptionUnsupportedMod);
 	public const string ExtraDownloadSize = nameof(ExtraDownloadSize);
+	public const string FeedLoadFailed = nameof(FeedLoadFailed);
+	public const string FeedLoading = nameof(FeedLoading);
+	public const string FeedUnavailableFeatures = nameof(FeedUnavailableFeatures);
 	public const string GraphPackStepTitle = nameof(GraphPackStepTitle);
 	public const string MicroBackupArchiveFiles = nameof(MicroBackupArchiveFiles);
 	public const string MicroChangeProfile = nameof(MicroChangeProfile);

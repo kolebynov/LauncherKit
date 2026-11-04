@@ -67,6 +67,7 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 			sp.GetRequiredService<LauncherKitDesktopOptions>().GetCloseHandlers,
 			sp.GetRequiredService<ILogger<AppCloseCoordinator>>()));
 		services.AddConfiguredScopeInitializer<TaskbarProgressInitializer>();
+		services.AddGlobalInitializer<FeedLoadNotificationsInitializer>();
 		services.TryAddSingleton<Core.Services.Abstractions.IApplicationLifetime>(sp =>
 			new ApplicationLifetime(sp.GetRequiredService<LauncherKitDesktopOptions>().GetLifetime()));
 		services.TryAddSingleton<IExternalBrowser>(sp => new ExternalBrowser(() =>
