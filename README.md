@@ -17,8 +17,7 @@ Contributor rules and detailed contracts are in [AGENTS.md](AGENTS.md).
 |---|---|
 | `src/LauncherKit.Infrastructure` | Product identity options, filesystem, registry and logging primitives. |
 | `src/LauncherKit.Core` | Feed, update selection, downloads, storage, tasks, Mod Organizer, FOMOD, backups, persistence, OAuth/Discord, analytics. |
-| `src/LauncherKit.Desktop` | Avalonia-free view models, typed presentation facts and default localized texts (`DesktopStrings`). |
-| `src/LauncherKit.Desktop.Avalonia` | `LauncherKitApp`/`LauncherKitProgram` host, view locator, converters, controls and platform services. |
+| `src/LauncherKit.Desktop` | Avalonia desktop layer: view models, typed presentation facts, default localized texts (`DesktopStrings`), the `LauncherKitApp`/`LauncherKitProgram` host, view locator, converters, controls and platform services. |
 | `src/LauncherKit.LogsCollector.Core` | Logs collector engine and console runner. |
 | `src/LauncherKit.ProductIdentity.Generator` | Source generator that turns the consumer's product props into a `ProductIdentity` class. |
 | `src/LauncherKit.Build` | NUKE build base (`LauncherBuild`). |
@@ -165,7 +164,7 @@ Each C# project that imports the product props gets a generated `{LauncherProduc
 
 ### 3. Launcher executable
 
-The project imports the product props and references `LauncherKit.Desktop.Avalonia`:
+The project imports the product props and references `LauncherKit.Desktop`:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -193,7 +192,7 @@ The project imports the product props and references `LauncherKit.Desktop.Avalon
 		<PackageReference Include="R3Extensions.Avalonia"/>
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\kit\src\LauncherKit.Desktop.Avalonia\LauncherKit.Desktop.Avalonia.csproj"/>
+		<ProjectReference Include="..\..\kit\src\LauncherKit.Desktop\LauncherKit.Desktop.csproj"/>
 	</ItemGroup>
 	<!-- Development automation, compiled in only with -p:EnableDevAutomation=true (never by PublishLauncher). -->
 	<PropertyGroup Condition="'$(EnableDevAutomation)' == 'true'">
@@ -211,7 +210,7 @@ The NativeAOT publish fails on any trim/AOT warning. When a third-party package'
 
 ```csharp
 using Avalonia;
-using LauncherKit.Desktop.Avalonia;
+using LauncherKit.Desktop;
 
 namespace MyLauncher.App;
 
@@ -276,17 +275,17 @@ The consumer must register:
 | `IViewRegistry` | Maps each kit or consumer view model to its view; throws for unknown models. `ViewLocator` uses it. |
 | `MainWindowViewModelBase` (scoped) | The consumer's main window model: pages, navigation, setup-versus-home selection (show `FirstSetupViewModel` only when `IsRequired`, i.e. it has steps). Kit page view models (`HomeViewModel`, `FirstSetupViewModel`, `SettingsViewModel`, `DownloadsViewModel`, `GraphPacksViewModel`, `OptionalModsViewModel`, `AppTaskQueueViewModel`, ...) are resolved from the scope. |
 | `IMainView` (singleton) | The main window; it must derive from Avalonia `Window`, with any base class. |
-| `IDialogService` (`LauncherKit.Desktop.Avalonia.Services`, singleton) | `ShowYesNoConfirmation(header, message, defaultToNo, cancellationToken)`: a yes/no question, closed unanswered (returning `false`) when the token is cancelled. The kit's main-window close confirmation uses it; the consumer may extend the interface with its own dialogs and register the implementation under both. |
+| `IDialogService` (`LauncherKit.Desktop.Services`, singleton) | `ShowYesNoConfirmation(header, message, defaultToNo, cancellationToken)`: a yes/no question, closed unanswered (returning `false`) when the token is cancelled. The kit's main-window close confirmation uses it; the consumer may extend the interface with its own dialogs and register the implementation under both. |
 
 View models expose typed facts and act directly. Views own the wording, confirmations, dialogs, notifications and directory pickers, and pass collected input as command parameters. Use compiled bindings, and use `ObjectConverters.IsNull`/`IsNotNull` (never `!obj`) to bind visibility to whether an object is null. AGENTS.md "Desktop contract" lists all the rules.
 
 #### Closing the main window
 
-The kit attaches its `Closing` handler to the main window. Application/OS shutdown and owner closing close at once. When the user closes the window, the close is cancelled and the current scope's `IAppCloseHandler`s (`LauncherKit.Desktop.Avalonia.Services`, `Handle(Window mainWindow)`) run in registration order; the window closes when none returns `CannotClose`. A failing handler is logged and skipped, and close requests while handlers run are ignored. The kit registers two handlers: the scoped pending-tasks confirmation (with unfinished tasks it asks through `IDialogService`, `DesktopStrings` `PendingTasksCloseTitle`/`PendingTasksCloseMessage`, "No" by default, and the question closes itself and allows the close once the queue empties) and the singleton window-state save into `AllSettings.Window` (nothing when minimized; a maximized window keeps its saved normal bounds). Consumers add their own with `AddScoped<IAppCloseHandler, ...>()` (or singleton). The kit also restores the saved size, position and maximized state before showing the main window, so consumer windows handle neither.
+The kit attaches its `Closing` handler to the main window. Application/OS shutdown and owner closing close at once. When the user closes the window, the close is cancelled and the current scope's `IAppCloseHandler`s (`LauncherKit.Desktop.Services`, `Handle(Window mainWindow)`) run in registration order; the window closes when none returns `CannotClose`. A failing handler is logged and skipped, and close requests while handlers run are ignored. The kit registers two handlers: the scoped pending-tasks confirmation (with unfinished tasks it asks through `IDialogService`, `DesktopStrings` `PendingTasksCloseTitle`/`PendingTasksCloseMessage`, "No" by default, and the question closes itself and allows the close once the queue empties) and the singleton window-state save into `AllSettings.Window` (nothing when minimized; a maximized window keeps its saved normal bounds). Consumers add their own with `AddScoped<IAppCloseHandler, ...>()` (or singleton). The kit also restores the saved size, position and maximized state before showing the main window, so consumer windows handle neither.
 
 #### Notifications
 
-The kit registers `INotificationService` (`LauncherKit.Desktop.Avalonia.Services`, singleton, UI thread only). `Show(AppNotification)` keeps a toast until the user clicks it or `Close` removes it. It shows toasts only when the consumer registers an `INotificationManagerProvider`, usually its main window: its `WindowNotificationManager` is resolved on the first notification, so the service never creates the window, and must be created with the window, because a manager whose template is not applied yet drops the first toast. Without a provider, `Show` and `Close` do nothing. The kit ships no toast template: add an application-wide `DataTemplate` for `AppNotification` (`Title`, optional `Message`, `IsInProgress`), because the manager lives in the window's adorner layer. View models never use the service; views and initializers do. The kit's `FeedLoadNotificationsInitializer` uses it to show feed loading progress and load errors in every launcher (texts `FeedLoading`, `FeedLoadFailed` and `FeedUnavailableFeatures` in `DesktopStrings`, overridable like other kit texts).
+The kit registers `INotificationService` (`LauncherKit.Desktop.Services`, singleton, UI thread only). `Show(AppNotification)` keeps a toast until the user clicks it or `Close` removes it. It shows toasts only when the consumer registers an `INotificationManagerProvider`, usually its main window: its `WindowNotificationManager` is resolved on the first notification, so the service never creates the window, and must be created with the window, because a manager whose template is not applied yet drops the first toast. Without a provider, `Show` and `Close` do nothing. The kit ships no toast template: add an application-wide `DataTemplate` for `AppNotification` (`Title`, optional `Message`, `IsInProgress`), because the manager lives in the window's adorner layer. View models never use the service; views and initializers do. The kit's `FeedLoadNotificationsInitializer` uses it to show feed loading progress and load errors in every launcher (texts `FeedLoading`, `FeedLoadFailed` and `FeedUnavailableFeatures` in `DesktopStrings`, overridable like other kit texts).
 
 #### First setup steps
 

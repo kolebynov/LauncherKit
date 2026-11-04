@@ -3,5 +3,7 @@
 		<ProjectReference Include="../../src/LauncherKit.Desktop/LauncherKit.Desktop.csproj"/>
 		<ProjectReference Include="../LauncherKit.TestSupport/LauncherKit.TestSupport.csproj"/>
 		<PackageReference Include="Microsoft.Extensions.TimeProvider.Testing"/>
+		<PackageReference Include="Avalonia.Headless"/>
+		<PackageReference Include="Avalonia.Headless.NUnit"/>
 	</ItemGroup>
 </Project>

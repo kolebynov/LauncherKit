@@ -26,11 +26,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<InternalsVisibleTo Include="LauncherKit.Desktop.Avalonia"/>
+		<InternalsVisibleTo Include="LauncherKit.Desktop"/>
 		<InternalsVisibleTo Include="LauncherKit.ConsoleHelper"/>
 		<InternalsVisibleTo Include="LauncherKit.Core.Tests"/>
 		<InternalsVisibleTo Include="LauncherKit.Desktop.Tests"/>
-		<InternalsVisibleTo Include="LauncherKit.Desktop.Avalonia.Tests"/>
 		<!-- Required for Moq/Castle to proxy internal interfaces in tests. -->
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2"/>
 	</ItemGroup>

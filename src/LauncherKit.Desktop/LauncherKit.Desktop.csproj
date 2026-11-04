@@ -1,11 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
 	<ItemGroup>
 		<InternalsVisibleTo Include="LauncherKit.Desktop.Tests"/>
-		<InternalsVisibleTo Include="LauncherKit.Desktop.Avalonia.Tests"/>
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="../LauncherKit.Core/LauncherKit.Core.csproj"/>
+		<PackageReference Include="Avalonia"/>
+		<PackageReference Include="Avalonia.Desktop"/>
+		<PackageReference Include="Avalonia.Fonts.Inter"/>
 		<PackageReference Include="CommunityToolkit.Mvvm"/>
 		<PackageReference Include="Microsoft.Extensions.Localization"/>
+		<PackageReference Include="R3Extensions.Avalonia"/>
+		<PackageReference Include="Serilog"/>
+		<PackageReference Include="Serilog.Extensions.Logging"/>
+		<PackageReference Include="Serilog.Sinks.File"/>
 	</ItemGroup>
 </Project>
