@@ -63,9 +63,7 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 		services.TryAddScoped<WindowStateService>();
 		services.AddScoped<IAppCloseHandler, PendingTasksCloseHandler>();
 		services.AddScoped<IAppCloseHandler, SaveWindowStateCloseHandler>();
-		services.TryAddSingleton(sp => new AppCloseCoordinator(
-			sp.GetRequiredService<LauncherKitDesktopOptions>().GetCloseHandlers,
-			sp.GetRequiredService<ILogger<AppCloseCoordinator>>()));
+		services.TryAddSingleton<MainWindowCloseHandler>();
 		services.AddConfiguredScopeInitializer<TaskbarProgressInitializer>();
 		services.AddGlobalInitializer<FeedLoadNotificationsInitializer>();
 		services.TryAddSingleton<Core.Services.Abstractions.IApplicationLifetime>(sp =>

@@ -71,6 +71,7 @@ public abstract class LauncherKitApp : Application
 				?? throw new InvalidOperationException("The registered IMainView must derive from Avalonia.Controls.Window.");
 			mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModelBase>();
 			desktop.MainWindow = mainWindow;
+			Services.GetRequiredService<MainWindowCloseHandler>().Attach(mainWindow);
 			var desktopServices = StartDesktopServices(desktop);
 			desktop.Exit += (_, _) =>
 			{
@@ -153,7 +154,6 @@ public abstract class LauncherKitApp : Application
 			GetMainWindow = () => (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow,
 			GetLifetime = () => (IClassicDesktopStyleApplicationLifetime)ApplicationLifetime!,
 			GetCurrentServices = () => Services,
-			GetCloseHandlers = () => Services.GetServices<IAppCloseHandler>(),
 			RefreshMainWindow = () =>
 			{
 				if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: { } window })

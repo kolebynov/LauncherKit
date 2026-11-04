@@ -30,7 +30,7 @@ public sealed class LauncherKitDesktopCompositionTests
 			Assert.That(services.Count(x => x.ServiceType == typeof(IAppCloseHandler)), Is.EqualTo(2));
 			Assert.That(services.Any(x => x.ServiceType == typeof(IConfiguredScopeInitializer)), Is.True);
 			Assert.That(services.Single(x => x.ServiceType == typeof(INotificationService)).Lifetime, Is.EqualTo(ServiceLifetime.Singleton));
-			Assert.That(services.Any(x => x.ServiceType.Name == "IDialogService"), Is.False);
+			Assert.That(services.Any(x => x.ServiceType == typeof(IDialogService)), Is.False);
 		});
 	}
 
@@ -74,7 +74,6 @@ public sealed class LauncherKitDesktopCompositionTests
 		GetMainWindow = () => null,
 		GetLifetime = () => throw new AssertionException("No lifetime expected."),
 		GetCurrentServices = currentServices,
-		GetCloseHandlers = () => [],
 		RefreshMainWindow = () => { },
 		ReloadViews = () => { },
 	};

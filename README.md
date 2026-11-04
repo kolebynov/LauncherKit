@@ -254,6 +254,7 @@ public sealed class App : LauncherKitApp
 		services.AddSingleton<MainWindow>();
 		services.AddSingleton<IMainView>(sp => sp.GetRequiredService<MainWindow>());
 		services.AddSingleton<INotificationManagerProvider>(sp => sp.GetRequiredService<MainWindow>());
+		services.AddSingleton<IDialogService, MyDialogService>();
 		// Views, dialogs and other consumer services.
 	}
 
@@ -275,8 +276,13 @@ The consumer must register:
 | `IViewRegistry` | Maps each kit or consumer view model to its view; throws for unknown models. `ViewLocator` uses it. |
 | `MainWindowViewModelBase` (scoped) | The consumer's main window model: pages, navigation, setup-versus-home selection (show `FirstSetupViewModel` only when `IsRequired`, i.e. it has steps). Kit page view models (`HomeViewModel`, `FirstSetupViewModel`, `SettingsViewModel`, `DownloadsViewModel`, `GraphPacksViewModel`, `OptionalModsViewModel`, `AppTaskQueueViewModel`, ...) are resolved from the scope. |
 | `IMainView` (singleton) | The main window; it must derive from Avalonia `Window`, with any base class. |
+| `IDialogService` (`LauncherKit.Desktop.Avalonia.Services`, singleton) | `ShowYesNoConfirmation(header, message, defaultToNo, cancellationToken)`: a yes/no question, closed unanswered (returning `false`) when the token is cancelled. The kit's main-window close confirmation uses it; the consumer may extend the interface with its own dialogs and register the implementation under both. |
 
 View models expose typed facts and act directly. Views own the wording, confirmations, dialogs, notifications and directory pickers, and pass collected input as command parameters. Use compiled bindings, and use `ObjectConverters.IsNull`/`IsNotNull` (never `!obj`) to bind visibility to whether an object is null. AGENTS.md "Desktop contract" lists all the rules.
+
+#### Closing the main window
+
+The kit attaches its `Closing` handler to the main window. Application/OS shutdown and owner closing close at once. When the user closes the window, the close is cancelled and the current scope's `IAppCloseHandler`s (`LauncherKit.Desktop.Avalonia.Services`, `Handle(Window mainWindow)`) run in registration order; the window closes when none returns `CannotClose`. A failing handler is logged and skipped, and close requests while handlers run are ignored. The kit registers two scoped handlers: the pending-tasks confirmation (with unfinished tasks it asks through `IDialogService`, `DesktopStrings` `PendingTasksCloseTitle`/`PendingTasksCloseMessage`, "No" by default, and the question closes itself and allows the close once the queue empties) and the window-state save through `WindowStateService`. Consumers add their own with `AddScoped<IAppCloseHandler, ...>()`; consumer windows only restore their state through `WindowStateService`.
 
 #### Notifications
 

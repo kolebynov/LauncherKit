@@ -95,6 +95,8 @@ public sealed class DesktopStrings
 	public const string OAuthMessage = nameof(OAuthMessage);
 	public const string OAuthTitle = nameof(OAuthTitle);
 	public const string OtherGraphPackInstalled = nameof(OtherGraphPackInstalled);
+	public const string PendingTasksCloseMessage = nameof(PendingTasksCloseMessage);
+	public const string PendingTasksCloseTitle = nameof(PendingTasksCloseTitle);
 	public const string RequiredModsStepTitle = nameof(RequiredModsStepTitle);
 	public const string SelectOneModSubtitle = nameof(SelectOneModSubtitle);
 	public const string SelectRequiredModTitle = nameof(SelectRequiredModTitle);

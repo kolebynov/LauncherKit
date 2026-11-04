@@ -97,6 +97,8 @@
 	<data name="OAuthMessage" xml:space="preserve"><value>Вы можете закрыть эту вкладку и вернуться в лаунчер.</value></data>
 	<data name="OAuthTitle" xml:space="preserve"><value>Авторизация завершена</value></data>
 	<data name="OtherGraphPackInstalled" xml:space="preserve"><value>Установлен граф-пак {0}</value></data>
+	<data name="PendingTasksCloseMessage" xml:space="preserve"><value>Лаунчер ожидает завершения задачи. При выходе все незавершённые задачи будут отменены. Продолжить?</value></data>
+	<data name="PendingTasksCloseTitle" xml:space="preserve"><value>Остались незавершённые задачи</value></data>
 	<data name="RequiredModsStepTitle" xml:space="preserve"><value>Обязательные моды</value></data>
 	<data name="SelectOneModSubtitle" xml:space="preserve"><value>Выберите один мод</value></data>
 	<data name="SelectRequiredModTitle" xml:space="preserve"><value>Выберите обязательный мод: {0}</value></data>

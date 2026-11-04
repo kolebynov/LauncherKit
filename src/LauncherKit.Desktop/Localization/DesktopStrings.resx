@@ -96,6 +96,8 @@
 	<data name="OAuthMessage" xml:space="preserve"><value>You can close this browser tab and return to the launcher.</value></data>
 	<data name="OAuthTitle" xml:space="preserve"><value>Authorization complete</value></data>
 	<data name="OtherGraphPackInstalled" xml:space="preserve"><value>Graphics pack {0} is installed</value></data>
+	<data name="PendingTasksCloseMessage" xml:space="preserve"><value>The launcher is waiting for tasks to finish. Exiting will cancel all unfinished tasks. Continue?</value></data>
+	<data name="PendingTasksCloseTitle" xml:space="preserve"><value>Tasks are still running</value></data>
 	<data name="RequiredModsStepTitle" xml:space="preserve"><value>Required mods</value></data>
 	<data name="SelectOneModSubtitle" xml:space="preserve"><value>Select one mod</value></data>
 	<data name="SelectRequiredModTitle" xml:space="preserve"><value>Select a required mod: {0}</value></data>
