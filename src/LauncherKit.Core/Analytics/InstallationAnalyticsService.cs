@@ -10,20 +10,17 @@ internal sealed class InstallationAnalyticsService : IInstallationAnalyticsServi
 	private readonly IDownloadServerFallback _downloadServerFallback;
 	private readonly IHttpClientFactory _httpClientFactory;
 	private readonly IInstallationIdProvider _installationIdProvider;
-	private readonly IUrlResolver _urlResolver;
 
 	public InstallationAnalyticsService(
 		IAppVersionProvider appVersionProvider,
 		IDownloadServerFallback downloadServerFallback,
 		IHttpClientFactory httpClientFactory,
-		IInstallationIdProvider installationIdProvider,
-		IUrlResolver urlResolver)
+		IInstallationIdProvider installationIdProvider)
 	{
 		_appVersionProvider = appVersionProvider;
 		_downloadServerFallback = downloadServerFallback;
 		_httpClientFactory = httpClientFactory;
 		_installationIdProvider = installationIdProvider;
-		_urlResolver = urlResolver;
 	}
 
 	public async Task ReportInstallation(CancellationToken cancellationToken)
@@ -34,9 +31,10 @@ internal sealed class InstallationAnalyticsService : IInstallationAnalyticsServi
 		using var httpClient = _httpClientFactory.CreateClient(AppConstants.AnalyticsHttpClient);
 
 		await _downloadServerFallback.Execute(
-			async (server, ct) =>
+			UrlKeys.Analytics,
+			async (baseUri, ct) =>
 			{
-				await Report(httpClient, _urlResolver.GetUri(UrlKeys.Analytics, server), installationEvent, ct);
+				await Report(httpClient, baseUri, installationEvent, ct);
 				return true;
 			},
 			cancellationToken);

@@ -85,14 +85,14 @@ static async Task HandleTestDownload(CancellationToken cancellationToken)
 		RegistryKey = @"HKEY_CURRENT_USER\Software\LauncherKit\DownloadHelper",
 	});
 	// The feed to download from comes from the environment, e.g. LAUNCHER_DOWNLOAD_HELPER_Feed__FeedPath=feedV11.json,
-	// LAUNCHER_DOWNLOAD_HELPER_Urls__Feed__MainUrl and LAUNCHER_DOWNLOAD_HELPER_Urls__Feed__ProxyUrl.
+	// LAUNCHER_DOWNLOAD_HELPER_Urls__Feed__MainUrl and the optional LAUNCHER_DOWNLOAD_HELPER_Urls__Feed__ProxyUrl.
 	var configuration = appBuilder.Configuration;
 	configuration.AddInMemoryCollection(new Dictionary<string, string?>
 	{
 		{ "App:AppDataDirectory", Environment.CurrentDirectory },
 	});
 	configuration.AddEnvironmentVariables(appBuilder.Product.EnvironmentVariablePrefix);
-	string[] requiredKeys = ["Feed:FeedPath", "Urls:Feed:MainUrl", "Urls:Feed:ProxyUrl"];
+	string[] requiredKeys = ["Feed:FeedPath", "Urls:Feed:MainUrl"];
 	var missingKeys = requiredKeys.Where(key => string.IsNullOrWhiteSpace(configuration[key])).ToArray();
 	if (missingKeys.Length > 0)
 	{
@@ -113,7 +113,8 @@ static async Task HandleTestDownload(CancellationToken cancellationToken)
 
 	fileSystemUtils.SafeDeleteFile(Path.Combine("Downloads", "Skyrim.7z"));
 	fileSystemUtils.SafeDeleteFile(Path.Combine("Downloads", "Skyrim.7z.part"));
-	var fileSource = feedSourceFactory.Create(new DownloadInfo { S3Path = "Skyrim.7z" }, DownloadServer.Main);
+	var fileSource = feedSourceFactory.Create(new DownloadInfo { S3Path = "Skyrim.7z" },
+		sp.GetRequiredService<IUrlResolver>().GetUri(UrlKeys.Feed, DownloadServer.Main));
 	{
 		await using var openedFile = fileStorage.GetOrCreate("Skyrim.7z", await fileSource.GetFileSize(cancellationToken), null) switch
 		{

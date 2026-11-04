@@ -1,9 +1,9 @@
 using LauncherKit.Core.Feed;
-using LauncherKit.Core.Services;
 
 namespace LauncherKit.Core.FileSources;
 
 public interface IFeedFileSourceFactory
 {
-	IFileSource Create(DownloadInfo downloadInfo, DownloadServer server);
+	/// <summary>A source for <paramref name="downloadInfo"/> on the feed server whose base URL is <paramref name="feedBaseUri"/>.</summary>
+	IFileSource Create(DownloadInfo downloadInfo, Uri feedBaseUri);
 }

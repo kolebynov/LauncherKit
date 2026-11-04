@@ -124,8 +124,9 @@ internal sealed class DownloadFileMicroTask : IAppMicroTask
 		_downloadFileSource switch
 		{
 			DownloadInfo downloadInfo => _downloadServerFallback.Execute(
-				(server, ct) => Download(
-					_feedFileSourceFactory.Create(downloadInfo, server), stepSubject, downloadProgress, ct),
+				UrlKeys.Feed,
+				(feedBaseUri, ct) => Download(
+					_feedFileSourceFactory.Create(downloadInfo, feedBaseUri), stepSubject, downloadProgress, ct),
 				cancellationToken),
 			DownloadFileSource.Http http => Download(
 				_httpFileSourceFactory.Create(http.Uri, null), stepSubject, downloadProgress, cancellationToken),

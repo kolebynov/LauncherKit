@@ -17,10 +17,11 @@ public sealed class FeedAvailabilityCheckerTests
 	{
 		// Arrange
 		var mocker = CreateMocker();
-		DownloadServerFallbackStubs.SingleServer<bool>(mocker, DownloadServer.Proxy);
+		var feedBaseUri = new Uri("https://proxy.test/");
+		DownloadServerFallbackStubs.SingleServer<bool>(mocker, feedBaseUri);
 		var source = mocker.GetMock<IFileSource>();
 		mocker.GetMock<IFeedFileSourceFactory>()
-			.Setup(x => x.Create(It.Is<DownloadInfo>(info => info.S3Path == "Test.zip"), DownloadServer.Proxy))
+			.Setup(x => x.Create(It.Is<DownloadInfo>(info => info.S3Path == "Test.zip"), feedBaseUri))
 			.Returns(source.Object);
 		source.Setup(x => x.OpenStream(null, null, It.IsAny<CancellationToken>()))
 			.ReturnsAsync(new MemoryFileStream([1, 2, 3]));
@@ -39,7 +40,7 @@ public sealed class FeedAvailabilityCheckerTests
 		// Arrange
 		var mocker = CreateMocker();
 		mocker.GetMock<IDownloadServerFallback>()
-			.Setup(x => x.Execute(It.IsAny<Func<DownloadServer, CancellationToken, Task<bool>>>(), It.IsAny<CancellationToken>()))
+			.Setup(x => x.Execute(It.IsAny<string>(), It.IsAny<Func<Uri, CancellationToken, Task<bool>>>(), It.IsAny<CancellationToken>()))
 			.ThrowsAsync(new DownloadServersUnavailableException(
 				new HttpRequestException("main offline"), new HttpRequestException("proxy offline")));
 		var sut = mocker.CreateInstance<FeedAvailabilityChecker>();

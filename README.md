@@ -314,7 +314,7 @@ The configuration is read in this order, each source overriding the previous: `G
 }
 ```
 
-- `Urls:<key>` needs both `MainUrl` and `ProxyUrl`. A failed request is retried once on the other server, which then stays preferred for the run. `BearerToken` is optional.
+- `Urls:<key>` needs `MainUrl`; `ProxyUrl` (a fallback server) and `BearerToken` are optional. With a proxy, a request that fails because of the server is retried once on the other server, which then stays preferred for the run. Without one, requests go to `MainUrl` only.
 - The feed is `{Urls:Feed}/{Feed:FeedPath}`; the downloads, logos and changelogs it references are paths on the same server (the bucket root). Edit it with the feed editor.
 - `Discord` is optional: without `Discord:ClientId`, `SettingsViewModel.DiscordIntegration` is null and the consumer hides Discord linking. The Discord application must be a public client with `http://127.0.0.1:{RedirectPort}/discord/callback` registered as a redirect URI.
 - `Download`, `App` and `Window` hold user settings that the launcher writes to `appsettings.override.json`.

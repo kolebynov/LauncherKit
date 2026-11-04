@@ -20,7 +20,11 @@ public sealed class UrlResolver : IUrlResolver
 		set => _preferredServer = value;
 	}
 
-	public Uri GetUri(string key) => GetUri(key, PreferredServer);
+	public Uri GetUri(string key)
+	{
+		var settings = GetSettings(key);
+		return PreferredServer == DownloadServer.Proxy && settings.ProxyUrl is { } proxyUrl ? proxyUrl : settings.MainUrl;
+	}
 
 	public Uri GetUri(string key, DownloadServer server)
 	{
@@ -28,10 +32,13 @@ public sealed class UrlResolver : IUrlResolver
 		return server switch
 		{
 			DownloadServer.Main => settings.MainUrl,
-			DownloadServer.Proxy => settings.ProxyUrl,
+			DownloadServer.Proxy => settings.ProxyUrl
+				?? throw new InvalidOperationException($"URL configuration with key '{key}' has no proxy server."),
 			_ => throw new ArgumentOutOfRangeException(nameof(server), server, "Unknown download server"),
 		};
 	}
+
+	public bool HasProxy(string key) => GetSettings(key).ProxyUrl != null;
 
 	private UrlSettings GetSettings(string key)
 	{

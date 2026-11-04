@@ -47,7 +47,6 @@ public sealed class FeedProvider : IFeedProvider, IDisposable
 
 	private readonly IDiscordAccountService _discordAccountService;
 	private readonly IDownloadServerFallback _downloadServerFallback;
-	private readonly IFeedUtils _feedUtils;
 	private readonly IHttpClientFactory _httpClientFactory;
 	private readonly IGlobalKeyValueStorage _keyValueStorage;
 	private readonly TimeProvider _timeProvider;
@@ -64,11 +63,10 @@ public sealed class FeedProvider : IFeedProvider, IDisposable
 
 	public Observable<FeedLoadEvent> LoadEvents => _loadEventsSubject;
 
-	public FeedProvider(IFeedUtils feedUtils, IDownloadServerFallback downloadServerFallback,
+	public FeedProvider(IDownloadServerFallback downloadServerFallback,
 		IGlobalKeyValueStorage keyValueStorage, IHttpClientFactory httpClientFactory, TimeProvider timeProvider,
 		IDiscordAccountService discordAccountService, IOptions<FeedSettings> feedSettings, ILogger<FeedProvider> logger)
 	{
-		_feedUtils = feedUtils;
 		_downloadServerFallback = downloadServerFallback;
 		_keyValueStorage = keyValueStorage;
 		_httpClientFactory = httpClientFactory;
@@ -252,10 +250,11 @@ public sealed class FeedProvider : IFeedProvider, IDisposable
 		try
 		{
 			var feed = await _downloadServerFallback.Execute(
-				async (server, ct) =>
+				UrlKeys.Feed,
+				async (feedBaseUri, ct) =>
 				{
 					using var httpClient = _httpClientFactory.CreateClient(AppConstants.S3HttpClient);
-					await using var stream = await httpClient.GetStreamAsync(_feedUtils.GetUri(_feedPath, server), ct);
+					await using var stream = await httpClient.GetStreamAsync(new Uri(feedBaseUri, _feedPath), ct);
 					return (await JsonSerializer.DeserializeAsync(stream, SourceGeneratedJsonContext.Default.FeedData, ct))!;
 				},
 				disposeToken);

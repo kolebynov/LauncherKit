@@ -73,6 +73,54 @@ public sealed class UrlResolverTests
 		Assert.That(() => sut.GetUri("missing"), Throws.InvalidOperationException.With.Message.Contains("missing"));
 	}
 
+	[Test]
+	public void GetUri_ProxyPreferredAndKeyWithoutProxy_UsesMainServer()
+	{
+		// Arrange
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		OptionsStubs.Monitor(mocker, CreateUrls());
+		var sut = mocker.CreateInstance<UrlResolver>();
+		sut.PreferredServer = DownloadServer.Proxy;
+
+		// Act
+		var result = sut.GetUri(MainOnlyKey);
+
+		// Assert
+		Assert.That(result, Is.EqualTo(new Uri("https://main-only.test/")));
+	}
+
+	[Test]
+	public void GetUri_ExplicitProxyForKeyWithoutProxy_ThrowsClearException()
+	{
+		// Arrange
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		OptionsStubs.Monitor(mocker, CreateUrls());
+		var sut = mocker.CreateInstance<UrlResolver>();
+
+		// Act
+		// Assert
+		Assert.That(() => sut.GetUri(MainOnlyKey, DownloadServer.Proxy),
+			Throws.InvalidOperationException.With.Message.Contains(MainOnlyKey));
+	}
+
+	[TestCase(UrlKeys.Feed, true)]
+	[TestCase(MainOnlyKey, false)]
+	public void HasProxy_ConfiguredKey_ReportsWhetherProxyUrlIsSet(string key, bool expected)
+	{
+		// Arrange
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		OptionsStubs.Monitor(mocker, CreateUrls());
+		var sut = mocker.CreateInstance<UrlResolver>();
+
+		// Act
+		var result = sut.HasProxy(key);
+
+		// Assert
+		Assert.That(result, Is.EqualTo(expected));
+	}
+
+	private const string MainOnlyKey = "MainOnly";
+
 	private static UrlsSettings CreateUrls() => new()
 	{
 		Urls = new Dictionary<string, UrlSettings>
@@ -82,6 +130,7 @@ public sealed class UrlResolverTests
 				MainUrl = new Uri("https://main.test/base/"),
 				ProxyUrl = new Uri("https://proxy.test/base/"),
 			},
+			[MainOnlyKey] = new() { MainUrl = new Uri("https://main-only.test/") },
 		},
 	};
 }

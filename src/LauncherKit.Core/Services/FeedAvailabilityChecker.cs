@@ -35,7 +35,7 @@ public sealed class FeedAvailabilityChecker : IFeedAvailabilityChecker
 	{
 		try
 		{
-			return await _downloadServerFallback.Execute(CheckServer, CancellationToken.None);
+			return await _downloadServerFallback.Execute(UrlKeys.Feed, CheckServer, CancellationToken.None);
 		}
 		catch (DownloadServersUnavailableException e)
 		{
@@ -44,12 +44,12 @@ public sealed class FeedAvailabilityChecker : IFeedAvailabilityChecker
 		}
 	}
 
-	private async Task<bool> CheckServer(DownloadServer server, CancellationToken cancellationToken)
+	private async Task<bool> CheckServer(Uri feedBaseUri, CancellationToken cancellationToken)
 	{
 		// A server that does not finish in time counts as failed: the cancellation is not the caller's.
 		using var timeoutCts = new CancellationTokenSource(ServerCheckTimeout, _timeProvider);
 		using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-		await using var testFileStream = await _feedFileSourceFactory.Create(TestFileInfo, server)
+		await using var testFileStream = await _feedFileSourceFactory.Create(TestFileInfo, feedBaseUri)
 			.OpenStream(null, null, linkedCts.Token);
 		await testFileStream.CopyTo(Stream.Null, linkedCts.Token);
 		return true;

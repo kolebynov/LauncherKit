@@ -24,11 +24,12 @@ public sealed class SelectModpackComponentsMicroTaskTests
 		var part1 = new DownloadInfo { S3Path = "full1.7z" };
 		var part2 = new DownloadInfo { S3Path = "full2.7z" };
 		var voices = new DownloadInfo { S3Path = "voices.7z" };
-		DownloadServerFallbackStubs.SingleServer<long[]>(mocker, DownloadServer.Proxy);
+		var feedBaseUri = new Uri("https://proxy.test/");
+		DownloadServerFallbackStubs.SingleServer<long[]>(mocker, feedBaseUri);
 		var feedFileSourceFactory = mocker.GetMock<IFeedFileSourceFactory>();
-		feedFileSourceFactory.Setup(x => x.Create(part1, DownloadServer.Proxy)).Returns(new SizedFileSource(BytesFormatter.GigaByte));
-		feedFileSourceFactory.Setup(x => x.Create(part2, DownloadServer.Proxy)).Returns(new SizedFileSource(BytesFormatter.GigaByte));
-		feedFileSourceFactory.Setup(x => x.Create(voices, DownloadServer.Proxy)).Returns(new SizedFileSource(BytesFormatter.GigaByte / 2));
+		feedFileSourceFactory.Setup(x => x.Create(part1, feedBaseUri)).Returns(new SizedFileSource(BytesFormatter.GigaByte));
+		feedFileSourceFactory.Setup(x => x.Create(part2, feedBaseUri)).Returns(new SizedFileSource(BytesFormatter.GigaByte));
+		feedFileSourceFactory.Setup(x => x.Create(voices, feedBaseUri)).Returns(new SizedFileSource(BytesFormatter.GigaByte / 2));
 		var fullTask = new AppTask("Full", new AppTaskDescription.Custom("Full"), _ => [], [], null);
 		var selection = new ModpackComponentsSelection();
 		var voicesTask = new AppTask("Install_Voices", new AppTaskDescription.Custom("Voices"), _ => [], [], null);

@@ -17,13 +17,28 @@ internal sealed class DownloadServerFallback : IDownloadServerFallback
 	}
 
 	public async Task<T> Execute<T>(
-		Func<DownloadServer, CancellationToken, Task<T>> operation, CancellationToken cancellationToken)
+		string endpointKey, Func<Uri, CancellationToken, Task<T>> operation, CancellationToken cancellationToken)
 	{
+		ArgumentNullException.ThrowIfNull(operation);
+		if (!_urlResolver.HasProxy(endpointKey))
+		{
+			try
+			{
+				return await operation(_urlResolver.GetUri(endpointKey, DownloadServer.Main), cancellationToken);
+			}
+			catch (Exception e) when (IsServerFailure(e, cancellationToken))
+			{
+				_logger.LogError(e, "Download from the {Server} server failed and {EndpointKey} has no proxy",
+					DownloadServer.Main, endpointKey);
+				throw new DownloadServersUnavailableException(e);
+			}
+		}
+
 		var preferredServer = _urlResolver.PreferredServer;
 		Exception preferredServerException;
 		try
 		{
-			return await operation(preferredServer, cancellationToken);
+			return await operation(_urlResolver.GetUri(endpointKey, preferredServer), cancellationToken);
 		}
 		catch (Exception e) when (IsServerFailure(e, cancellationToken))
 		{
@@ -35,7 +50,7 @@ internal sealed class DownloadServerFallback : IDownloadServerFallback
 		T result;
 		try
 		{
-			result = await operation(otherServer, cancellationToken);
+			result = await operation(_urlResolver.GetUri(endpointKey, otherServer), cancellationToken);
 		}
 		catch (Exception e) when (IsServerFailure(e, cancellationToken))
 		{

@@ -36,8 +36,9 @@ internal sealed class SelectModpackComponentsMicroTask : IAppMicroTask
 		var downloads = _offer.Components.SelectMany(x => x.Options).SelectMany(x => x.Downloads)
 			.Distinct().ToList();
 		var sizes = await _downloadServerFallback.Execute(
-			(server, ct) => Task.WhenAll(downloads.Select(x =>
-				_feedFileSourceFactory.Create(x, server).GetFileSize(ct).AsTask())),
+			UrlKeys.Feed,
+			(feedBaseUri, ct) => Task.WhenAll(downloads.Select(x =>
+				_feedFileSourceFactory.Create(x, feedBaseUri).GetFileSize(ct).AsTask())),
 			cancellationToken);
 		var sizeByDownload = downloads.Zip(sizes).ToDictionary(x => x.First, x => x.Second);
 		var componentChoices = new ModpackComponentChoices(_offer, x => sizeByDownload[x]);

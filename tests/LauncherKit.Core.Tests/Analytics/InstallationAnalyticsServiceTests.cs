@@ -2,7 +2,6 @@ using System.Net;
 using NuGet.Versioning;
 using RichardSzalay.MockHttp;
 using LauncherKit.Core.Analytics;
-using LauncherKit.Core.Services;
 using LauncherKit.Core.Services.Abstractions;
 using LauncherKit.TestSupport;
 
@@ -14,17 +13,17 @@ public sealed class InstallationAnalyticsServiceTests
 	private const string MainEndpoint = "https://analytics.test/base/v1/installations";
 	private const string ProxyEndpoint = "https://proxy.test/base/v1/installations";
 
-	[TestCase(DownloadServer.Main, MainEndpoint)]
-	[TestCase(DownloadServer.Proxy, ProxyEndpoint)]
-	public async Task ReportInstallation_ServerChosenByFallback_PostsCamelCasePayloadToItsEndpoint(
-		DownloadServer server, string endpoint)
+	[TestCase("https://analytics.test/base/", MainEndpoint)]
+	[TestCase("https://proxy.test/base/", ProxyEndpoint)]
+	public async Task ReportInstallation_BaseUrlChosenByFallback_PostsCamelCasePayloadToItsEndpoint(
+		string serverBase, string endpoint)
 	{
 		// Arrange
 		using var handler = MockHttpClientFactory.StrictHandler();
 		var request = handler.Expect(HttpMethod.Post, endpoint)
 			.WithContent("{\"installationId\":\"install-id\",\"launcherVersion\":\"1.2.3\"}");
 		request.Respond(HttpStatusCode.NoContent);
-		var sut = CreateSut(handler, server);
+		var sut = CreateSut(handler, new Uri(serverBase));
 
 		// Act
 		await sut.ReportInstallation(CancellationToken.None);
@@ -39,7 +38,7 @@ public sealed class InstallationAnalyticsServiceTests
 		// Arrange
 		using var handler = MockHttpClientFactory.StrictHandler();
 		handler.Expect(HttpMethod.Post, MainEndpoint).Respond(HttpStatusCode.ServiceUnavailable);
-		var sut = CreateSut(handler, DownloadServer.Main);
+		var sut = CreateSut(handler, new Uri("https://analytics.test/base/"));
 
 		// Act
 		// Assert
@@ -47,20 +46,15 @@ public sealed class InstallationAnalyticsServiceTests
 			Throws.InstanceOf<HttpRequestException>());
 	}
 
-	private static InstallationAnalyticsService CreateSut(MockHttpMessageHandler handler, DownloadServer server)
+	private static InstallationAnalyticsService CreateSut(MockHttpMessageHandler handler, Uri baseUri)
 	{
 		var mocker = new AutoMocker(MockBehavior.Strict);
 		MockHttpClientFactory.Factory(mocker, AppConstants.AnalyticsHttpClient, handler);
 		mocker.GetMock<IDownloadServerFallback>()
 			.Setup(x => x.Execute(
-				It.IsAny<Func<DownloadServer, CancellationToken, Task<bool>>>(), It.IsAny<CancellationToken>()))
-			.Returns((Func<DownloadServer, CancellationToken, Task<bool>> operation, CancellationToken ct) =>
-				operation(server, ct));
-		var urlResolver = mocker.GetMock<IUrlResolver>();
-		urlResolver.Setup(x => x.GetUri(UrlKeys.Analytics, DownloadServer.Main))
-			.Returns(new Uri("https://analytics.test/base/"));
-		urlResolver.Setup(x => x.GetUri(UrlKeys.Analytics, DownloadServer.Proxy))
-			.Returns(new Uri("https://proxy.test/base/"));
+				UrlKeys.Analytics, It.IsAny<Func<Uri, CancellationToken, Task<bool>>>(), It.IsAny<CancellationToken>()))
+			.Returns((string _, Func<Uri, CancellationToken, Task<bool>> operation, CancellationToken ct) =>
+				operation(baseUri, ct));
 		mocker.GetMock<IInstallationIdProvider>()
 			.Setup(x => x.GetInstallationId())
 			.Returns("install-id");

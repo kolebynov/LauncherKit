@@ -368,8 +368,8 @@ public sealed class FeedProviderTests
 		var requestStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 		mocker.GetMock<IDownloadServerFallback>()
 			.Setup(x => x.Execute(
-				It.IsAny<Func<DownloadServer, CancellationToken, Task<FeedData>>>(), It.IsAny<CancellationToken>()))
-			.Returns(async (Func<DownloadServer, CancellationToken, Task<FeedData>> _, CancellationToken ct) =>
+				It.IsAny<string>(), It.IsAny<Func<Uri, CancellationToken, Task<FeedData>>>(), It.IsAny<CancellationToken>()))
+			.Returns(async (string _, Func<Uri, CancellationToken, Task<FeedData>> _, CancellationToken ct) =>
 			{
 				requestStarted.SetResult();
 				await Task.Delay(Timeout.InfiniteTimeSpan, ct);
@@ -465,8 +465,7 @@ public sealed class FeedProviderTests
 		mocker.Use<ILogger<FeedProvider>>(NullLogger<FeedProvider>.Instance);
 		MockHttpClientFactory.Factory(mocker, AppConstants.S3HttpClient, handler);
 		OptionsStubs.Options(mocker, new FeedSettings { FeedPath = FeedPath });
-		DownloadServerFallbackStubs.SingleServer<FeedData>(mocker);
-		mocker.GetMock<IFeedUtils>().Setup(x => x.GetUri(FeedPath, DownloadServer.Main)).Returns(new Uri(FeedUrl));
+		DownloadServerFallbackStubs.SingleServer<FeedData>(mocker, new Uri("https://feed.test/"));
 		mocker.GetMock<IGlobalKeyValueStorage>().Setup(x => x.Get("ActivatedBetaCodes")).Returns((string?)null);
 		mocker.GetMock<IDiscordAccountService>().SetupGet(x => x.LinkedAccountChanged).Returns(Observable.Empty<Unit>());
 		return mocker;
