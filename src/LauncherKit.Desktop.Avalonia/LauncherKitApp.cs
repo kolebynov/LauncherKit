@@ -69,6 +69,7 @@ public abstract class LauncherKitApp : Application
 			ObservableSystem.RegisterUnhandledExceptionHandler(e => _logger.LogError(e, "Unhandled observable system exception"));
 			var mainWindow = Services.GetRequiredService<IMainView>() as Window
 				?? throw new InvalidOperationException("The registered IMainView must derive from Avalonia.Controls.Window.");
+			Services.GetRequiredService<MainWindowStateHandler>().Restore(mainWindow);
 			mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModelBase>();
 			desktop.MainWindow = mainWindow;
 			Services.GetRequiredService<MainWindowCloseHandler>().Attach(mainWindow);
