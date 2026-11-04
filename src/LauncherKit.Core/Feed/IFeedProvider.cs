@@ -27,7 +27,7 @@ public interface IFeedProvider
 	ValueTask<ActivateBetaCodeResult> ActivateBetaCode(string betaCode, CancellationToken cancellationToken);
 
 	/// <summary>
-	/// STB versions offered to the user. Releases are always included; a prerelease only when an activated beta code's
+	/// Modpack versions offered to the user. Releases are always included; a prerelease only when an activated beta code's
 	/// <see cref="FeedData.BetaVersions"/> range covers it, when the linked Discord account has a role of
 	/// <see cref="FeedData.DeveloperRoleIds"/>, or when it is <see cref="ModpackFeedItem.IsAvailableForSponsors"/> and the
 	/// account has a role of <see cref="FeedData.SponsorRoleIds"/> (read through the account cache; a failed read

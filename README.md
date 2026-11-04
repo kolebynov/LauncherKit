@@ -9,7 +9,7 @@ LauncherKit is the reusable core of Windows desktop launchers for Skyrim Special
 - **Desktop.** Avalonia view models and the application host, with localized default texts.
 - **Tools.** A logs collector, a feed editor (Blazor Server, Cloudflare R2), a per-user WiX installer and setup bundle, a Cloudflare Analytics Worker, NUKE build targets and development automation.
 
-The reference consumer is STB Launcher (Skyrim True Believer). Contributor rules and detailed contracts are in [AGENTS.md](AGENTS.md).
+Contributor rules and detailed contracts are in [AGENTS.md](AGENTS.md).
 
 ## Repository layout
 
@@ -205,7 +205,7 @@ The project imports the product props and references `LauncherKit.Desktop.Avalon
 </Project>
 ```
 
-The NativeAOT publish fails on any trim/AOT warning. When a third-party package's remaining warnings have been checked by hand, collapse only that assembly's warnings with a `CollapseCheckedThirdPartyTrimWarnings` target (`TrimmerSingleWarn` on its `ResolvedFileToPublish` items, `TrimmerSingleWarn=false` and `NoWarn` `IL2104;IL3053` on the project). Re-check the warnings when updating that package. STB Launcher's App project has the audited target.
+The NativeAOT publish fails on any trim/AOT warning. When a third-party package's remaining warnings have been checked by hand, collapse only that assembly's warnings with a `CollapseCheckedThirdPartyTrimWarnings` target (`TrimmerSingleWarn` on its `ResolvedFileToPublish` items, `TrimmerSingleWarn=false` and `NoWarn` `IL2104;IL3053` on the project). Re-check the warnings when updating that package.
 
 `Program.cs`:
 
@@ -253,7 +253,8 @@ public sealed class App : LauncherKitApp
 		services.AddScoped<MainWindowViewModelBase, MainWindowViewModel>();
 		services.AddSingleton<MainWindow>();
 		services.AddSingleton<IMainView>(sp => sp.GetRequiredService<MainWindow>());
-		// Views, dialogs, notifications and other consumer services.
+		services.AddSingleton<INotificationManagerProvider>(sp => sp.GetRequiredService<MainWindow>());
+		// Views, dialogs and other consumer services.
 	}
 
 	// Rebuilds views after a scope reload (e.g. a language change).
@@ -276,6 +277,10 @@ The consumer must register:
 | `IMainView` (singleton) | The main window; it must derive from Avalonia `Window`, with any base class. |
 
 View models expose typed facts and act directly. Views own the wording, confirmations, dialogs, notifications and directory pickers, and pass collected input as command parameters. Use compiled bindings, and use `ObjectConverters.IsNull`/`IsNotNull` (never `!obj`) to bind visibility to whether an object is null. AGENTS.md "Desktop contract" lists all the rules.
+
+#### Notifications
+
+The kit registers `INotificationService` (`LauncherKit.Desktop.Avalonia.Services`, singleton, UI thread only). `Show(AppNotification)` keeps a toast until the user clicks it or `Close` removes it. It shows toasts only when the consumer registers an `INotificationManagerProvider`, usually its main window: its `WindowNotificationManager` is resolved on the first notification, so the service never creates the window, and must be created with the window, because a manager whose template is not applied yet drops the first toast. Without a provider, `Show` and `Close` do nothing. The kit ships no toast template: add an application-wide `DataTemplate` for `AppNotification` (`Title`, optional `Message`, `IsInProgress`), because the manager lives in the window's adorner layer. View models never use the service; views and consumer initializers do.
 
 #### First setup steps
 
@@ -427,7 +432,7 @@ class Build : LauncherBuild
 ### 9. Feed, feed editor and analytics
 
 - **Feed.** `feedV11.json` lists launcher versions, modpacks and their patches and changelogs, install components, prerequisites, graph packs and optional mods. Text is localized with a required `DefaultLanguage`. Downloads carry SHA-256 hashes, and install steps are declarative (`installMod`, `extractArchive`, `removeFileSystemItem`, `mergePlugins`, ...). The C# contracts are in `src/LauncherKit.Core/Feed`.
-- **Feed editor.** Edits the feed stored in a Cloudflare R2 bucket; each user signs in with their own R2 credentials. Run it with `dotnet run --project kit/src/LauncherKit.FeedEditor`, or in Docker: its `Dockerfile` builds from the consumer root, with a `compose.yaml` and `.dockerignore` there. The bucket needs CORS rules for direct uploads (see AGENTS.md).
+- **Feed editor.** Edits the feed stored in a Cloudflare R2 bucket; each user signs in with their own R2 credentials. The consumer supplies its bucket as `R2:ServiceUrl` and `R2:BucketName` (`R2:FeedKey` defaults to `feedV11.json`), e.g. as `R2__ServiceUrl`/`R2__BucketName` environment variables. Run it with `dotnet run --project kit/src/LauncherKit.FeedEditor`, or in Docker: its `Dockerfile` builds from the consumer root, with a `compose.yaml` and `.dockerignore` there. The bucket needs CORS rules for direct uploads (see AGENTS.md).
 - **Analytics.** `workers/analytics` receives the installation reports the launcher sends on every start. The consumer owns the Wrangler configuration (routes, dataset, secrets):
 
 ```powershell

@@ -8,7 +8,7 @@ namespace LauncherKit.Core.Services.Abstractions;
 public interface IInstallAppTaskProvider
 {
 	/// <summary>
-	/// Installs the feed version <paramref name="version"/>, or the newest version supporting the installed STB when
+	/// Installs the feed version <paramref name="version"/>, or the newest version supporting the installed modpack when
 	/// <see langword="null"/>, followed by its patches. An installed version is uninstalled first, so this also updates
 	/// the mod, unless it is the same version with some of its patches missing: then only those patches are applied.
 	/// </summary>
@@ -24,7 +24,7 @@ public interface IInstallAppTaskProvider
 
 	/// <summary>
 	/// Whether the mod is installed, can be updated to the newest version supporting <paramref name="modpackVersion"/>
-	/// (<see langword="null"/> when STB is not installed, which offers no update), and can be uninstalled.
+	/// (<see langword="null"/> when the modpack is not installed, which offers no update), and can be uninstalled.
 	/// </summary>
 	ModInstallState GetModInstallState(ModFeedData modFeed, NuGetVersion? modpackVersion);
 }

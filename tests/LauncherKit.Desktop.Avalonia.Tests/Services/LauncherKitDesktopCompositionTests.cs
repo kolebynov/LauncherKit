@@ -29,9 +29,30 @@ public sealed class LauncherKitDesktopCompositionTests
 			Assert.That(services.Single(x => x.ServiceType == typeof(LauncherKitScopeReloadService)).Lifetime, Is.EqualTo(ServiceLifetime.Singleton));
 			Assert.That(services.Count(x => x.ServiceType == typeof(IAppCloseHandler)), Is.EqualTo(2));
 			Assert.That(services.Any(x => x.ServiceType == typeof(IConfiguredScopeInitializer)), Is.True);
-			Assert.That(services.Any(x => x.ServiceType.Name == "INotificationService"), Is.False);
+			Assert.That(services.Single(x => x.ServiceType == typeof(INotificationService)).Lifetime, Is.EqualTo(ServiceLifetime.Singleton));
 			Assert.That(services.Any(x => x.ServiceType.Name == "IDialogService"), Is.False);
 		});
+	}
+
+	[Test]
+	public void NotificationService_ManagerProviderRegistered_DoesNotResolveProviderOnCreation()
+	{
+		// Arrange
+		var services = new ServiceCollection();
+		services.AddLauncherKitDesktop();
+		var providerResolved = false;
+		services.AddSingleton<INotificationManagerProvider>(_ =>
+		{
+			providerResolved = true;
+			return null!;
+		});
+		using var provider = services.BuildServiceProvider();
+
+		// Act
+		provider.GetRequiredService<INotificationService>();
+
+		// Assert
+		Assert.That(providerResolved, Is.False);
 	}
 
 	[Test]

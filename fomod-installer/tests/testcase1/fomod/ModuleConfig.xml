@@ -129,7 +129,7 @@
 				<group type="SelectExactlyOne" name="Установить систему нарядов?">
 					<plugins order="Explicit">
 						<plugin name="Да">
-							<description>Устанавливает систему визуальных нарядов, совместимую с STB.</description>
+							<description>Устанавливает систему визуальных нарядов, совместимую со сборкой.</description>
 							<files>
 								<folder source="20. OS" destination="" priority="0"/>
 							</files>

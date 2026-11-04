@@ -59,9 +59,9 @@ public sealed class AppTaskProvider : IAppTaskProvider
 	}
 
 	/// <summary>
-	/// Whether <paramref name="taskId"/> changes the STB installation: a task of the installation chain (component
-	/// choice, STB, patches, English voices, graph pack), which keeps changing the installation until its last task
-	/// finishes, or the STB removal.
+	/// Whether <paramref name="taskId"/> changes the modpack installation: a task of the installation chain (component
+	/// choice, modpack, patches, components, graph pack), which keeps changing the installation until its last task
+	/// finishes, or the modpack removal.
 	/// </summary>
 	public static bool IsModpackInstallationTask(string taskId) =>
 		taskId is SelectModpackComponentsTaskId or InstallModpackTaskId or UninstallModpackTaskId ||
@@ -72,7 +72,7 @@ public sealed class AppTaskProvider : IAppTaskProvider
 	{
 		ArgumentNullException.ThrowIfNull(launch);
 		var microTaskDescription = new MicroTaskDescription.GameStarted(launch.Name);
-		// The feed may offer no STB to this user (e.g. only beta versions gated by a code the user has not activated);
+		// The feed may offer no modpack to this user (e.g. only beta versions gated by a code the user has not activated);
 		// the game then runs on whatever is installed.
 		var newestModpackFeedItem = (await _feedProvider.GetModpackFeedItems(cancellationToken)).MaxBy(x => x.Version);
 
@@ -144,8 +144,8 @@ public sealed class AppTaskProvider : IAppTaskProvider
 		CreateInstallPatchTaskInternal(modpackPatchFeedItem, forceUpdate, [], cancellationToken);
 
 	/// <summary>
-	/// Downloads the patch, extracts it without the STB version file, runs its install steps, and only then extracts the
-	/// version file. The installed STB version is read from that file, so a patch whose steps failed or were interrupted
+	/// Downloads the patch, extracts it without the modpack version file, runs its install steps, and only then extracts the
+	/// version file. The installed modpack version is read from that file, so a patch whose steps failed or were interrupted
 	/// is still offered (and its steps retried) after a restart, instead of counting as installed.
 	/// </summary>
 	private async ValueTask<AppTask> CreateInstallPatchTaskInternal(ModpackPatchFeedItem modpackPatchFeedItem,

@@ -105,38 +105,38 @@ public sealed class FeedProvider : IFeedProvider, IDisposable
 		var activatedBetaCodes = GetHashedActivatedBetaCodes();
 		var feedData = await GetFeed(cancellationToken);
 		BetaRole? betaRole = null;
-		var stbFeedItems = new List<ModpackFeedItem>(feedData.Modpacks.Count);
-		foreach (var stbFeed in feedData.Modpacks)
+		var offeredItems = new List<ModpackFeedItem>(feedData.Modpacks.Count);
+		foreach (var modpackFeed in feedData.Modpacks)
 		{
-			if (!stbFeed.Version.IsPrerelease)
+			if (!modpackFeed.Version.IsPrerelease)
 			{
-				stbFeedItems.Add(stbFeed);
+				offeredItems.Add(modpackFeed);
 				continue;
 			}
 
 			var isUnlockedByBetaCode = feedData.BetaVersions?.Any(x =>
-				activatedBetaCodes.Contains(x.Key) && x.Value.Satisfies(stbFeed.Version)) ?? false;
+				activatedBetaCodes.Contains(x.Key) && x.Value.Satisfies(modpackFeed.Version)) ?? false;
 			if (isUnlockedByBetaCode)
 			{
-				stbFeedItems.Add(stbFeed);
+				offeredItems.Add(modpackFeed);
 				continue;
 			}
 
 			// A prerelease no activated beta code covers (including one no beta code covers at all) is offered only to
 			// developers and, when marked, to sponsors. Discord is asked only when a role could unlock it.
-			if (!stbFeed.IsAvailableForSponsors && feedData.DeveloperRoleIds is not { Count: > 0 })
+			if (!modpackFeed.IsAvailableForSponsors && feedData.DeveloperRoleIds is not { Count: > 0 })
 			{
 				continue;
 			}
 
 			betaRole ??= await GetBetaRole(feedData, cancellationToken);
-			if (betaRole == BetaRole.Developer || (betaRole == BetaRole.Sponsor && stbFeed.IsAvailableForSponsors))
+			if (betaRole == BetaRole.Developer || (betaRole == BetaRole.Sponsor && modpackFeed.IsAvailableForSponsors))
 			{
-				stbFeedItems.Add(stbFeed);
+				offeredItems.Add(modpackFeed);
 			}
 		}
 
-		return stbFeedItems;
+		return offeredItems;
 	}
 
 	public async ValueTask<BetaAccessRoles> GetBetaAccessRoles(CancellationToken cancellationToken)

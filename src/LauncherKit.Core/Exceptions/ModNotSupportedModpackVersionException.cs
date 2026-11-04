@@ -9,7 +9,7 @@ public sealed class ModNotSupportedModpackVersionException : Exception
 
 	public NuGetVersion ModpackVersion { get; }
 
-	public override string Message => $"Mod {ModName} does not support STB version {ModpackVersion}";
+	public override string Message => $"Mod {ModName} does not support modpack version {ModpackVersion}";
 
 	public ModNotSupportedModpackVersionException(string modName, NuGetVersion modpackVersion)
 	{

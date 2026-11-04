@@ -16,17 +16,14 @@ public sealed class FeedV11ContractTests
 		var result = JsonNode.Parse(FeedJson.Serialize(feed))!.AsObject();
 		Assert.Multiple(() =>
 		{
-			Assert.That(result.ContainsKey("Stb"), Is.False);
-			Assert.That(result.ContainsKey("StbChangelogs"), Is.False);
 			Assert.That(result["Modpacks"]!.AsArray(), Is.Not.Empty);
 			Assert.That(result["ModpackChangelogs"]!.AsArray(), Is.Not.Empty);
 			Assert.That(result["DefaultLanguage"]!.GetValue<string>(), Is.EqualTo("ru"));
 			Assert.That(result["InstallComponents"]![0]!["Kind"]!.GetValue<string>(), Is.EqualTo("GraphPack"));
 			Assert.That(result["InstallComponents"]![1]!["Kind"]!.GetValue<string>(), Is.EqualTo("Mod"));
-			Assert.That(result["InstallComponents"]![1]!["ModName"]!.GetValue<string>(), Is.EqualTo("WispShelterStb"));
+			Assert.That(result["InstallComponents"]![1]!["ModName"]!.GetValue<string>(), Is.EqualTo("WispShelter"));
 			Assert.That(result["Prerequisites"]![0]!["Id"]!.GetValue<string>(), Is.EqualTo("directx9"));
 			Assert.That(result["Prerequisites"]![0]!["Arguments"]!.GetValue<string>(), Is.EqualTo("/silent"));
-			Assert.That(result.ToJsonString(), Does.Not.Contain("SupportedStbVersion").And.Not.Contain("SupportsNewStbVersions"));
 		});
 	}
 

@@ -90,7 +90,7 @@ public interface IInstallBackupService
 
 	/// <summary>
 	/// Deletes every backup and record without restoring it, when the Mod Organizer directory with the installed mods
-	/// is deleted (STB uninstalled or reinstalled): no installed mod is left to roll back, and restoring the backups of
+	/// is deleted (the modpack uninstalled or reinstalled): no installed mod is left to roll back, and restoring the backups of
 	/// a mod installed again later could bring back outdated files.
 	/// </summary>
 	void DeleteAll();

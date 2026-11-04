@@ -75,6 +75,10 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 		services.TryAddSingleton<ITaskbarProgressSink>(sp => new TaskbarProgressSink(
 			sp.GetRequiredService<LauncherKitDesktopOptions>().GetMainWindow, TaskbarList.Create,
 			sp.GetRequiredService<ILogger<TaskbarProgressSink>>()));
+		services.TryAddSingleton<INotificationService>(sp => new NotificationService(
+			sp.GetRequiredService<IServiceProviderIsService>().IsService(typeof(INotificationManagerProvider))
+				? () => sp.GetRequiredService<INotificationManagerProvider>().NotificationManager
+				: null));
 		services.TryAddSingleton<LauncherKitScopeReloadService>();
 		services.TryAddSingleton<IAppReloader>(sp => new AppReloader(
 			() => sp.GetRequiredService<IUiDispatcher>().Post(() =>

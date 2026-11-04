@@ -31,7 +31,7 @@ public sealed class FeedData
 	public IReadOnlyDictionary<string, VersionRange>? BetaVersions { get; init; }
 
 	/// <summary>
-	/// IDs of the roles on the STB Discord server (<c>Discord:GuildId</c>) whose members are sponsors: a linked
+	/// IDs of the roles on the Discord server (<c>Discord:GuildId</c>) whose members are sponsors: a linked
 	/// account with any of them gets the beta versions marked <see cref="ModpackFeedItem.IsAvailableForSponsors"/>.
 	/// Snowflakes are written as JSON strings.
 	/// </summary>
@@ -39,7 +39,7 @@ public sealed class FeedData
 	public IReadOnlyList<ulong>? SponsorRoleIds { get; init; }
 
 	/// <summary>
-	/// IDs of the roles of STB developers on the STB Discord server (<c>Discord:GuildId</c>): a linked account with
+	/// IDs of the roles of modpack developers on the Discord server (<c>Discord:GuildId</c>): a linked account with
 	/// any of them gets every prerelease, whether or not a beta code covers it or it is
 	/// <see cref="ModpackFeedItem.IsAvailableForSponsors"/>. Snowflakes are written as JSON strings.
 	/// </summary>

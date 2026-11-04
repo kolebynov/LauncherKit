@@ -7,7 +7,7 @@ public interface IUpdateProvider
 	ValueTask<ModpackUpdateInfo?> GetModpackUpdateInfo(CancellationToken cancellationToken);
 
 	/// <summary>
-	/// The main STB versions the feed offers to this user, newest first.
+	/// The main modpack versions the feed offers to this user, newest first.
 	/// </summary>
 	ValueTask<IReadOnlyList<AvailableModpackVersion>> GetAvailableModpackVersions(CancellationToken cancellationToken);
 

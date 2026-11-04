@@ -239,7 +239,7 @@ public sealed class ModpackComponentChoicesTests
 	{
 		Id = id,
 		Kind = kind,
-		ModName = kind == InstallComponentKind.Mod ? "STB Voices" : null,
+		ModName = kind == InstallComponentKind.Mod ? "Voices" : null,
 		Title = new LocalizedText { ["ru"] = title },
 		Description = new LocalizedText { ["ru"] = $"Описание: {title}" },
 		SupportedModpackVersion = VersionRange.All,

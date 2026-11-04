@@ -2,9 +2,9 @@
 
 A local HTTP API inside an automation-enabled launcher reads and drives its UI. The reusable tools are
 `kit/scripts/launcher_dev.py` (sandbox/CLI) and `kit/scripts/launcher_client.py` (Python API client).
-STB-specific user flows and their configured CLI remain in `scripts/launcher_flows.py`; mock generation and serving
-remain consumer-owned. Prefer these tools over OS-level mouse scripts or screen captures. All commands below run
-from the consumer repository root. See [kit contracts](../AGENTS.md) and [STB mock/release guidance](../../AGENTS.md).
+Consumer-specific user flows, their configured CLI, mock generation and serving are consumer-owned. Prefer these
+tools over OS-level mouse scripts or screen captures. All commands below run from the consumer repository root. See
+[kit contracts](../AGENTS.md).
 
 ## Build gating
 
@@ -14,7 +14,7 @@ The API lives in `kit/src/LauncherKit.DevAutomation`. The launcher references it
 contain it, even if an environment variable sets it. The solution build still compiles the project, so it keeps up
 with API changes.
 
-Even when compiled in, the server starts only when `DevAutomation:Port` is configured (`<EnvironmentPrefix>DevAutomation__Port`; STB uses `STB_DevAutomation__Port`). It
+Even when compiled in, the server starts only when `DevAutomation:Port` is configured (`<EnvironmentPrefix>DevAutomation__Port`). It
 listens on `http://localhost:{port}/` only. POST bodies must be `application/json`, which a web page cannot send
 cross-origin without a CORS preflight, and the server never answers preflights.
 
@@ -29,13 +29,13 @@ updating Avalonia.
 The generic CLI requires explicit consumer identity on `start`; it has no fallback project, executable or environment prefix:
 
 ```powershell
-python kit\scripts\launcher_dev.py --sandbox-dir scripts\Sandbox start --project src\STBLauncher.App\STBLauncher.App.csproj --exe-name STBLauncher.App.exe --environment-prefix STB_ --mock-dir scripts\Mock --fresh
+python kit\scripts\launcher_dev.py --sandbox-dir scripts\Sandbox start --project src\MyLauncher.App\MyLauncher.App.csproj --exe-name MyLauncher.App.exe --environment-prefix MY_ --mock-dir scripts\Mock --fresh
 python kit\scripts\launcher_dev.py --sandbox-dir scripts\Sandbox tree
 python kit\scripts\launcher_dev.py --sandbox-dir scripts\Sandbox snapshot save configured
 python kit\scripts\launcher_dev.py --sandbox-dir scripts\Sandbox stop --mock
 ```
 
-Those names are an explicit STB example, not kit defaults. Another consumer supplies its own values. `--sandbox-dir`
+Those names are placeholders, not kit defaults; each consumer supplies its own values, typically from its own flow CLI. `--sandbox-dir`
 defaults to `Sandbox` under the current working directory. `start` builds/publishes to an explicit output (`--output`),
 defaulting to `<sandbox>/build/Debug`, or `Release` with `--aot`; `--no-build` consumes that same output. There is no
 inferred target-framework output directory. Build output is copied to `<sandbox>/current/Launcher`, used as the
@@ -48,23 +48,8 @@ prefix. `--fresh` empties state, while `--snapshot NAME` restores a saved state;
 `snapshot save NAME` stops the launcher and saves databases/settings/game/data without build output. Snapshots live
 at `<sandbox>/snapshots`, screenshots at `<sandbox>/screenshots`, and CLI state at `<sandbox>/state.json`.
 Restores use the same absolute paths, preserving installation records.
+The NativeAOT automation output belongs to the selected sandbox build directory.
 
-STB supplies its identity, mock directory, sandbox path and `launcher.db*` state exclusions in the consumer flow CLI.
-It retains generic sandbox commands as well as the STB flows:
-
-```powershell
-python scripts\launcher_flows.py start --fresh
-python scripts\launcher_flows.py start --aot
-python scripts\launcher_flows.py snapshot save configured
-python scripts\launcher_flows.py start --snapshot configured --no-build
-python scripts\launcher_flows.py start --feed feedV11-stb-3.3.0.json
-python scripts\launcher_flows.py log -n 50
-python scripts\launcher_flows.py stop --mock
-```
-
-The consumer CLI uses `scripts/Sandbox` and `scripts/Mock`. Its stage-feed example installs an older STB; restarting
-with default `feedV11.json` offers the update. See [Mock install archives](../../AGENTS.md#mock-install-archives).
-The NativeAOT automation output now belongs to the selected sandbox build directory, not `out/dev-automation`.
 
 ## Commands
 
@@ -81,9 +66,9 @@ then the other windows (e.g. task dialogs), then popups (flyouts, menus, tooltip
 device-independent pixels.
 
 ```text
-root 0 window "STB Launcher 1.23.0" 1000x700
-  #8 FANavigationViewItem id=SettingsNavItem [-1,632 72x60] tip="Настройки"
-        #17 Button "Установить" [105,369 96x32] disabled
+root 0 window "My Launcher 1.0.0" 1000x700
+  #8 FANavigationViewItem id=SettingsNavItem [-1,632 72x60] tip="Settings"
+        #17 Button "Install" [105,369 96x32] disabled
 root 1 popup 259x102
   #44 FAMenuFlyoutItem id=SettingsMenuItem [r1:1,67 257x32]
 ```
@@ -125,9 +110,9 @@ sys.path.insert(0, 'kit/scripts')
 from launcher_client import AutomationError, LauncherClient
 
 launcher = LauncherClient()                       # port 8095, the sandbox default
-launcher.click('Установить')
-launcher.click(contains="MD's Graphics Lite", type='LockableCheckBox')
-launcher.click('Завершить')
+launcher.click('Install')
+launcher.click(contains='Graphics pack', type='LockableCheckBox')
+launcher.click('Finish')
 launcher.wait(task_count=0, timeout=600)
 card = launcher.find(type='ModCardView')[0]
 launcher.hover(card)                              # a Node from find/tree is a target too
@@ -143,64 +128,6 @@ print(launcher.tree().format())
 - Results are frozen dataclasses: `Tree` (`roots`, `walk()`, `format()`), `Root`, `Node` (`walk()`, `describe()`,
   `bounds.center`), `PointerResult` (`target`, `hit`), `WaitResult` and `Status`.
 - A refused request raises `AutomationError` with `status`, `message` and, for ambiguous selectors, `candidates`.
-
-## STB consumer flows
-
-`scripts/launcher_flows.py` performs whole user actions with `LauncherFlows` and waits for their tasks. Prefer a flow
-to chaining clicks, and add one here when a sequence repeats. `python scripts/launcher_flows.py <command>` exposes each flow; they are not generic kit commands.
-
-| Command | `LauncherFlows` | Effect |
-|---|---|---|
-| `setup [--skyrim DIR] [--data DIR] [--offline]` | `first_setup` | First setup through the availability check; defaults to the sandbox `Skyrim` and `Data` directories. |
-| `state` | `home_state` | Installed STB, offered install/patch/major update, launcher update, mod cards (name, section, button, uninstall). |
-| `open PAGE` | `open` | `home`, `tasks`, `downloads`, `changelog` or `settings`. |
-| `install-stb [--version V] [--choice S=O]...` | `install_stb` | "Установить", picking STB `V` (the latest version including patches) when the feed offers several main versions, then the whole chain. |
-| `install-other-stb [--version V] [--choice S=O]...` | `install_other_stb` | "Установить другую версию STB" from the "Играть" menu, then the whole chain. |
-| `update-stb [--choice S=O]...` | `update_stb` | The offered major update ("Обновить") or patch, confirming its dialog. |
-| `install-mod NAME [--choice S=O]...` | `install_mod` | Install or update a graph pack or optional mod from its card, confirming the warning. |
-| `uninstall-mod NAME` | `uninstall_mod` | The card's "Удалить". |
-| `mod-info NAME` | `mod_description` | Text of the card's "Подробнее". |
-| `delete-saves [--keep N]` | `delete_old_saves` | "Удалить старые сохранения"; prints the notification. |
-| `uninstall-stb` | `uninstall_stb` | "Удалить STB". |
-| `tasks`, `cancel-task NAME`, `resume-task NAME` | `tasks`, `cancel_task`, `resume_task` | The task queue page; `NAME` is the start of the task text. |
-| `downloads`, `delete-downloads NAME...\|--all` | `downloads`, `delete_downloads` | The downloads page. |
-| `changelog [VERSION]` | `changelog` | Text of an STB changelog. |
-| `close-dialogs [--timeout S]` | `close_dialogs` | Close "Что нового" and other dialogs with a "Закрыть" button. |
-
-The home page's "Графпаки" and "Опциональные моды" sections start collapsed. Expand their `ToggleButton` headers
-before selecting a card, e.g. `launcher.click(contains='Графпаки', type='ToggleButton')`. Both lists wrap cards onto
-the next row when the viewport is too narrow, with 8 px between cards and rows. Both headers stay visible even
-when their lists are empty. A section receives its view model only while expanded, activating it through the
-normal view lifecycle; collapsing clears its data context and deactivates it. An indeterminate progress bar is
-shown while that section loads its cards. The `state` and card-action flows expand these sections and wait for
-loading to finish.
-Each section view model owns an instance of the shared `Loader` helper, exposed through `Loader.IsLoading`. Loading operations hold
-`using var loading = Loader.BeginLoading()` scopes; overlapping operations keep the indicator active until the
-last scope is disposed, including when a cancelled operation finishes after a section is reopened.
-
-Task flows answer every choice step that appears while the queue runs, the STB components and the graph pack's FOMOD
-alike. `--choice STEP=OPTION` (Python: `{'STEP': 'OPTION'}`, or a list for several options) names the step by its
-title and the option by its name; the step then gets exactly those options. A step that is not given keeps its
-default selection, and one without a default fails with the list of its options. The CLI prints every step with the
-options it was left with and warns about given steps that no dialog showed. A failed task raises
-`TaskFailedError` with the error shown in the queue, leaving it there for `resume_task`/`cancel_task`.
-
-Component titles follow the launcher's current UI culture (then parent cultures, then the feed's default).
-Use the titles actually printed by the flow: the bilingual mocks show `English voices` and `Graphics pack`
-on an English host, so their overrides are `--choice "English voices=Install"` and
-`--choice "Graphics pack=MD's Graphics Lite"`. The example below uses Russian feed titles. FOMOD titles
-come from the archive and may remain Russian independently of the feed language.
-
-```python
-import sys
-sys.path.insert(0, 'scripts')
-from launcher_flows import LauncherFlows
-
-flows = LauncherFlows()
-flows.install_stb({'Графпак': "MD's Graphics Lite", 'Английская озвучка': 'Установить', 'HDR': 'Нет', 'Хвосты': 'Нет',
-                   'Музыка': 'Нет'})
-assert flows.home_state().installed_stb == '3.3.1'
-```
 
 ## HTTP API
 
@@ -224,12 +151,12 @@ action.
 
 ### Feed editor sandbox
 
-Check feed editor changes without R2 credentials with `kit/scripts/feed_editor_dev.py`. It serves a fake R2 bucket (an in-memory S3 subset on `http://127.0.0.1:5005`, explicit `--bucket` (STB uses `stb`): `GetObject`, `HeadObject`, `PutObject` with `If-Match`, `ListObjectsV2`, multipart uploads through presigned URLs, and CORS for the browser upload; signatures are not checked) and runs the editor on `http://127.0.0.1:5090` pointed at it (`--port`, `--r2-port`; `--no-editor` serves only the bucket for an editor started elsewhere).
+Check feed editor changes without R2 credentials with `kit/scripts/feed_editor_dev.py`. It serves a fake R2 bucket (an in-memory S3 subset on `http://127.0.0.1:5005`, explicit `--bucket`: `GetObject`, `HeadObject`, `PutObject` with `If-Match`, `ListObjectsV2`, multipart uploads through presigned URLs, and CORS for the browser upload; signatures are not checked) and runs the editor on `http://127.0.0.1:5090` pointed at it (`--port`, `--r2-port`; `--no-editor` serves only the bucket for an editor started elsewhere).
 
 Every run serves the feed `feedV11.json` from `kit/tests/LauncherKit.FeedEditor.Tests/Fixtures/feedV11.json` (`--feed`; its object key is `R2:FeedKey`). Every bucket path named in the feed, including each localized markdown path, exists with small fixed content and SHA-256 metadata. `Smoke/no-checksum.7z`, `Smoke/invalid-checksum.7z` and `Smoke/uppercase-checksum.7z` cover other metadata cases. Any access key signs in except `denied`. Saves and uploads live in memory until restart. The script uses only the Python standard library.
 
 ```powershell
-python kit\scripts\feed_editor_dev.py --bucket stb
+python kit\scripts\feed_editor_dev.py --bucket my-bucket
 ```
 
 Browser smoke after integration: run the sandbox, open `http://127.0.0.1:5090`, sign in with any nonempty credentials except access key `denied`, and edit `DefaultLanguage` plus the values in both languages of mod names/descriptions, recommendations and changelog paths. Each language is a row labelled `{field} ({language})` with its delete button, followed by the row adding a language; it must line up with plain fields in neighbouring columns. Add/remove component and prerequisite entries, choose each component kind/mod reference, change numeric order and support ranges, and save/reload. Confirm missing default translations, unknown mod references, duplicate IDs, invalid ranges and invalid download hashes block saving. Open a second browser context on the same page, save a change there, then save in the first to exercise conflict cancel/overwrite/reload. Reloading or leaving the page must warn about unsaved changes.

@@ -15,7 +15,7 @@ public sealed class AppLogsCollectorTests
 	{
 		var mocker = LauncherKit.TestSupport.ProductTestSupport.CreateMocker(MockBehavior.Strict);
 		var monitor = OptionsStubs.Monitor(mocker, new AppSettings());
-		var path = Path.Combine(Path.GetTempPath(), "stb-log-test");
+		var path = Path.Combine(Path.GetTempPath(), "launcherkit-log-test");
 		mocker.GetMock<ITempStorageService>()
 			.Setup(x => x.CreateTempDirectory())
 			.Returns(new TempStorageService.TempDirectoryHandle(path, mocker.Get<IFileSystemUtils>()));
@@ -43,7 +43,7 @@ public sealed class AppLogsCollectorTests
 		// Arrange
 		var mocker = LauncherKit.TestSupport.ProductTestSupport.CreateMocker(MockBehavior.Strict);
 		OptionsStubs.Monitor(mocker, new AppSettings());
-		var path = Path.Combine(Path.GetTempPath(), "stb-log-test");
+		var path = Path.Combine(Path.GetTempPath(), "launcherkit-log-test");
 		var fileSystem = mocker.GetMock<IFileSystemUtils>();
 		mocker.GetMock<ITempStorageService>()
 			.Setup(x => x.CreateTempDirectory())
@@ -72,7 +72,7 @@ public sealed class AppLogsCollectorTests
 		// Arrange
 		var mocker = LauncherKit.TestSupport.ProductTestSupport.CreateMocker(MockBehavior.Strict);
 		OptionsStubs.Monitor(mocker, new AppSettings());
-		var path = Path.Combine(Path.GetTempPath(), "stb-log-test");
+		var path = Path.Combine(Path.GetTempPath(), "launcherkit-log-test");
 		var fileSystem = mocker.GetMock<IFileSystemUtils>();
 		fileSystem.Setup(x => x.SafeDeleteDirectory(path)).Returns(FileSystemUtils.SafeDeleteResult.Success.Instance);
 		mocker.GetMock<ITempStorageService>()

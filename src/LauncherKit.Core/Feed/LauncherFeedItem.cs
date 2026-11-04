@@ -11,7 +11,7 @@ public sealed class LauncherFeedItem
 	public LocalizedText? ChangelogPath { get; init; }
 
 	/// <summary>
-	/// This launcher version is the first one able to install or update to new STB versions,
+	/// This launcher version is the first one able to install or update to new modpack versions,
 	/// so users of older launchers must update to get them.
 	/// </summary>
 	public bool SupportsNewModpackVersions { get; init; }

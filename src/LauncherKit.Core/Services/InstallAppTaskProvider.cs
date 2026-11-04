@@ -53,8 +53,8 @@ public sealed class InstallAppTaskProvider : IInstallAppTaskProvider
 				ModFeedItem modFeedItem;
 				if (version != null)
 				{
-					// The caller vouches for the version, so it is installed even when the cached installed STB version
-					// is stale, e.g. right after STB itself was installed by a preceding task.
+					// The caller vouches for the version, so it is installed even when the cached installed modpack version
+					// is stale, e.g. right after the modpack itself was installed by a preceding task.
 					modFeedItem = modFeed.Items.FirstOrDefault(x => x.Version == version) ??
 					              throw new ArgumentException($"Mod {modName} version {version} was not found", nameof(version));
 				}

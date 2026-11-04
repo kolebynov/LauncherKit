@@ -129,13 +129,13 @@ public sealed class UpdateProviderTests
 	{
 		InitialVersion = NuGetVersion.Parse(initialVersion),
 		Version = NuGetVersion.Parse(version),
-		DownloadInfo = new DownloadInfo { S3Path = $"stb-{version}.7z" },
+		DownloadInfo = new DownloadInfo { S3Path = $"modpack-{version}.7z" },
 		Patches =
 		[
 			.. patchVersions.Select(x => new ModpackPatchFeedItem
 			{
 				Version = NuGetVersion.Parse(x),
-				DownloadInfo = new DownloadInfo { S3Path = $"stb-patch-{x}.7z" },
+				DownloadInfo = new DownloadInfo { S3Path = $"modpack-patch-{x}.7z" },
 			}),
 		],
 	};

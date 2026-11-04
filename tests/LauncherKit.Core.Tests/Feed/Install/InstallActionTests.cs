@@ -26,8 +26,8 @@ public sealed class InstallActionTests
 			new InstallAction.RemoveFileSystemItem(["mods/a", "mods/b"], false),
 			"""{"$type":"RemoveFileSystemItem","Paths":["mods/a","mods/b"],"FailOnFailedDelete":false}""");
 		yield return Case(
-			new InstallAction.ExtractArchive(new DownloadInfo { S3Path = "Mods/a.7z", Hash = new Sha256Hash(Hash) }, "[STB] Mod Organizer"),
-			$$$"""{"$type":"ExtractArchive","DownloadInfo":{"S3Path":"Mods/a.7z","Hash":"{{{Hash}}}","FileName":"a.7z"},"DestinationPath":"[STB] Mod Organizer"}""");
+			new InstallAction.ExtractArchive(new DownloadInfo { S3Path = "Mods/a.7z", Hash = new Sha256Hash(Hash) }, "[Modpack] Mod Organizer"),
+			$$$"""{"$type":"ExtractArchive","DownloadInfo":{"S3Path":"Mods/a.7z","Hash":"{{{Hash}}}","FileName":"a.7z"},"DestinationPath":"[Modpack] Mod Organizer"}""");
 		yield return Case(
 			new InstallAction.MergePlugins(new DownloadInfo { S3Path = "Mods/plugins.txt", Hash = new Sha256Hash(Hash) }),
 			$$$"""{"$type":"MergePlugins","DownloadInfo":{"S3Path":"Mods/plugins.txt","Hash":"{{{Hash}}}","FileName":"plugins.txt"}}""");

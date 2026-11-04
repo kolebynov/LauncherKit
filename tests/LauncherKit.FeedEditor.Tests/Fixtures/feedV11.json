@@ -4,7 +4,7 @@
       "InitialVersion": "3.1.0",
       "Version": "3.1.0",
       "DownloadInfo": {
-        "S3Path": "STB/3.0/Skyrim True Believer [3.1.0].7z",
+        "S3Path": "Modpack/3.0/Example Modpack [3.1.0].7z",
         "Hash": "9DBD20E17BD455D5377BE57692578FDDF9D6D64109AC7280A9A9636CA7E09444"
       },
       "Patches": [
@@ -12,7 +12,7 @@
           "Version": "3.1.6",
           "RequireNewGame": false,
           "DownloadInfo": {
-            "S3Path": "STB/3.0/Skyrim True Believer Patch [3.1.6].7z"
+            "S3Path": "Modpack/3.0/Example Modpack Patch [3.1.6].7z"
           },
           "InstallSteps": [
             {
@@ -20,12 +20,12 @@
                 {
                   "$type": "RemoveFileSystemItem",
                   "Paths": [
-                    "[STB] Mod Organizer\\mods\\STB\\NetScriptFramework",
-                    "[STB] Mod Organizer\\mods\\NetScriptFramework SkyrimSE",
-                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\REQ_KnockdownAttacks.pex",
-                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\Source\\REQ_KnockdownAttacks.psc",
-                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\REQ_StaminaConsumption.pex",
-                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\Source\\REQ_StaminaConsumption.psc"
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\NetScriptFramework",
+                    "[Modpack] Mod Organizer\\mods\\NetScriptFramework SkyrimSE",
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\Scripts\\REQ_KnockdownAttacks.pex",
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\Scripts\\Source\\REQ_KnockdownAttacks.psc",
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\Scripts\\REQ_StaminaConsumption.pex",
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\Scripts\\Source\\REQ_StaminaConsumption.psc"
                   ],
                   "FailOnFailedDelete": false
                 }
@@ -38,7 +38,7 @@
           "Version": "3.1.5",
           "RequireNewGame": false,
           "DownloadInfo": {
-            "S3Path": "STB/3.0/Skyrim True Believer Patch [3.1.5].7z"
+            "S3Path": "Modpack/3.0/Example Modpack Patch [3.1.5].7z"
           },
           "InstallSteps": [
             {
@@ -46,11 +46,11 @@
                 {
                   "$type": "RemoveFileSystemItem",
                   "Paths": [
-                    "[STB] Mod Organizer\\mods\\STB\\interface\\buttonTradeAll.swf",
-                    "[STB] Mod Organizer\\mods\\STB Widgets Untarnished UI\\interface\\buttonTradeAll.swf",
-                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\aaMZ_buttonTradeAll.pex",
-                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\Source\\aaMZ_buttonTradeAll.psc",
-                    "[STB] Mod Organizer\\mods\\PolarisRebalance\\Projectile.esp"
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\interface\\buttonTradeAll.swf",
+                    "[Modpack] Mod Organizer\\mods\\Modpack Widgets Untarnished UI\\interface\\buttonTradeAll.swf",
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\Scripts\\aaMZ_buttonTradeAll.pex",
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\Scripts\\Source\\aaMZ_buttonTradeAll.psc",
+                    "[Modpack] Mod Organizer\\mods\\PolarisRebalance\\Projectile.esp"
                   ],
                   "FailOnFailedDelete": false
                 }
@@ -63,14 +63,14 @@
           "Version": "3.1.4",
           "RequireNewGame": false,
           "DownloadInfo": {
-            "S3Path": "STB/3.0/Skyrim True Believer Patch [3.1.4].7z"
+            "S3Path": "Modpack/3.0/Example Modpack Patch [3.1.4].7z"
           }
         },
         {
           "Version": "3.1.3",
           "RequireNewGame": true,
           "DownloadInfo": {
-            "S3Path": "STB/3.0/Skyrim True Believer Patch [3.1.3].7z"
+            "S3Path": "Modpack/3.0/Example Modpack Patch [3.1.3].7z"
           },
           "InstallSteps": [
             {
@@ -78,11 +78,11 @@
                 {
                   "$type": "RemoveFileSystemItem",
                   "Paths": [
-                    "[STB] Mod Organizer\\mods\\STB\\SKSE\\Plugins\\PortalLightsRuntimePatcher.dll",
-                    "[STB] Mod Organizer\\mods\\STB\\SKSE\\Plugins\\PortalLightsRuntimePatcher.ini",
-                    "[STB] Mod Organizer\\mods\\STB\\SKSE\\Plugins\\PortalLightsRuntimePatcher.pdb",
-                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\aaMZ_SpeechMehaniksScript.pex",
-                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\Source\\aaMZ_SpeechMehaniksScript.psc"
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\SKSE\\Plugins\\PortalLightsRuntimePatcher.dll",
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\SKSE\\Plugins\\PortalLightsRuntimePatcher.ini",
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\SKSE\\Plugins\\PortalLightsRuntimePatcher.pdb",
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\Scripts\\aaMZ_SpeechMehaniksScript.pex",
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\Scripts\\Source\\aaMZ_SpeechMehaniksScript.psc"
                   ],
                   "FailOnFailedDelete": false
                 }
@@ -94,7 +94,7 @@
         {
           "Version": "3.1.2",
           "DownloadInfo": {
-            "S3Path": "STB/3.0/Skyrim True Believer Patch [3.1.2].7z"
+            "S3Path": "Modpack/3.0/Example Modpack Patch [3.1.2].7z"
           },
           "InstallSteps": [
             {
@@ -102,14 +102,14 @@
                 {
                   "$type": "RemoveFileSystemItem",
                   "Paths": [
-                    "[STB] Mod Organizer\\mods\\STB\\NetScriptFramework\\Plugins\\GamePlayTweaks.dll",
-                    "[STB] Mod Organizer\\mods\\STB\\NetScriptFramework\\Plugins\\GamePlayTweaks.pdb",
-                    "[STB] Mod Organizer\\mods\\STB\\NetScriptFramework\\Plugins\\Supporter.dll",
-                    "[STB] Mod Organizer\\mods\\STB\\NetScriptFramework\\Plugins\\Supporter.pdb",
-                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\aaMZ_NegativeMagicDebuff.pex",
-                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\source\\aaMZ_NegativeMagicDebuff.psc",
-                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\aaMZ_Encumbarance.pex",
-                    "[STB] Mod Organizer\\mods\\STB\\Scripts\\source\\aaMZ_Encumbarance.psc"
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\NetScriptFramework\\Plugins\\GamePlayTweaks.dll",
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\NetScriptFramework\\Plugins\\GamePlayTweaks.pdb",
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\NetScriptFramework\\Plugins\\Supporter.dll",
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\NetScriptFramework\\Plugins\\Supporter.pdb",
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\Scripts\\aaMZ_NegativeMagicDebuff.pex",
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\Scripts\\source\\aaMZ_NegativeMagicDebuff.psc",
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\Scripts\\aaMZ_Encumbarance.pex",
+                    "[Modpack] Mod Organizer\\mods\\Modpack\\Scripts\\source\\aaMZ_Encumbarance.psc"
                   ],
                   "FailOnFailedDelete": false
                 }
@@ -121,7 +121,7 @@
         {
           "Version": "3.1.1",
           "DownloadInfo": {
-            "S3Path": "STB/3.0/Skyrim True Believer Patch [3.1.1].7z"
+            "S3Path": "Modpack/3.0/Example Modpack Patch [3.1.1].7z"
           }
         }
       ]
@@ -154,8 +154,8 @@
                 {
                   "$type": "RemoveFileSystemItem",
                   "Paths": [
-                    "[STB] Mod Organizer\\overwrite\\ShaderCache",
-                    "[STB] Mod Organizer\\profiles\\STB - MD's Graphics Lite"
+                    "[Modpack] Mod Organizer\\overwrite\\ShaderCache",
+                    "[Modpack] Mod Organizer\\profiles\\Modpack - MD's Graphics Lite"
                   ]
                 },
                 {
@@ -172,7 +172,7 @@
               "Actions": [
                 {
                   "$type": "ChangeProfile",
-                  "ProfileName": "STB - MD's Graphics Lite"
+                  "ProfileName": "Modpack - MD's Graphics Lite"
                 },
                 {
                   "$type": "ActivateMods",
@@ -221,8 +221,8 @@
                 {
                   "$type": "RemoveFileSystemItem",
                   "Paths": [
-                    "[STB] Mod Organizer\\overwrite\\ShaderCache",
-                    "[STB] Mod Organizer\\profiles\\STB - MD's Graphics Full"
+                    "[Modpack] Mod Organizer\\overwrite\\ShaderCache",
+                    "[Modpack] Mod Organizer\\profiles\\Modpack - MD's Graphics Full"
                   ]
                 },
                 {
@@ -239,7 +239,7 @@
               "Actions": [
                 {
                   "$type": "ChangeProfile",
-                  "ProfileName": "STB - MD's Graphics Full"
+                  "ProfileName": "Modpack - MD's Graphics Full"
                 },
                 {
                   "$type": "ActivateMods",
@@ -280,7 +280,7 @@
                 {
                   "$type": "RemoveFileSystemItem",
                   "Paths": [
-                    "[STB] Mod Organizer\\overwrite\\ShaderCache"
+                    "[Modpack] Mod Organizer\\overwrite\\ShaderCache"
                   ]
                 }
               ],
@@ -312,55 +312,55 @@
   "Launchers": [
     {
       "DownloadInfo": {
-        "S3Path": "Launchers/STBLauncher_1.19.1.exe"
+        "S3Path": "Launchers/Launcher_1.19.1.exe"
       },
       "Version": "1.19.1"
     },
     {
       "DownloadInfo": {
-        "S3Path": "Launchers/STBLauncher_1.19.0.exe"
+        "S3Path": "Launchers/Launcher_1.19.0.exe"
       },
       "Version": "1.19.0"
     },
     {
       "DownloadInfo": {
-        "S3Path": "Launchers/STBLauncher_1.18.0.exe"
+        "S3Path": "Launchers/Launcher_1.18.0.exe"
       },
       "Version": "1.18.0"
     },
     {
       "DownloadInfo": {
-        "S3Path": "Launchers/STBLauncher_1.17.0.exe"
+        "S3Path": "Launchers/Launcher_1.17.0.exe"
       },
       "Version": "1.17.0"
     },
     {
       "DownloadInfo": {
-        "S3Path": "Launchers/STBLauncher_1.16.0.exe"
+        "S3Path": "Launchers/Launcher_1.16.0.exe"
       },
       "Version": "1.16.0"
     },
     {
       "DownloadInfo": {
-        "S3Path": "Launchers/STBLauncher_1.15.3.exe"
+        "S3Path": "Launchers/Launcher_1.15.3.exe"
       },
       "Version": "1.15.3"
     },
     {
       "DownloadInfo": {
-        "S3Path": "Launchers/STBLauncher_1.15.2.exe"
+        "S3Path": "Launchers/Launcher_1.15.2.exe"
       },
       "Version": "1.15.2"
     },
     {
       "DownloadInfo": {
-        "S3Path": "Launchers/STBLauncher_1.15.1.exe"
+        "S3Path": "Launchers/Launcher_1.15.1.exe"
       },
       "Version": "1.15.1"
     },
     {
       "DownloadInfo": {
-        "S3Path": "Launchers/STBLauncher_1.15.0.exe"
+        "S3Path": "Launchers/Launcher_1.15.0.exe"
       },
       "Version": "1.15.0"
     }
@@ -368,127 +368,127 @@
   "ModpackChangelogs": [
     {
       "Path": {
-        "ru": "Changelogs/STB/3.0/3.1.6.md"
+        "ru": "Changelogs/Modpack/3.0/3.1.6.md"
       },
       "Version": "3.1.6"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/3.0/3.1.5.md"
+        "ru": "Changelogs/Modpack/3.0/3.1.5.md"
       },
       "Version": "3.1.5"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/3.0/3.1.4.md"
+        "ru": "Changelogs/Modpack/3.0/3.1.4.md"
       },
       "Version": "3.1.4"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/3.0/3.1.3.md"
+        "ru": "Changelogs/Modpack/3.0/3.1.3.md"
       },
       "Version": "3.1.3"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/3.0/3.1.2.md"
+        "ru": "Changelogs/Modpack/3.0/3.1.2.md"
       },
       "Version": "3.1.2"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/3.0/3.1.1.md"
+        "ru": "Changelogs/Modpack/3.0/3.1.1.md"
       },
       "Version": "3.1.1"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/3.0/3.1.0.md"
+        "ru": "Changelogs/Modpack/3.0/3.1.0.md"
       },
       "Version": "3.1.0"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/3.0/3.0.7.md"
+        "ru": "Changelogs/Modpack/3.0/3.0.7.md"
       },
       "Version": "3.0.7"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/3.0/3.0.6.md"
+        "ru": "Changelogs/Modpack/3.0/3.0.6.md"
       },
       "Version": "3.0.6"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/3.0/3.0.5.md"
+        "ru": "Changelogs/Modpack/3.0/3.0.5.md"
       },
       "Version": "3.0.5"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/3.0/3.0.4.md"
+        "ru": "Changelogs/Modpack/3.0/3.0.4.md"
       },
       "Version": "3.0.4"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/3.0/3.0.3.md"
+        "ru": "Changelogs/Modpack/3.0/3.0.3.md"
       },
       "Version": "3.0.3"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/3.0/3.0.2.md"
+        "ru": "Changelogs/Modpack/3.0/3.0.2.md"
       },
       "Version": "3.0.2"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/3.0/3.0.1.md"
+        "ru": "Changelogs/Modpack/3.0/3.0.1.md"
       },
       "Version": "3.0.1"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/3.0/3.0.0.md"
+        "ru": "Changelogs/Modpack/3.0/3.0.0.md"
       },
       "Version": "3.0.0"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/2.6/2.6.3.md"
+        "ru": "Changelogs/Modpack/2.6/2.6.3.md"
       },
       "Version": "2.6.3"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/2.6/2.6.2.md"
+        "ru": "Changelogs/Modpack/2.6/2.6.2.md"
       },
       "Version": "2.6.2"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/2.6/2.6.1.md"
+        "ru": "Changelogs/Modpack/2.6/2.6.1.md"
       },
       "Version": "2.6.1"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/2.6/2.6.0.md"
+        "ru": "Changelogs/Modpack/2.6/2.6.0.md"
       },
       "Version": "2.6.0"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/2.5/2.5.0.md"
+        "ru": "Changelogs/Modpack/2.5/2.5.0.md"
       },
       "Version": "2.5.0"
     },
     {
       "Path": {
-        "ru": "Changelogs/STB/2.4/2.4.0.md"
+        "ru": "Changelogs/Modpack/2.4/2.4.0.md"
       },
       "Version": "2.4.0"
     }
@@ -496,7 +496,7 @@
   "Mods": [
     {
       "DescriptionPath": {
-        "ru": "Mods/WispShelterStb/Description.md"
+        "ru": "Mods/WispShelter/Description.md"
       },
       "DisplayName": {
         "ru": "Убежка от Wisp0220"
@@ -504,7 +504,7 @@
       "Items": [
         {
           "ArchiveDownloadInfo": {
-            "S3Path": "Mods/WispShelterStb/WispShelterStb_1.1.5.zip"
+            "S3Path": "Mods/WispShelter/WispShelter_1.1.5.zip"
           },
           "InstallSteps": [
             {
@@ -513,7 +513,7 @@
                   "$type": "ActivateMods",
                   "Activate": false,
                   "Mods": [
-                    "STB Hub"
+                    "Modpack Hub"
                   ]
                 }
               ],
@@ -525,7 +525,7 @@
         },
         {
           "ArchiveDownloadInfo": {
-            "S3Path": "Mods/WispShelterStb/WispShelterStb_1.1.2.zip"
+            "S3Path": "Mods/WispShelter/WispShelter_1.1.2.zip"
           },
           "InstallSteps": [
             {
@@ -534,8 +534,8 @@
                   "$type": "ActivateMods",
                   "Activate": false,
                   "Mods": [
-                    "STB Hub - Legacy",
-                    "STB Hub"
+                    "Modpack Hub - Legacy",
+                    "Modpack Hub"
                   ]
                 }
               ],
@@ -546,12 +546,12 @@
           "Version": "1.1.2"
         }
       ],
-      "LogoPath": "Mods/WispShelterStb/Logo.jpg",
-      "Name": "WispShelterStb"
+      "LogoPath": "Mods/WispShelter/Logo.jpg",
+      "Name": "WispShelter"
     },
     {
       "DescriptionPath": {
-        "ru": "Mods/WispRouglikeStb/Description.md"
+        "ru": "Mods/WispRoguelike/Description.md"
       },
       "DisplayName": {
         "ru": "Коты от Wisp0220"
@@ -559,7 +559,7 @@
       "Items": [
         {
           "ArchiveDownloadInfo": {
-            "S3Path": "Mods/WispRouglikeStb/WispRouglikeStb_1.3.2.zip"
+            "S3Path": "Mods/WispRoguelike/WispRoguelike_1.3.2.zip"
           },
           "InstallSteps": [
             {
@@ -567,9 +567,9 @@
                 {
                   "$type": "SelectRequiredMod",
                   "Mods": [
-                    "STB Hub",
-                    "STB Hub - Legacy",
-                    "WispShelterStb"
+                    "Modpack Hub",
+                    "Modpack Hub - Legacy",
+                    "WispShelter"
                   ]
                 }
               ]
@@ -580,14 +580,14 @@
                   "$type": "ActivateMods",
                   "Activate": true,
                   "Mods": [
-                    "STB Hub"
+                    "Modpack Hub"
                   ]
                 },
                 {
                   "$type": "ActivatePlugins",
                   "Activate": false,
                   "Plugins": [
-                    "WispRLSTBHubLegacyAdapter.esp",
+                    "WispRLHubLegacyAdapter.esp",
                     "WispRLHubAdapter.esp"
                   ]
                 }
@@ -596,7 +596,7 @@
                 "Key": "SelectedMod",
                 "Operator": "Equal",
                 "StepIndex": 0,
-                "Value": "STB Hub"
+                "Value": "Modpack Hub"
               }
             },
             {
@@ -605,7 +605,7 @@
                   "$type": "ActivateMods",
                   "Activate": true,
                   "Mods": [
-                    "STB Hub - Legacy"
+                    "Modpack Hub - Legacy"
                   ]
                 },
                 {
@@ -621,7 +621,7 @@
                 "Key": "SelectedMod",
                 "Operator": "Equal",
                 "StepIndex": 0,
-                "Value": "STB Hub - Legacy"
+                "Value": "Modpack Hub - Legacy"
               }
             },
             {
@@ -630,14 +630,14 @@
                   "$type": "ActivateMods",
                   "Activate": true,
                   "Mods": [
-                    "WispShelterStb"
+                    "WispShelter"
                   ]
                 },
                 {
                   "$type": "ActivatePlugins",
                   "Activate": false,
                   "Plugins": [
-                    "WispRLSTBHubLegacyAdapter.esp",
+                    "WispRLHubLegacyAdapter.esp",
                     "WispRLNewHubAdapter.esp"
                   ]
                 }
@@ -646,7 +646,7 @@
                 "Key": "SelectedMod",
                 "Operator": "Equal",
                 "StepIndex": 0,
-                "Value": "WispShelterStb"
+                "Value": "WispShelter"
               }
             }
           ],
@@ -655,7 +655,7 @@
         },
         {
           "ArchiveDownloadInfo": {
-            "S3Path": "Mods/WispRouglikeStb/WispRouglikeStb_1.2.0.zip"
+            "S3Path": "Mods/WispRoguelike/WispRoguelike_1.2.0.zip"
           },
           "InstallSteps": [
             {
@@ -663,9 +663,9 @@
                 {
                   "$type": "SelectRequiredMod",
                   "Mods": [
-                    "STB Hub",
-                    "STB Hub - Legacy",
-                    "WispShelterStb"
+                    "Modpack Hub",
+                    "Modpack Hub - Legacy",
+                    "WispShelter"
                   ]
                 }
               ]
@@ -676,14 +676,14 @@
                   "$type": "ActivateMods",
                   "Activate": true,
                   "Mods": [
-                    "STB Hub"
+                    "Modpack Hub"
                   ]
                 },
                 {
                   "$type": "ActivatePlugins",
                   "Activate": false,
                   "Plugins": [
-                    "WispRLSTBHubLegacyAdapter.esp",
+                    "WispRLHubLegacyAdapter.esp",
                     "WispRLHubAdapter.esp"
                   ]
                 }
@@ -692,7 +692,7 @@
                 "Key": "SelectedMod",
                 "Operator": "Equal",
                 "StepIndex": 0,
-                "Value": "STB Hub"
+                "Value": "Modpack Hub"
               }
             },
             {
@@ -701,7 +701,7 @@
                   "$type": "ActivateMods",
                   "Activate": true,
                   "Mods": [
-                    "STB Hub - Legacy"
+                    "Modpack Hub - Legacy"
                   ]
                 },
                 {
@@ -717,7 +717,7 @@
                 "Key": "SelectedMod",
                 "Operator": "Equal",
                 "StepIndex": 0,
-                "Value": "STB Hub - Legacy"
+                "Value": "Modpack Hub - Legacy"
               }
             },
             {
@@ -726,14 +726,14 @@
                   "$type": "ActivateMods",
                   "Activate": true,
                   "Mods": [
-                    "WispShelterStb"
+                    "WispShelter"
                   ]
                 },
                 {
                   "$type": "ActivatePlugins",
                   "Activate": false,
                   "Plugins": [
-                    "WispRLSTBHubLegacyAdapter.esp",
+                    "WispRLHubLegacyAdapter.esp",
                     "WispRLNewHubAdapter.esp"
                   ]
                 }
@@ -742,7 +742,7 @@
                 "Key": "SelectedMod",
                 "Operator": "Equal",
                 "StepIndex": 0,
-                "Value": "WispShelterStb"
+                "Value": "WispShelter"
               }
             }
           ],
@@ -750,24 +750,24 @@
           "Version": "1.2.0"
         }
       ],
-      "LogoPath": "Mods/WispRouglikeStb/Logo.jpg",
-      "Name": "WispRouglikeStb"
+      "LogoPath": "Mods/WispRoguelike/Logo.jpg",
+      "Name": "WispRoguelike"
     },
     {
       "DescriptionPath": {
-        "ru": "Mods/STB_MKO/Description.md"
+        "ru": "Mods/MKO/Description.md"
       },
       "DisplayName": {
         "ru": "MCO от Yosh1m"
       },
-      "LogoPath": "Mods/STB_MKO/Logo3.jpg",
-      "Name": "STB_MKO",
+      "LogoPath": "Mods/MKO/Logo3.jpg",
+      "Name": "MKO",
       "Items": [
         {
           "SupportedModpackVersion": "[3.1.0, 3.2.0)",
           "Version": "1.4.2",
           "ArchiveDownloadInfo": {
-            "S3Path": "Mods/STB_MKO/STB_MKO_1.4.2.7z"
+            "S3Path": "Mods/MKO/MKO_1.4.2.7z"
           },
           "InstallSteps": [
             {
@@ -783,21 +783,21 @@
                 {
                   "$type": "ExtractArchive",
                   "DownloadInfo": {
-                    "S3Path": "Mods/STB_MKO/STB_MKO_1.4.2.7z"
+                    "S3Path": "Mods/MKO/MKO_1.4.2.7z"
                   },
-                  "DestinationPath": "[STB] Mod Organizer"
+                  "DestinationPath": "[Modpack] Mod Organizer"
                 },
                 {
                   "$type": "ActivateMods",
                   "Activate": true,
                   "Mods": [
-                    "STB_MKO"
+                    "MKO"
                   ]
                 },
                 {
                   "$type": "MergePlugins",
                   "DownloadInfo": {
-                    "S3Path": "Mods/STB_MKO/STB_MKO_1.4.2_plugins.txt"
+                    "S3Path": "Mods/MKO/MKO_1.4.2_plugins.txt"
                   }
                 }
               ]
@@ -826,7 +826,7 @@
     {
       "Id": "wisp-shelter",
       "Kind": "Mod",
-      "ModName": "WispShelterStb",
+      "ModName": "WispShelter",
       "Title": {
         "ru": "Убежище Виспа",
         "en": "Wisp shelter"

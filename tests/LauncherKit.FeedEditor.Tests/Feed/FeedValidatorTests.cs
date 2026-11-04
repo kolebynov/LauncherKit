@@ -117,7 +117,7 @@ public sealed class FeedValidatorTests
 		{
 			InitialVersion = "3.1.0",
 			Version = "3.1.0",
-			DownloadInfo = new DownloadInfoModel { S3Path = "stb.7z" },
+			DownloadInfo = new DownloadInfoModel { S3Path = "modpack.7z" },
 			Patches =
 			{
 				new ModpackPatchModel
@@ -442,7 +442,7 @@ public sealed class FeedValidatorTests
 			{
 				new ModpackModel
 				{
-					InitialVersion = version, Version = version, DownloadInfo = new DownloadInfoModel { S3Path = "stb.7z" },
+					InitialVersion = version, Version = version, DownloadInfo = new DownloadInfoModel { S3Path = "modpack.7z" },
 					IsAvailableForSponsors = true,
 				},
 			},

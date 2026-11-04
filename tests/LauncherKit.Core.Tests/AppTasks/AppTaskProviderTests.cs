@@ -271,16 +271,16 @@ public sealed class AppTaskProviderTests
 		installAppTaskProvider.Setup(x => x.CreateModInstallAppTask(voicesMod, voicesItem.Version, CancellationToken.None))
 			.ReturnsAsync(voicesInstallTask);
 		var sut = mocker.CreateInstance<AppTaskProvider>();
-		var stb = new ModpackFeedItem
+		var modpackItem = new ModpackFeedItem
 		{
 			InitialVersion = NuGetVersion.Parse("3.2.0"),
 			Version = NuGetVersion.Parse("3.2.0"),
-			DownloadInfo = new DownloadInfo { S3Path = "stb.7z" },
+			DownloadInfo = new DownloadInfo { S3Path = "modpack.7z" },
 		};
 		var patch = new ModpackPatchFeedItem { Version = NuGetVersion.Parse("3.2.1"), DownloadInfo = new DownloadInfo { S3Path = "patch.7z" } };
 
 		// Act
-		var task = await sut.CreateInstallModpackTask(stb, [patch], CancellationToken.None);
+		var task = await sut.CreateInstallModpackTask(modpackItem, [patch], CancellationToken.None);
 
 		// Assert
 		var englishVoicesTask = task.Dependencies.Single();
@@ -342,13 +342,13 @@ public sealed class AppTaskProviderTests
 			.Returns(mocker.GetMock<IAppMicroTask>().Object);
 		SetupEnglishVoicesMod(mocker, "[3.0.0, )");
 		var sut = mocker.CreateInstance<AppTaskProvider>();
-		var stb = new ModpackFeedItem
+		var modpackItem = new ModpackFeedItem
 		{
 			InitialVersion = NuGetVersion.Parse("3.2.0"),
 			Version = NuGetVersion.Parse("3.2.0"),
-			DownloadInfo = new DownloadInfo { S3Path = "stb.7z" },
+			DownloadInfo = new DownloadInfo { S3Path = "modpack.7z" },
 		};
-		var graphPackTask = await sut.CreateInstallModpackTask(stb, [], CancellationToken.None);
+		var graphPackTask = await sut.CreateInstallModpackTask(modpackItem, [], CancellationToken.None);
 		var englishVoicesTask = graphPackTask.Dependencies.Single();
 		var selectComponentsTask = englishVoicesTask.Dependencies.Single().Dependencies[0];
 		selectComponentsTask.MicroTasksProvider(CreateMicroTasksProviderContext(mocker));
@@ -393,15 +393,15 @@ public sealed class AppTaskProviderTests
 			.Returns(mocker.GetMock<IAppMicroTask>().Object);
 		mocker.GetMock<IFeedProvider>().Setup(x => x.GetModFeedDatas(CancellationToken.None)).ReturnsAsync((IReadOnlyList<ModFeedData>?)null);
 		var sut = mocker.CreateInstance<AppTaskProvider>();
-		var stb = new ModpackFeedItem
+		var modpackItem = new ModpackFeedItem
 		{
 			InitialVersion = NuGetVersion.Parse("3.2.0"),
 			Version = NuGetVersion.Parse("3.2.0"),
-			DownloadInfo = new DownloadInfo { S3Path = "stb.7z" },
+			DownloadInfo = new DownloadInfo { S3Path = "modpack.7z" },
 		};
 
 		// Act
-		var graphPackTask = await sut.CreateInstallModpackTask(stb, [], CancellationToken.None);
+		var graphPackTask = await sut.CreateInstallModpackTask(modpackItem, [], CancellationToken.None);
 
 		// Assert
 		var modpackTask = graphPackTask.Dependencies.Single();
@@ -436,15 +436,15 @@ public sealed class AppTaskProviderTests
 			.Returns(mocker.GetMock<IAppMicroTask>().Object);
 		SetupEnglishVoicesMod(mocker, "[3.0.0, )");
 		var sut = mocker.CreateInstance<AppTaskProvider>();
-		var stb = new ModpackFeedItem
+		var modpackItem = new ModpackFeedItem
 		{
 			InitialVersion = NuGetVersion.Parse(modpackVersion),
 			Version = NuGetVersion.Parse(modpackVersion),
-			DownloadInfo = new DownloadInfo { S3Path = "stb.7z" },
+			DownloadInfo = new DownloadInfo { S3Path = "modpack.7z" },
 		};
 
 		// Act
-		var task = await sut.CreateInstallModpackTask(stb, [], CancellationToken.None);
+		var task = await sut.CreateInstallModpackTask(modpackItem, [], CancellationToken.None);
 
 		// Assert
 		var modpackTask = task.Id == "InstallModpackComponent_GraphPack" ? task.Dependencies.Single().Dependencies.Single() : task.Dependencies.Single();
@@ -471,15 +471,15 @@ public sealed class AppTaskProviderTests
 			.ReturnsAsync(new DownloadInfo { S3Path = "skyrim.7z" });
 		SetupEnglishVoicesMod(mocker, "[3.2.0, )");
 		var sut = mocker.CreateInstance<AppTaskProvider>();
-		var stb = new ModpackFeedItem
+		var modpackItem = new ModpackFeedItem
 		{
 			InitialVersion = NuGetVersion.Parse("3.1.9"),
 			Version = NuGetVersion.Parse("3.1.9"),
-			DownloadInfo = new DownloadInfo { S3Path = "stb.7z" },
+			DownloadInfo = new DownloadInfo { S3Path = "modpack.7z" },
 		};
 
 		// Act
-		var task = await sut.CreateInstallModpackTask(stb, [], CancellationToken.None);
+		var task = await sut.CreateInstallModpackTask(modpackItem, [], CancellationToken.None);
 
 		// Assert
 		Assert.Multiple(() =>
@@ -511,15 +511,15 @@ public sealed class AppTaskProviderTests
 			.Returns(mocker.GetMock<IAppMicroTask>().Object);
 		SetupEnglishVoicesMod(mocker, "[3.0.0, )");
 		var sut = mocker.CreateInstance<AppTaskProvider>();
-		var stb = new ModpackFeedItem
+		var modpackItem = new ModpackFeedItem
 		{
 			InitialVersion = NuGetVersion.Parse("3.2.0"),
 			Version = NuGetVersion.Parse("3.2.0"),
-			DownloadInfo = new DownloadInfo { S3Path = "stb.7z" },
+			DownloadInfo = new DownloadInfo { S3Path = "modpack.7z" },
 		};
 
 		// Act
-		var task = await sut.CreateInstallModpackTask(stb, [], CancellationToken.None);
+		var task = await sut.CreateInstallModpackTask(modpackItem, [], CancellationToken.None);
 
 		// Assert
 		task.Dependencies.Single().Dependencies[0].MicroTasksProvider(CreateMicroTasksProviderContext(mocker));
@@ -549,15 +549,15 @@ public sealed class AppTaskProviderTests
 		feedProvider.Setup(x => x.GetGraphPacks(CancellationToken.None)).ReturnsAsync([]);
 		mocker.GetMock<IFeedProvider>().Setup(x => x.GetModFeedDatas(CancellationToken.None)).ReturnsAsync((IReadOnlyList<ModFeedData>?)null);
 		var sut = mocker.CreateInstance<AppTaskProvider>();
-		var stb = new ModpackFeedItem
+		var modpackItem = new ModpackFeedItem
 		{
 			InitialVersion = NuGetVersion.Parse("3.2.0"),
 			Version = NuGetVersion.Parse("3.2.0"),
-			DownloadInfo = new DownloadInfo { S3Path = "stb.7z" },
+			DownloadInfo = new DownloadInfo { S3Path = "modpack.7z" },
 		};
 
 		// Act
-		var task = await sut.CreateInstallModpackTask(stb, [], CancellationToken.None);
+		var task = await sut.CreateInstallModpackTask(modpackItem, [], CancellationToken.None);
 
 		// Assert
 		Assert.Multiple(() =>
@@ -590,15 +590,15 @@ public sealed class AppTaskProviderTests
 			.Returns(mocker.GetMock<IAppMicroTask>().Object);
 		mocker.GetMock<IFeedProvider>().Setup(x => x.GetModFeedDatas(CancellationToken.None)).ReturnsAsync((IReadOnlyList<ModFeedData>?)null);
 		var sut = mocker.CreateInstance<AppTaskProvider>();
-		var stb = new ModpackFeedItem
+		var modpackItem = new ModpackFeedItem
 		{
 			InitialVersion = NuGetVersion.Parse("3.2.0"),
 			Version = NuGetVersion.Parse("3.2.0"),
-			DownloadInfo = new DownloadInfo { S3Path = "stb.7z" },
+			DownloadInfo = new DownloadInfo { S3Path = "modpack.7z" },
 		};
 
 		// Act
-		var task = await sut.CreateInstallModpackTask(stb, [], CancellationToken.None);
+		var task = await sut.CreateInstallModpackTask(modpackItem, [], CancellationToken.None);
 
 		// Assert
 		task.Dependencies.Single().Dependencies[0].MicroTasksProvider(CreateMicroTasksProviderContext(mocker));
@@ -627,15 +627,15 @@ public sealed class AppTaskProviderTests
 			.ReturnsAsync([CreateUnavailableGraphPack("Discontinued", isDiscontinued: true)]);
 		mocker.GetMock<IFeedProvider>().Setup(x => x.GetModFeedDatas(CancellationToken.None)).ReturnsAsync((IReadOnlyList<ModFeedData>?)null);
 		var sut = mocker.CreateInstance<AppTaskProvider>();
-		var stb = new ModpackFeedItem
+		var modpackItem = new ModpackFeedItem
 		{
 			InitialVersion = NuGetVersion.Parse("3.2.0"),
 			Version = NuGetVersion.Parse("3.2.0"),
-			DownloadInfo = new DownloadInfo { S3Path = "stb.7z" },
+			DownloadInfo = new DownloadInfo { S3Path = "modpack.7z" },
 		};
 
 		// Act
-		var task = await sut.CreateInstallModpackTask(stb, [], CancellationToken.None);
+		var task = await sut.CreateInstallModpackTask(modpackItem, [], CancellationToken.None);
 
 		// Assert
 		Assert.Multiple(() =>
@@ -746,7 +746,7 @@ public sealed class AppTaskProviderTests
 			},
 			new InstallComponent
 			{
-				Id = "EnglishVoices", Kind = InstallComponentKind.Mod, ModName = "STB Voices",
+				Id = "EnglishVoices", Kind = InstallComponentKind.Mod, ModName = "Voices",
 				Title = new LocalizedText { ["ru"] = "Английская озвучка" },
 				Description = new LocalizedText { ["ru"] = "Установить английскую озвучку вместе со сборкой?" },
 				SupportedModpackVersion = VersionRange.Parse(voicesRange), Order = 0,
@@ -793,7 +793,7 @@ public sealed class AppTaskProviderTests
 
 	private static ModFeedData CreateEnglishVoicesMod(params ModFeedItem[] items) => new()
 	{
-		Name = "STB Voices",
+		Name = "Voices",
 		LogoPath = "voices.jpg",
 		DescriptionPath = new LocalizedText { ["ru"] = "voices.md" },
 		Items = items,

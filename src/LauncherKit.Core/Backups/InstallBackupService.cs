@@ -15,7 +15,7 @@ namespace LauncherKit.Core.Backups;
 /// <c>plugins.txt</c> in <c>Plugins\Previous.txt</c>, the merged one in <c>Plugins\Merged.txt</c>, and the profile
 /// name in <c>Plugins\Profile.txt</c>, written last so it marks a complete backup. The directory of an
 /// <see cref="InstallBackupId"/> holds the empty <c>Installing</c> file while its installation is unfinished. Which
-/// actions ran is recorded in <c>stb.db</c>, next to the backups directory, by <see cref="InstallBackupId.RelativePath"/>
+/// actions ran is recorded in the local database (<c>LocalDatabaseFileName</c>), next to the backups directory, by <see cref="InstallBackupId.RelativePath"/>
 /// and action indexes.
 /// </summary>
 internal sealed class InstallBackupService : IInstallBackupService

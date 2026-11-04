@@ -7,7 +7,7 @@ public readonly record struct ModInstallState
 
 	public bool IsInstalled { get; private init; }
 
-	/// <summary>Installed in a version listed in the feed, and the feed has a newer version supporting the installed STB.</summary>
+	/// <summary>Installed in a version listed in the feed, and the feed has a newer version supporting the installed modpack.</summary>
 	public bool IsUpdateAvailable { get; private init; }
 
 	/// <summary>

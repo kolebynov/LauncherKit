@@ -17,7 +17,7 @@ public sealed class DataDirectoriesRegistrationInitializerTests
 	{
 		// Arrange
 		var mocker = ProductTestSupport.CreateMocker();
-		OptionsStubs.Monitor(mocker, new AppSettings { AppDataDirectory = @"D:\STBData\" });
+		OptionsStubs.Monitor(mocker, new AppSettings { AppDataDirectory = @"D:\LauncherData\" });
 		var registry = mocker.GetMock<IRegistryManager>();
 		registry.Setup(x => x.SetValue(Key, It.IsAny<string>(), It.IsAny<object>()));
 		using var sut = CreateSut(mocker);
@@ -26,9 +26,9 @@ public sealed class DataDirectoriesRegistrationInitializerTests
 		await sut.Initialize();
 
 		// Assert
-		registry.Verify(x => x.SetValue(Key, "DownloadsDirectory", @"D:\STBData\Downloads"), Times.Once);
-		registry.Verify(x => x.SetValue(Key, "TempDataDirectory", @"D:\STBData\Temp"), Times.Once);
-		registry.Verify(x => x.SetValue(Key, "AppDataDirectory", @"D:\STBData"), Times.Once);
+		registry.Verify(x => x.SetValue(Key, "DownloadsDirectory", @"D:\LauncherData\Downloads"), Times.Once);
+		registry.Verify(x => x.SetValue(Key, "TempDataDirectory", @"D:\LauncherData\Temp"), Times.Once);
+		registry.Verify(x => x.SetValue(Key, "AppDataDirectory", @"D:\LauncherData"), Times.Once);
 	}
 
 	[Test]
@@ -74,7 +74,7 @@ public sealed class DataDirectoriesRegistrationInitializerTests
 	{
 		// Arrange
 		var mocker = ProductTestSupport.CreateMocker();
-		OptionsStubs.Monitor(mocker, new AppSettings { AppDataDirectory = @"D:\STBData" });
+		OptionsStubs.Monitor(mocker, new AppSettings { AppDataDirectory = @"D:\LauncherData" });
 		mocker.GetMock<IRegistryManager>()
 			.Setup(x => x.SetValue(Key, It.IsAny<string>(), It.IsAny<object>()))
 			.Throws(new UnauthorizedAccessException());

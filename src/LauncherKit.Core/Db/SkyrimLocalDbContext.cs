@@ -1,6 +1,6 @@
 namespace LauncherKit.Core.Db;
 
-/// <summary>Installation-local data in <c>stb.db</c>.</summary>
+/// <summary>Installation-local data in the product's <c>LocalDatabaseFileName</c>.</summary>
 internal sealed class SkyrimLocalDbContext : SqliteDbContext
 {
 	public SkyrimLocalDbContext(string dbPath)

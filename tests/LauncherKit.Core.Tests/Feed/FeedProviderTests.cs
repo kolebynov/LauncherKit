@@ -76,7 +76,7 @@ public sealed class FeedProviderTests
 
 		// Act
 		var launchers = await sut.GetLauncherFeedItems(CancellationToken.None);
-		var stb = await sut.GetModpackFeedItems(CancellationToken.None);
+		var modpacks = await sut.GetModpackFeedItems(CancellationToken.None);
 		var changelogs = await sut.GetModpackChangelogs(CancellationToken.None);
 		var mods = await sut.GetModFeedDatas(CancellationToken.None);
 		var graphPacks = await sut.GetGraphPacks(CancellationToken.None);
@@ -87,7 +87,7 @@ public sealed class FeedProviderTests
 		Assert.Multiple(() =>
 		{
 			Assert.That(launchers, Is.Empty);
-			Assert.That(stb, Is.Empty);
+			Assert.That(modpacks, Is.Empty);
 			Assert.That(changelogs, Is.Empty);
 			Assert.That(mods, Is.Null);
 			Assert.That(graphPacks, Is.Empty);
@@ -211,11 +211,11 @@ public sealed class FeedProviderTests
 		using var handler = MockHttpClientFactory.StrictHandler();
 		handler.When(HttpMethod.Get, FeedUrl).Respond("application/json", """
 			{
-				"DefaultLanguage": "ru", "SkyrimDownloadInfo": { "S3Path": "skyrim/stb.7z" },
+				"DefaultLanguage": "ru", "SkyrimDownloadInfo": { "S3Path": "skyrim/skyrim.7z" },
 				"SevenZipDownloadInfo": { "S3Path": "tools/7z.exe" },
 				"Modpacks": [
-					{ "InitialVersion": "3.1.0", "Version": "3.1.0", "DownloadInfo": { "S3Path": "stb/3.1.0.7z" } },
-					{ "InitialVersion": "3.2.0-beta.1", "Version": "3.2.0-beta.1", "DownloadInfo": { "S3Path": "stb/b1.7z" } }
+					{ "InitialVersion": "3.1.0", "Version": "3.1.0", "DownloadInfo": { "S3Path": "modpack/3.1.0.7z" } },
+					{ "InitialVersion": "3.2.0-beta.1", "Version": "3.2.0-beta.1", "DownloadInfo": { "S3Path": "modpack/b1.7z" } }
 				],
 				"ModpackChangelogs": [],
 				"Launchers": []
@@ -268,7 +268,7 @@ public sealed class FeedProviderTests
 		Assert.Multiple(() =>
 		{
 			Assert.That(launchers.Select(x => x.Version.ToNormalizedString()), Is.EqualTo(new[] { "1.2.3" }));
-			Assert.That(skyrimFromCachedFeed.S3Path, Is.EqualTo("skyrim/stb.7z"));
+			Assert.That(skyrimFromCachedFeed.S3Path, Is.EqualTo("skyrim/skyrim.7z"));
 		});
 		handler.VerifyNoOutstandingExpectation();
 	}
@@ -473,7 +473,7 @@ public sealed class FeedProviderTests
 
 	private const string FeedJson = """
 		{
-			"DefaultLanguage": "ru", "SkyrimDownloadInfo": { "S3Path": "skyrim/stb.7z" },
+			"DefaultLanguage": "ru", "SkyrimDownloadInfo": { "S3Path": "skyrim/skyrim.7z" },
 			"SevenZipDownloadInfo": { "S3Path": "tools/7z.exe" },
 			"Modpacks": [],
 			"ModpackChangelogs": [],
@@ -485,7 +485,7 @@ public sealed class FeedProviderTests
 
 	private static string FeedJsonWithModAction(string action) => $$"""
 		{
-			"DefaultLanguage": "ru", "SkyrimDownloadInfo": { "S3Path": "skyrim/stb.7z" },
+			"DefaultLanguage": "ru", "SkyrimDownloadInfo": { "S3Path": "skyrim/skyrim.7z" },
 			"SevenZipDownloadInfo": { "S3Path": "tools/7z.exe" },
 			"Modpacks": [],
 			"ModpackChangelogs": [],
@@ -512,14 +512,14 @@ public sealed class FeedProviderTests
 	/// </summary>
 	private static readonly string SponsorFeedJson = $$"""
 		{
-			"DefaultLanguage": "ru", "SkyrimDownloadInfo": { "S3Path": "skyrim/stb.7z" },
+			"DefaultLanguage": "ru", "SkyrimDownloadInfo": { "S3Path": "skyrim/skyrim.7z" },
 			"SevenZipDownloadInfo": { "S3Path": "tools/7z.exe" },
 			"Modpacks": [
-				{ "InitialVersion": "3.1.0", "Version": "3.1.0", "DownloadInfo": { "S3Path": "stb/3.1.0.7z" } },
-				{ "InitialVersion": "3.2.0-beta.1", "Version": "3.2.0-beta.1", "DownloadInfo": { "S3Path": "stb/b1.7z" }, "IsAvailableForSponsors": true },
-				{ "InitialVersion": "3.2.0-beta.2", "Version": "3.2.0-beta.2", "DownloadInfo": { "S3Path": "stb/b2.7z" } },
-				{ "InitialVersion": "3.3.0-alpha.1", "Version": "3.3.0-alpha.1", "DownloadInfo": { "S3Path": "stb/a1.7z" }, "IsAvailableForSponsors": true },
-				{ "InitialVersion": "3.3.0-alpha.2", "Version": "3.3.0-alpha.2", "DownloadInfo": { "S3Path": "stb/a2.7z" } }
+				{ "InitialVersion": "3.1.0", "Version": "3.1.0", "DownloadInfo": { "S3Path": "modpack/3.1.0.7z" } },
+				{ "InitialVersion": "3.2.0-beta.1", "Version": "3.2.0-beta.1", "DownloadInfo": { "S3Path": "modpack/b1.7z" }, "IsAvailableForSponsors": true },
+				{ "InitialVersion": "3.2.0-beta.2", "Version": "3.2.0-beta.2", "DownloadInfo": { "S3Path": "modpack/b2.7z" } },
+				{ "InitialVersion": "3.3.0-alpha.1", "Version": "3.3.0-alpha.1", "DownloadInfo": { "S3Path": "modpack/a1.7z" }, "IsAvailableForSponsors": true },
+				{ "InitialVersion": "3.3.0-alpha.2", "Version": "3.3.0-alpha.2", "DownloadInfo": { "S3Path": "modpack/a2.7z" } }
 			],
 			"ModpackChangelogs": [],
 			"Launchers": [],

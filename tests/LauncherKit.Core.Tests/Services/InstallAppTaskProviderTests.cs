@@ -462,8 +462,8 @@ public sealed class InstallAppTaskProviderTests
 	private static ModFeedData CreateMod() => CreateMod([], []);
 
 	/// <summary>
-	/// Version 1.0.0 (with <paramref name="v1Patches"/>) supports STB 1.0.0 and later, version 2.0.0 (never
-	/// uninstallable, with <paramref name="v2Patches"/>) STB 3.0.0 and later.
+	/// Version 1.0.0 (with <paramref name="v1Patches"/>) supports modpack 1.0.0 and later, version 2.0.0 (never
+	/// uninstallable, with <paramref name="v2Patches"/>) modpack 3.0.0 and later.
 	/// </summary>
 	private static ModFeedData CreateMod(IReadOnlyList<InstallStep> v1Steps, IReadOnlyList<InstallStep> v2Steps,
 		bool v1SupportsUninstall = false, IReadOnlyList<ModPatchFeedItem>? v1Patches = null,

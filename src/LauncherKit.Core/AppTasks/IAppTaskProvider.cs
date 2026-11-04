@@ -7,20 +7,20 @@ namespace LauncherKit.Core.AppTasks;
 
 public interface IAppTaskProvider
 {
-	/// <summary>Starts <paramref name="launch"/> through Mod Organizer after installing the newest offered STB.</summary>
+	/// <summary>Starts <paramref name="launch"/> through Mod Organizer after installing the newest offered modpack.</summary>
 	ValueTask<AppTask> CreateRunGameTask(GameLaunch launch, CancellationToken cancellationToken);
 
 	AppTask CreateUpdateLauncherTask(DownloadInfo downloadInfo, NuGetVersion version);
 
 	/// <summary>
-	/// Reinstalls STB from <paramref name="modpackFeedItem"/>, then installs <paramref name="patches"/> in order and the
+	/// Reinstalls the modpack from <paramref name="modpackFeedItem"/>, then installs <paramref name="patches"/> in order and the
 	/// optional components the user chooses when the installation starts.
 	/// </summary>
 	ValueTask<AppTask> CreateInstallModpackTask(ModpackFeedItem modpackFeedItem, IReadOnlyList<ModpackPatchFeedItem> patches,
 		CancellationToken cancellationToken);
 
 	/// <summary>
-	/// Removes STB by deleting the Mod Organizer directory with its mods, profiles and saves; Skyrim stays.
+	/// Removes the modpack by deleting the Mod Organizer directory with its mods, profiles and saves; Skyrim stays.
 	/// </summary>
 	AppTask CreateUninstallModpackTask();
 

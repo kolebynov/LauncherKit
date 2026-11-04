@@ -24,7 +24,7 @@ public partial class GraphPacksViewModel : BaseActivatableViewModel, IDisposable
 	private readonly IDisposable _appTaskQueueSubscription;
 
 	/// <summary>
-	/// Queued tasks of the STB installation chain; the queue raises events on several threads, so access is locked.
+	/// Queued tasks of the modpack installation chain; the queue raises events on several threads, so access is locked.
 	/// </summary>
 	private readonly HashSet<AppTask> _modpackInstallationTasks = [];
 	private readonly Lock _modpackInstallationTasksLock = new();
@@ -39,12 +39,12 @@ public partial class GraphPacksViewModel : BaseActivatableViewModel, IDisposable
 	private string? _installingGraphPackName;
 
 	/// <summary>
-	/// Install commands of the cards, disabled while STB is being installed and, except for its own card, while another
+	/// Install commands of the cards, disabled while the modpack is being installed and, except for its own card, while another
 	/// graph pack is installed or being installed.
 	/// </summary>
 	private AsyncRelayCommand[] _installCommands = [];
 
-	/// <summary>Uninstall commands of the cards, disabled while STB is being installed.</summary>
+	/// <summary>Uninstall commands of the cards, disabled while the modpack is being installed.</summary>
 	private AsyncRelayCommand[] _uninstallCommands = [];
 
 	[ObservableProperty]
@@ -85,7 +85,7 @@ public partial class GraphPacksViewModel : BaseActivatableViewModel, IDisposable
 				.SubscribeAwait((_, ct) => UpdateGraphPacks(ct))
 				.AddTo(d);
 
-			// The STB installation may install a graph pack, so the installed one is re-read once it ends.
+			// The modpack installation may install a graph pack, so the installed one is re-read once it ends.
 			this.ObservePropertyChanged(x => x.IsModpackInstalling)
 				.ObserveOnUi(dispatcher)
 				.Subscribe(_ =>
@@ -113,7 +113,7 @@ public partial class GraphPacksViewModel : BaseActivatableViewModel, IDisposable
 	}
 
 	/// <summary>
-	/// Whether any task of the STB installation chain or the STB removal is queued. The chain replaces Mod Organizer in
+	/// Whether any task of the modpack installation chain or the modpack removal is queued. The chain replaces Mod Organizer in
 	/// its <c>InstallModpack</c> task and installs the chosen graph pack in its last task, so the cards stay locked until the
 	/// whole chain is done; the removal deletes Mod Organizer. A failed task stays queued until it is resumed or
 	/// cancelled.

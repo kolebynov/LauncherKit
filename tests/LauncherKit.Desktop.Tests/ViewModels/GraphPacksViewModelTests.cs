@@ -26,7 +26,7 @@ public sealed class GraphPacksViewModelTests
 		var mocker = CreateMocker(events);
 		using var sut = mocker.CreateInstance<GraphPacksViewModel>();
 		using var activation = await ActivateWithCards(mocker, sut);
-		var installModpack = new AppTask(AppTaskProvider.InstallModpackTaskId, new AppTaskDescription.Custom("STB"), _ => [], [], null);
+		var installModpack = new AppTask(AppTaskProvider.InstallModpackTaskId, new AppTaskDescription.Custom("Modpack"), _ => [], [], null);
 		var installPatch = new AppTask($"{AppTaskProvider.InstallModpackPatchTaskIdPrefix}3.2.1", new AppTaskDescription.Custom("Patch"), _ => [], [], null);
 		var installGraphPack = new AppTask($"{AppTaskProvider.InstallModpackComponentTaskIdPrefix}GraphPack", new AppTaskDescription.Custom("Graph pack"), _ => [], [], null);
 
@@ -60,7 +60,7 @@ public sealed class GraphPacksViewModelTests
 		var mocker = CreateMocker(events);
 		using var sut = mocker.CreateInstance<GraphPacksViewModel>();
 		using var activation = await ActivateWithCards(mocker, sut);
-		var installModpack = new AppTask(AppTaskProvider.InstallModpackTaskId, new AppTaskDescription.Custom("STB"), _ => [], [], null);
+		var installModpack = new AppTask(AppTaskProvider.InstallModpackTaskId, new AppTaskDescription.Custom("Modpack"), _ => [], [], null);
 		var installGraphPack = new AppTask($"{AppTaskProvider.InstallModpackComponentTaskIdPrefix}GraphPack", new AppTaskDescription.Custom("Graph pack"), _ => [], [], null);
 		events.OnNext(new AppTaskQueue.Event.TaskQueued(installModpack));
 		events.OnNext(new AppTaskQueue.Event.TaskQueued(installGraphPack));

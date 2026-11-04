@@ -93,7 +93,7 @@ public sealed class FeedJsonTests
 				{
 					InitialVersion = "3.1.0",
 					Version = "3.1.0",
-					DownloadInfo = new DownloadInfoModel { S3Path = "stb.7z", Hash = Hash },
+					DownloadInfo = new DownloadInfoModel { S3Path = "modpack.7z", Hash = Hash },
 					Patches =
 					{
 						new ModpackPatchModel
@@ -316,10 +316,10 @@ public sealed class FeedJsonTests
 		var json = """
 			{
 				"Modpacks": [{
-					"InitialVersion": "3.0.0", "Version": "3.1.0", "DownloadInfo": { "S3Path": "stb.7z" },
+					"InitialVersion": "3.0.0", "Version": "3.1.0", "DownloadInfo": { "S3Path": "modpack.7z" },
 					"Patches": [{ "Version": "3.1.0", "DownloadInfo": { "S3Path": "p.7z" }, "InstallSteps": null }]
 				}, {
-					"InitialVersion": "4.0.0", "Version": "4.0.0", "DownloadInfo": { "S3Path": "stb4.7z" }, "Patches": null
+					"InitialVersion": "4.0.0", "Version": "4.0.0", "DownloadInfo": { "S3Path": "modpack4.7z" }, "Patches": null
 				}],
 				"InstallComponents": null,
 				"Prerequisites": null,

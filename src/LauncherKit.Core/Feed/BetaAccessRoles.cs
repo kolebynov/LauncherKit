@@ -1,7 +1,7 @@
 namespace LauncherKit.Core.Feed;
 
 /// <summary>
-/// The feed's roles on the STB Discord server that unlock beta versions hidden behind beta codes.
+/// The feed's roles on the Discord server (<c>Discord:GuildId</c>) that unlock beta versions hidden behind beta codes.
 /// </summary>
 /// <param name="SponsorRoleIds">
 /// <see cref="FeedData.SponsorRoleIds"/>: unlock the versions marked <see cref="Modpacks.ModpackFeedItem.IsAvailableForSponsors"/>.

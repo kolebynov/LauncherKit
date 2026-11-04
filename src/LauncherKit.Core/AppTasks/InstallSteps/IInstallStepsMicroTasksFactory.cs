@@ -27,7 +27,7 @@ public interface IInstallStepsMicroTasksFactory
 	/// <summary>
 	/// Microtasks undoing the <see cref="InstallStep.CanRollback"/> steps of <paramref name="steps"/> in reverse order,
 	/// the actions of a step reversed too: a mod an action installed is uninstalled, mods and plugins get the opposite
-	/// state, a profile change returns to the STB profile, and deleted or overwritten files are restored from the backups
+	/// state, a profile change returns to the modpack profile, and deleted or overwritten files are restored from the backups
 	/// of <paramref name="backupId"/> (files an extraction created are deleted); other actions are not undone. Only the
 	/// actions that ran are undone: an action without a backup, or one not recorded as run, is skipped (its step's
 	/// condition skipped it, or the installation stopped before it). Actions of steps installed by a launcher that did

@@ -15,7 +15,7 @@ namespace LauncherKit.Core.Tests.Db;
 /// migration, the key values <c>channel = beta</c> and <c>empty = NULL</c>, the finished <c>finished.bin</c>
 /// (3 bytes, hash 00..1F) and <c>partial.bin</c> (10 bytes in two parts of 5, 2 bytes written to the first),
 /// all timestamps 2026-09-08 12:00 UTC. Only the file paths were rewritten afterwards to
-/// <c>C:\stb\Downloads\</c>; each test points them at its own downloads directory.
+/// <c>C:\launcher\Downloads\</c>; each test points them at its own downloads directory.
 /// </summary>
 [TestFixture]
 public sealed class Linq2DbLauncherDatabaseTests
