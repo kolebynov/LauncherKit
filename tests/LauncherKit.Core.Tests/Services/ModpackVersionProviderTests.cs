@@ -1,4 +1,3 @@
-using System.Text;
 using NuGet.Versioning;
 using LauncherKit.Core.Services;
 using LauncherKit.Infrastructure;
@@ -10,7 +9,7 @@ namespace LauncherKit.Core.Tests.Services;
 public sealed class ModpackVersionProviderTests
 {
 	[Test]
-	public void Constructor_MissingTranslationsFile_ReportsNoInstalledVersion()
+	public void Constructor_MissingVersionFile_ReportsNoInstalledVersion()
 	{
 		using var temp = new TempDirectory();
 		var mocker = LauncherKit.TestSupport.ProductTestSupport.CreateMocker(MockBehavior.Strict);
@@ -25,9 +24,9 @@ public sealed class ModpackVersionProviderTests
 	public void RefreshInstalledModpackVersion_UnchangedVersion_DoesNotRaiseDuplicateChange()
 	{
 		using var temp = new TempDirectory();
-		var translations = Path.Combine(temp.Path, ProductTestSupport.CreateProduct().ModpackVersionFile);
-		Directory.CreateDirectory(Path.GetDirectoryName(translations)!);
-		File.WriteAllLines(translations, ["$Other value", "$NowVersionMZV  4.2.1-beta.3"], Encoding.Unicode);
+		var versionFile = Path.Combine(temp.Path, ProductTestSupport.CreateProduct().ModpackVersionFile);
+		Directory.CreateDirectory(Path.GetDirectoryName(versionFile)!);
+		File.WriteAllText(versionFile, "4.2.1-beta.3");
 		var mocker = LauncherKit.TestSupport.ProductTestSupport.CreateMocker(MockBehavior.Strict);
 		OptionsStubs.Monitor(mocker, new AppSettings { SkyrimDirectory = temp.Path });
 		var sut = mocker.CreateInstance<ModpackVersionProvider>(enablePrivate: true);
@@ -54,9 +53,9 @@ public sealed class ModpackVersionProviderTests
 	{
 		using var first = new TempDirectory();
 		using var second = new TempDirectory();
-		var translations = Path.Combine(second.Path, ProductTestSupport.CreateProduct().ModpackVersionFile);
-		Directory.CreateDirectory(Path.GetDirectoryName(translations)!);
-		File.WriteAllText(translations, "$NowVersionMZV 5.0.0", Encoding.Unicode);
+		var versionFile = Path.Combine(second.Path, ProductTestSupport.CreateProduct().ModpackVersionFile);
+		Directory.CreateDirectory(Path.GetDirectoryName(versionFile)!);
+		File.WriteAllText(versionFile, "5.0.0");
 		var mocker = LauncherKit.TestSupport.ProductTestSupport.CreateMocker(MockBehavior.Strict);
 		var monitor = OptionsStubs.Monitor(mocker, new AppSettings { SkyrimDirectory = first.Path });
 		var sut = mocker.CreateInstance<ModpackVersionProvider>(enablePrivate: true);

@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Text;
 using Microsoft.Extensions.Options;
 using NuGet.Versioning;
 using R3;
@@ -10,9 +9,13 @@ using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Core.Services;
 
-internal sealed class ModpackVersionProvider : IModpackVersionProvider
+/// <summary>
+/// Reads the installed modpack version from <see cref="LauncherProductOptions.ModpackVersionFile"/>, a file holding
+/// only the version string. Public so a consumer can decorate it.
+/// </summary>
+public sealed class ModpackVersionProvider : IModpackVersionProvider
 {
-	private string? _translationsFilePath;
+	private string? _versionFilePath;
 
 	public NuGetVersion? InstalledModpackVersion
 	{
@@ -34,7 +37,7 @@ internal sealed class ModpackVersionProvider : IModpackVersionProvider
 		appSettingsMonitor.ToObservable()
 			.Subscribe(appSettings =>
 			{
-				_translationsFilePath = !string.IsNullOrEmpty(appSettings.SkyrimDirectory)
+				_versionFilePath = !string.IsNullOrEmpty(appSettings.SkyrimDirectory)
 					? new SkyrimRelativePath(product.Value.ModpackVersionFile).ToAbsolute(appSettings.SkyrimDirectory)
 					: null;
 				RefreshInstalledModpackVersion();
@@ -45,19 +48,9 @@ internal sealed class ModpackVersionProvider : IModpackVersionProvider
 	{
 		InstalledModpackVersion = GetInstalledModpackVersion();
 
-		NuGetVersion? GetInstalledModpackVersion()
-		{
-			if (_translationsFilePath == null || !File.Exists(_translationsFilePath))
-			{
-				return null;
-			}
-
-			const string VersionKey = "$NowVersionMZV";
-			var versionString = File.ReadAllLines(_translationsFilePath, Encoding.Unicode)
-				.Where(x => x.StartsWith(VersionKey, StringComparison.Ordinal))
-				.Select(x => x[(VersionKey.Length + 1)..].Trim())
-				.FirstOrDefault();
-			return versionString != null ? NuGetVersion.Parse(versionString) : null;
-		}
+		NuGetVersion? GetInstalledModpackVersion() =>
+			_versionFilePath != null && File.Exists(_versionFilePath)
+				? NuGetVersion.Parse(File.ReadAllText(_versionFilePath))
+				: null;
 	}
 }

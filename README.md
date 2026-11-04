@@ -149,7 +149,7 @@ One props file defines the product's whole identity. The launcher, the logs coll
 | `LauncherUserAgentProduct` | HTTP User-Agent product token. |
 | `LauncherModOrganizerDirectoryName` | Mod Organizer directory inside the Skyrim directory. |
 | `LauncherModpackProfileName` | Mod Organizer profile of the modpack. |
-| `LauncherModpackVersionFile` | File, relative to the Skyrim directory, holding the installed modpack version. |
+| `LauncherModpackVersionFile` | File, relative to the Skyrim directory, holding the installed modpack version: only the version string, with no line break. |
 | `LauncherUserModsSeparator` | Mod Organizer separator under which users' own mods are kept. |
 | `LauncherRequiredSkyrimVersion` | `SkyrimSE.exe` version the launcher accepts. |
 | `LauncherRegistryKey` | `HKEY_CURRENT_USER\...` key shared by the installer and the launcher. |
