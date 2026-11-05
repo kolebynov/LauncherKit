@@ -59,6 +59,7 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 		services.TryAddScoped<OptionalModsViewModel>();
 		services.TryAddTransient<ActivateBetaCodeViewModel>();
 		services.TryAddScoped<DiscordIntegrationViewModel>();
+		services.AddSingleton<IAppCloseHandler, NavigationGuardCloseHandler>();
 		services.AddScoped<IAppCloseHandler, PendingTasksCloseHandler>();
 		services.TryAddSingleton<MainWindowStateHandler>();
 		services.AddSingleton<IAppCloseHandler>(sp => sp.GetRequiredService<MainWindowStateHandler>());

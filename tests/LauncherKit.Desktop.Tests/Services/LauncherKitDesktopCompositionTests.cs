@@ -26,7 +26,7 @@ public sealed class LauncherKitDesktopCompositionTests
 				Assert.That(services.Single(x => x.ServiceType == model).Lifetime, Is.EqualTo(ServiceLifetime.Scoped));
 			Assert.That(services.Single(x => x.ServiceType == typeof(IUiDispatcher)).Lifetime, Is.EqualTo(ServiceLifetime.Singleton));
 			Assert.That(services.Single(x => x.ServiceType == typeof(LauncherKitScopeReloadService)).Lifetime, Is.EqualTo(ServiceLifetime.Singleton));
-			Assert.That(services.Count(x => x.ServiceType == typeof(IAppCloseHandler)), Is.EqualTo(2));
+			Assert.That(services.Count(x => x.ServiceType == typeof(IAppCloseHandler)), Is.EqualTo(3));
 			Assert.That(services.Any(x => x.ServiceType == typeof(IConfiguredScopeInitializer)), Is.True);
 			Assert.That(services.Single(x => x.ServiceType == typeof(INotificationService)).Lifetime, Is.EqualTo(ServiceLifetime.Singleton));
 			Assert.That(services.Any(x => x.ServiceType == typeof(IDialogService)), Is.False);

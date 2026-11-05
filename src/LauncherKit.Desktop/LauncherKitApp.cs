@@ -65,9 +65,11 @@ public abstract class LauncherKitApp : Application
 			base.OnFrameworkInitializationCompleted();
 			if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop) return;
 			ObservableSystem.RegisterUnhandledExceptionHandler(e => _logger.LogError(e, "Unhandled observable system exception"));
-			var mainWindow = Services.GetRequiredService<IMainView>() as Window
+			var mainView = Services.GetRequiredService<IMainView>();
+			var mainWindow = mainView as Window
 				?? throw new InvalidOperationException("The registered IMainView must derive from Avalonia.Controls.Window.");
 			Services.GetRequiredService<MainWindowStateHandler>().Restore(mainWindow);
+			mainView.SetNavigationGuard(new NavigationGuard(mainView).Navigate);
 			mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModelBase>();
 			desktop.MainWindow = mainWindow;
 			Services.GetRequiredService<MainWindowCloseHandler>().Attach(mainWindow);
