@@ -4,6 +4,7 @@
 WiX 7.0.1's HyperlinkTheme.xml, kept as is (spaces included, to compare with new WiX versions) except for:
 - the DesktopShortcut and StartMenuShortcut checkboxes of the Install page. A named checkbox shows and sets the numeric
   Burn variable of its name (1 checked, 0 not), which Bundle.wxs passes to the MSI;
+- the Install page's InstallNote label below them, empty unless the consumer's strings set it;
 - the Options button's VisibleCondition, which also hides it once a launcher is installed (LaunchersRoot, Bundle.wxs);
 - the Modify page (the page uninstalling starts from), which starts the launcher or leads to the Repair page (the
   shortcut checkboxes and the RepairButton) and the Remove page (the RemoveAllData checkbox and the UninstallButton).
@@ -13,6 +14,9 @@ WiX 7.0.1's HyperlinkTheme.xml, kept as is (spaces included, to compare with new
 - the LaunchButton, moved from the Success page to the Modify page: the MSI already starts the launcher after
   installing it, and WixStdBA binds one control of that name. It starts LaunchTarget (Bundle.wxs), and the
   BAFunctions then close the setup without asking to cancel it (CloseAfterLaunch.cpp).
+
+Consumers change its texts through LauncherInstallerLocalizationFile, whose strings override or add to
+Theme.ru-ru.wxl, or replace it whole through LauncherInstallerThemeFile (LauncherKit.Installer.Bundle.wixproj).
 -->
 
 <Theme xmlns="http://wixtoolset.org/schemas/v4/thmutil">
@@ -40,6 +44,8 @@ WiX 7.0.1's HyperlinkTheme.xml, kept as is (spaces included, to compare with new
             <Hypertext Name="EulaHyperlink" X="11" Y="121" Width="-11" Height="51" TabStop="yes" FontId="3" HideWhenDisabled="yes">#(loc.InstallLicenseLinkText)</Hypertext>
             <Checkbox Name="DesktopShortcut" X="11" Y="121" Width="-11" Height="17" TabStop="yes" FontId="3">#(loc.InstallDesktopShortcutCheckbox)</Checkbox>
             <Checkbox Name="StartMenuShortcut" X="11" Y="145" Width="-11" Height="17" TabStop="yes" FontId="3">#(loc.InstallStartMenuShortcutCheckbox)</Checkbox>
+            <!-- Empty in the kit; a consumer's LauncherInstallerLocalizationFile can set it. -->
+            <Label X="11" Y="177" Width="-11" Height="68" FontId="3" DisablePrefix="yes">#(loc.InstallNote)</Label>
             <Checkbox Name="EulaAcceptCheckbox" X="-11" Y="-41" Width="260" Height="17" TabStop="yes" FontId="3" HideWhenDisabled="yes">#(loc.InstallAcceptCheckbox)</Checkbox>
             <Button Name="InstallUpdateButton" X="11" Y="-11" Width="200" Height="23" TabStop="yes" FontId="0" EnableCondition="WixStdBAUpdateAvailable" HideWhenDisabled="yes">#(loc.UpdateButton)</Button>
             <Button Name="OptionsButton" X="-171" Y="-11" Width="75" Height="23" TabStop="yes" FontId="0" VisibleCondition="NOT WixStdBASuppressOptionsUI AND NOT LaunchersRoot">

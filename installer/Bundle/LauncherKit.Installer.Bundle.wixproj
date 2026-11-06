@@ -21,6 +21,14 @@
 		-->
 		<BundleVersion>$(VersionPrefix)</BundleVersion>
 		<BundleVersion Condition="'$(VersionSuffix)' != ''">$(VersionPrefix)-$(VersionSuffix)</BundleVersion>
+		<!--
+		Optional consumer customization of the setup window: LauncherInstallerThemeFile replaces Theme.xml (keep the
+		control and page names WixStdBA and the BAFunctions bind); LauncherInstallerLocalizationFile is a .wxl of the
+		same culture whose strings override Theme.ru-ru.wxl's of the same Id or add new ones (e.g. InstallNote, the
+		Install page's note, empty in the kit).
+		-->
+		<LauncherInstallerThemeFile Condition="'$(LauncherInstallerThemeFile)' == ''">$(MSBuildThisFileDirectory)Theme.xml</LauncherInstallerThemeFile>
+		<_LauncherKitLocalizationFile>$(MSBuildThisFileDirectory)Theme.ru-ru.wxl</_LauncherKitLocalizationFile>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -32,7 +40,64 @@
 		<LauncherInstallerConstant Include="LauncherInstallerBundleId" Value="$(LauncherInstallerBundleId)"/>
 		<LauncherInstallerConstant Include="LauncherInstallerLogoFile" Value="$(LauncherInstallerLogoFile)"/>
 		<LauncherInstallerConstant Include="LauncherAppExecutableName" Value="$(LauncherAppExecutableName)"/>
+		<LauncherInstallerConstant Include="LauncherInstallerThemeFile" Value="$(LauncherInstallerThemeFile)"/>
 	</ItemGroup>
+
+	<UsingTask TaskName="LauncherKitMergeLocalization" TaskFactory="RoslynCodeTaskFactory"
+	           AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+		<ParameterGroup>
+			<BaseFile ParameterType="System.String" Required="true"/>
+			<OverrideFile ParameterType="System.String" Required="true"/>
+			<OutputFile ParameterType="System.String" Required="true"/>
+		</ParameterGroup>
+		<Task>
+			<Using Namespace="System.Linq"/>
+			<Using Namespace="System.Xml.Linq"/>
+			<Code Type="Fragment" Language="cs"><![CDATA[
+XNamespace ns = "http://wixtoolset.org/schemas/v4/wxl";
+var document = XDocument.Load(BaseFile);
+var overrides = XDocument.Load(OverrideFile).Root;
+if (overrides == null || overrides.Name != ns + "WixLocalization" ||
+	(string)overrides.Attribute("Culture") != (string)document.Root.Attribute("Culture"))
+{
+	Log.LogError("LauncherInstallerLocalizationFile '{0}' must be a WixLocalization of culture '{1}'.", OverrideFile, (string)document.Root.Attribute("Culture"));
+	return false;
+}
+
+foreach (var overrideString in overrides.Elements(ns + "String"))
+{
+	var id = (string)overrideString.Attribute("Id");
+	var baseString = document.Root.Elements(ns + "String").FirstOrDefault(s => (string)s.Attribute("Id") == id);
+	if (baseString != null)
+	{
+		baseString.ReplaceWith(new XElement(overrideString));
+	}
+	else
+	{
+		document.Root.Add(new XElement(overrideString));
+	}
+}
+
+System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(OutputFile));
+document.Save(OutputFile);
+]]></Code>
+		</Task>
+	</UsingTask>
+
+	<!-- Passes the setup window's strings to Bundle.wxs as LauncherInstallerLocalizationFile, merged with the consumer's. -->
+	<Target Name="LauncherKitLocalization" BeforeTargets="LauncherKitInstallerSharedConstants">
+		<Error Condition="'$(LauncherInstallerLocalizationFile)' != '' And !Exists('$(LauncherInstallerLocalizationFile)')"
+		       Text="LauncherInstallerLocalizationFile '$(LauncherInstallerLocalizationFile)' does not exist."/>
+		<PropertyGroup>
+			<_LauncherLocalizationFile>$(_LauncherKitLocalizationFile)</_LauncherLocalizationFile>
+			<_LauncherLocalizationFile Condition="'$(LauncherInstallerLocalizationFile)' != ''">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Theme.ru-ru.wxl'))</_LauncherLocalizationFile>
+		</PropertyGroup>
+		<LauncherKitMergeLocalization Condition="'$(LauncherInstallerLocalizationFile)' != ''" BaseFile="$(_LauncherKitLocalizationFile)"
+		                              OverrideFile="$(LauncherInstallerLocalizationFile)" OutputFile="$(_LauncherLocalizationFile)"/>
+		<ItemGroup>
+			<LauncherInstallerConstant Include="LauncherInstallerLocalizationFile" Value="$(_LauncherLocalizationFile)"/>
+		</ItemGroup>
+	</Target>
 
 	<Target Name="LauncherKitCheckInstallerProject" BeforeTargets="ResolveProjectReferences;_CreateProjectDefineConstants">
 		<Error Condition="'$(LauncherInstallerProject)' == '' Or !Exists('$(LauncherInstallerProject)')"

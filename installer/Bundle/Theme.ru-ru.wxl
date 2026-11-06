@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
 Russian strings of WixStdBA's hyperlinkLicense theme (every ID of WiX 7.0.1's HyperlinkTheme.wxl), used whatever the
-user's Windows language is, plus the strings of the controls Theme.xml adds.
+user's Windows language is, plus the strings of the controls Theme.xml adds. A consumer's
+LauncherInstallerLocalizationFile overrides or adds strings by Id (LauncherKit.Installer.Bundle.wixproj merges them).
 -->
 <WixLocalization Culture="ru-ru" Language="1049" xmlns="http://wixtoolset.org/schemas/v4/wxl">
 	<String Id="Caption" Value="Установка [WixBundleName]" />
@@ -21,6 +22,7 @@ user's Windows language is, plus the strings of the controls Theme.xml adds.
 	<String Id="InstallAcceptCheckbox" Value="Я &amp;принимаю условия лицензионного соглашения" />
 	<String Id="InstallDesktopShortcutCheckbox" Value="Создать ярлык на &amp;рабочем столе" />
 	<String Id="InstallStartMenuShortcutCheckbox" Value="Добавить в меню «&amp;Пуск» (поиск Windows)" />
+	<String Id="InstallNote" Value="" />
 	<String Id="InstallOptionsButton" Value="&amp;Параметры" />
 	<String Id="InstallInstallButton" Value="&amp;Установить" />
 	<String Id="InstallCancelButton" Value="&amp;Отмена" />

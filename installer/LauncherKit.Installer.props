@@ -26,6 +26,11 @@
 		<LauncherInstallerConstant Include="ProductVersion" Value="$(VersionPrefix)"/>
 		<LauncherInstallerConstant Include="LauncherInstallerPackageId" Value="$(LauncherInstallerPackageId)"/>
 		<LauncherInstallerConstant Include="LauncherAppExecutableName" Value="$(LauncherAppExecutableName)"/>
+		<!--
+		The setup bundle's strings (LauncherInstallerLocalizationFile) usually sit in this project's directory, where the
+		WiX SDK would also make them the package's localization.
+		-->
+		<EmbeddedResource Remove="$(LauncherInstallerLocalizationFile)" Condition="'$(LauncherInstallerLocalizationFile)' != ''"/>
 	</ItemGroup>
 
 	<Target Name="LauncherKitCheckPublishDirectory" BeforeTargets="_CreateProjectDefineConstants">

@@ -2,10 +2,11 @@
 <!--
 Per-user, like its only package, so it never asks for elevation. The launcher's MSI starts the launcher once installed,
 so the Success page has no launch button; the Modify page's has (LaunchTarget). The setup window is in Russian
-(Theme.ru-ru.wxl) with the consumer's logo (LauncherInstallerLogoFile, 64x64, the size the theme shows) and the
-shortcut checkboxes of Theme.xml. WixStdBA loads the kit's BAFunctions (LauncherBAFunctionsFile, ..\BAFunctions),
-which lets the theme put the Repair and Uninstall buttons on pages of their own and closes the setup after launching
-without asking to cancel it.
+(Theme.ru-ru.wxl with the strings of the consumer's optional LauncherInstallerLocalizationFile merged in) with the
+consumer's logo (LauncherInstallerLogoFile, 64x64, the size the theme shows) and the shortcut checkboxes of Theme.xml
+(or the consumer's LauncherInstallerThemeFile). WixStdBA loads the kit's BAFunctions (LauncherBAFunctionsFile,
+..\BAFunctions), which lets the theme put the Repair and Uninstall buttons on pages of their own and closes the setup
+after launching without asking to cancel it.
 
 Each checkbox starts from the choice of the installed launcher, which the MSI keeps in the registry, or from its
 default (both shortcuts) when there is none, so an upgrade without UI (the launcher's /passive update) keeps what the
@@ -23,11 +24,11 @@ button, so upgrades (also /passive ones) never move the launcher away from its l
 	        Version="$(var.BundleVersion)" IconSourceFile="$(var.LauncherIconFile)" DisableModify="yes">
 		<BootstrapperApplication>
 <?if $(var.LauncherInstallerFolderChoice) = "yes" ?>
-			<bal:WixStandardBootstrapperApplication Theme="hyperlinkLicense" ThemeFile="Theme.xml" LicenseUrl="" SuppressOptionsUI="no"
-			                                        ShowVersion="yes" LocalizationFile="Theme.ru-ru.wxl" LogoFile="$(var.LauncherInstallerLogoFile)" />
+			<bal:WixStandardBootstrapperApplication Theme="hyperlinkLicense" ThemeFile="$(var.LauncherInstallerThemeFile)" LicenseUrl="" SuppressOptionsUI="no"
+			                                        ShowVersion="yes" LocalizationFile="$(var.LauncherInstallerLocalizationFile)" LogoFile="$(var.LauncherInstallerLogoFile)" />
 <?else?>
-			<bal:WixStandardBootstrapperApplication Theme="hyperlinkLicense" ThemeFile="Theme.xml" LicenseUrl="" SuppressOptionsUI="yes"
-			                                        ShowVersion="yes" LocalizationFile="Theme.ru-ru.wxl" LogoFile="$(var.LauncherInstallerLogoFile)" />
+			<bal:WixStandardBootstrapperApplication Theme="hyperlinkLicense" ThemeFile="$(var.LauncherInstallerThemeFile)" LicenseUrl="" SuppressOptionsUI="yes"
+			                                        ShowVersion="yes" LocalizationFile="$(var.LauncherInstallerLocalizationFile)" LogoFile="$(var.LauncherInstallerLogoFile)" />
 <?endif?>
 			<Payload SourceFile="$(var.LauncherBAFunctionsFile)" bal:BAFunctions="yes" />
 		</BootstrapperApplication>
