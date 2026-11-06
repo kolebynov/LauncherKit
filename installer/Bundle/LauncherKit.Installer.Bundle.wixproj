@@ -5,6 +5,8 @@
 	than the MSI itself, because launchers released with the former bootstrapper start the downloaded update with the
 	shell's "runas" verb, which .msi files do not have. The package is the consumer's LauncherInstallerProject: a
 	WixToolset.Sdk project importing LauncherKit.Installer.props whose own .wxs defines the launcher's layout.
+	WixStdBA loads the kit's BAFunctions DLL (..\BAFunctions), which this project builds first with Visual Studio's
+	MSBuild (the C++ toolset, found by vswhere), also when the bundle itself is built with `dotnet build`.
 	-->
 	<Import Project="$(LauncherProductProps)" Condition="'$(LauncherProductProps)' != ''"/>
 	<Import Project="..\LauncherKit.Installer.Shared.props"/>
@@ -29,10 +31,41 @@
 		<LauncherInstallerConstant Include="BundleVersion" Value="$(BundleVersion)"/>
 		<LauncherInstallerConstant Include="LauncherInstallerBundleId" Value="$(LauncherInstallerBundleId)"/>
 		<LauncherInstallerConstant Include="LauncherInstallerLogoFile" Value="$(LauncherInstallerLogoFile)"/>
+		<LauncherInstallerConstant Include="LauncherAppExecutableName" Value="$(LauncherAppExecutableName)"/>
 	</ItemGroup>
 
 	<Target Name="LauncherKitCheckInstallerProject" BeforeTargets="ResolveProjectReferences;_CreateProjectDefineConstants">
 		<Error Condition="'$(LauncherInstallerProject)' == '' Or !Exists('$(LauncherInstallerProject)')"
 		       Text="LauncherInstallerProject must name the consumer's launcher package project, not '$(LauncherInstallerProject)'."/>
+	</Target>
+
+	<!--
+	Builds LauncherKitBAFunctions.dll for the bundle's platform into the bundle's intermediate directory and passes it
+	to Bundle.wxs as LauncherBAFunctionsFile. The DLL does not depend on the consumer's product. The MSBuild
+	environment variables of a `dotnet build` are cleared so Visual Studio's MSBuild uses its own toolset.
+	-->
+	<Target Name="LauncherKitBuildBAFunctions" BeforeTargets="LauncherKitInstallerSharedConstants">
+		<PropertyGroup>
+			<_LauncherBAFunctionsProject>$(MSBuildThisFileDirectory)..\BAFunctions\LauncherKit.Installer.BAFunctions.vcxproj</_LauncherBAFunctionsProject>
+			<_LauncherBAFunctionsPlatform>Win32</_LauncherBAFunctionsPlatform>
+			<_LauncherBAFunctionsPlatform Condition="'$(InstallerPlatform)' == 'x64'">x64</_LauncherBAFunctionsPlatform>
+			<_LauncherBAFunctionsPlatform Condition="'$(InstallerPlatform)' == 'arm64'">ARM64</_LauncherBAFunctionsPlatform>
+			<_LauncherBAFunctionsOutDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'BAFunctions'))</_LauncherBAFunctionsOutDir>
+			<_LauncherVsWhere>$([System.Environment]::GetFolderPath(SpecialFolder.ProgramFilesX86))\Microsoft Visual Studio\Installer\vswhere.exe</_LauncherVsWhere>
+		</PropertyGroup>
+		<Error Condition="!Exists('$(_LauncherVsWhere)')"
+		       Text="Building the setup bundle's BAFunctions needs Visual Studio or its Build Tools with the C++ toolset ('$(_LauncherVsWhere)' not found)."/>
+		<Exec Command="&quot;$(_LauncherVsWhere)&quot; -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find MSBuild\**\Bin\MSBuild.exe"
+		      ConsoleToMSBuild="true" StandardOutputImportance="low">
+			<Output TaskParameter="ConsoleOutput" PropertyName="_LauncherVsMSBuild"/>
+		</Exec>
+		<Error Condition="'$(_LauncherVsMSBuild)' == '' Or !Exists('$(_LauncherVsMSBuild)')"
+		       Text="Building the setup bundle's BAFunctions needs Visual Studio or its Build Tools with the C++ toolset (Desktop development with C++)."/>
+		<!-- The doubled trailing backslash keeps the directory's own one from escaping the closing quote. -->
+		<Exec Command="&quot;$(_LauncherVsMSBuild)&quot; &quot;$(_LauncherBAFunctionsProject)&quot; -restore -nologo -verbosity:minimal -p:Configuration=$(Configuration) -p:Platform=$(_LauncherBAFunctionsPlatform) &quot;-p:OutDir=$(_LauncherBAFunctionsOutDir)\&quot;"
+		      EnvironmentVariables="MSBuildExtensionsPath=;MSBuildSDKsPath=;MSBUILD_EXE_PATH="/>
+		<ItemGroup>
+			<LauncherInstallerConstant Include="LauncherBAFunctionsFile" Value="$(_LauncherBAFunctionsOutDir)LauncherKitBAFunctions.dll"/>
+		</ItemGroup>
 	</Target>
 </Project>

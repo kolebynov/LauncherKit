@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+LauncherKitBAFunctions.dll: the BAFunctions extension the setup bundle loads into WixStdBA (Bundle.wxs). It is
+product-independent (no consumer props): each feature (features.h) supplements WixStdBA's behavior for any theme.
+Built with Visual Studio's MSBuild and its C++ toolset (the bundle project runs it, LauncherKit.Installer.Bundle.wixproj),
+not with `dotnet build`. The WiX packages are its only dependencies (kit Directory.Packages.props).
+-->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{6F1D2A57-8C3E-4B9A-9E0D-3A7C51B2E4F6}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <TargetName>LauncherKitBAFunctions</TargetName>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <!-- The kit's Directory.Build.props configures C# projects; only its central package versions apply here. -->
+    <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
+    <!-- Native NuGet restore of the WiX packages (PackageReference). -->
+    <NuGetTargetMoniker>native,Version=v0.0</NuGetTargetMoniker>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+    <!-- Accepts the WiX 7 Open Source Maintenance Fee EULA, as LauncherKit.Installer.Shared.props does. -->
+    <AcceptEula>wix7</AcceptEula>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <PropertyGroup Label="Configuration">
+    <PlatformToolset Condition="'$(PlatformToolset)' == ''">$(DefaultPlatformToolset)</PlatformToolset>
+    <UseDebugLibraries Condition="'$(Configuration)' == 'Debug'">true</UseDebugLibraries>
+    <WholeProgramOptimization Condition="'$(Configuration)' == 'Release'">true</WholeProgramOptimization>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <PropertyGroup>
+    <!-- The bundle project passes its own OutDir. -->
+    <IntDir>$(MSBuildProjectDirectory)\obj\$(Configuration)\$(Platform)\</IntDir>
+    <OutDir>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(Platform)\</OutDir>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <ExceptionHandling>false</ExceptionHandling>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>precomp.h</PrecompiledHeaderFile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <!-- Static CRT: the DLL runs in WixStdBA's process on machines without the VC++ redistributable. -->
+      <RuntimeLibrary Condition="'$(Configuration)' == 'Debug'">MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary Condition="'$(Configuration)' == 'Release'">MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <ModuleDefinitionFile>bafunctions.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <!-- What thmutil (dutil.lib) and balutil.lib link against. -->
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;wininet.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release'">
+    <ClCompile>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)' == 'Debug'">
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <ClCompile Include="precomp.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="bafunctions.cpp" />
+    <ClCompile Include="LauncherKitBAFunctions.cpp" />
+    <ClCompile Include="CustomPageActionButtons.cpp" />
+    <ClCompile Include="CloseAfterLaunch.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="precomp.h" />
+    <ClInclude Include="Feature.h" />
+    <ClInclude Include="features.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bafunctions.def" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixToolset.WixStandardBootstrapperApplicationFunctionApi" />
+  </ItemGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

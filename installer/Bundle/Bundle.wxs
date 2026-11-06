@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
 Per-user, like its only package, so it never asks for elevation. The launcher's MSI starts the launcher once installed,
-so the bundle has no launch button of its own. The setup window is in Russian (Theme.ru-ru.wxl) with the consumer's
-logo (LauncherInstallerLogoFile, 64x64, the size the theme shows) and the shortcut checkboxes of Theme.xml.
+so the Success page has no launch button; the Modify page's has (LaunchTarget). The setup window is in Russian
+(Theme.ru-ru.wxl) with the consumer's logo (LauncherInstallerLogoFile, 64x64, the size the theme shows) and the
+shortcut checkboxes of Theme.xml. WixStdBA loads the kit's BAFunctions (LauncherBAFunctionsFile, ..\BAFunctions),
+which lets the theme put the Repair and Uninstall buttons on pages of their own and closes the setup after launching
+without asking to cancel it.
 
 Each checkbox starts from the choice of the installed launcher, which the MSI keeps in the registry, or from its
 default (both shortcuts) when there is none, so an upgrade without UI (the launcher's /passive update) keeps what the
-user chose.
+user chose and the Repair page shows the current shortcuts. Repairing with changed checkboxes adds or removes the
+shortcuts (the MSI's shortcut components are transitive).
 
 With the consumer's LauncherInstallerDefaultFolder (LauncherInstallerFolderChoice), the Install page's Options button
 lets the user choose the launchers root (InstallFolder, starting from that folder), passed to the MSI as LAUNCHERSROOT.
@@ -25,6 +29,7 @@ button, so upgrades (also /passive ones) never move the launcher away from its l
 			<bal:WixStandardBootstrapperApplication Theme="hyperlinkLicense" ThemeFile="Theme.xml" LicenseUrl="" SuppressOptionsUI="yes"
 			                                        ShowVersion="yes" LocalizationFile="Theme.ru-ru.wxl" LogoFile="$(var.LauncherInstallerLogoFile)" />
 <?endif?>
+			<Payload SourceFile="$(var.LauncherBAFunctionsFile)" bal:BAFunctions="yes" />
 		</BootstrapperApplication>
 
 		<Variable Name="DesktopShortcut" Type="numeric" Value="1" />
@@ -34,6 +39,14 @@ button, so upgrades (also /passive ones) never move the launcher away from its l
 		<!-- The installed launchers root, shown in the RemoveAllData checkbox text (Theme.ru-ru.wxl). -->
 		<util:RegistrySearch Id="LaunchersRootSearch" Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Value="LaunchersRoot"
 		                     Variable="LaunchersRoot" />
+		<!--
+		The Modify page's Launch button starts the installed launcher from its directory, which the launcher resolves its
+		files from, then closes the setup.
+		-->
+		<util:RegistrySearch Id="LauncherDirectorySearch" Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Value="LauncherDirectory"
+		                     Variable="LauncherDirectory" />
+		<Variable Name="LaunchTarget" Type="formatted" Value="[LauncherDirectory]$(var.LauncherAppExecutableName)" />
+		<Variable Name="LaunchWorkingFolder" Type="formatted" Value="[LauncherDirectory]" />
 
 <?if $(var.LauncherInstallerFolderChoice) = "yes" ?>
 		<!-- The Options page's folder; also settable on the command line: <setup>.exe /quiet InstallFolder=D:\Games\Launcher -->

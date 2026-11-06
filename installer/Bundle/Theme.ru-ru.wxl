@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
 Russian strings of WixStdBA's hyperlinkLicense theme (every ID of WiX 7.0.1's HyperlinkTheme.wxl), used whatever the
-user's Windows language is, plus the strings of the checkboxes Theme.xml adds.
+user's Windows language is, plus the strings of the controls Theme.xml adds.
 -->
 <WixLocalization Culture="ru-ru" Language="1049" xmlns="http://wixtoolset.org/schemas/v4/wxl">
 	<String Id="Caption" Value="Установка [WixBundleName]" />
@@ -36,6 +36,14 @@ user's Windows language is, plus the strings of the checkboxes Theme.xml adds.
 	<String Id="OverallProgressPackageText" Value="Подготовка..." />
 	<String Id="ProgressCancelButton" Value="&amp;Отмена" />
 	<String Id="ModifyHeader" Value="Изменение установки" />
+	<String Id="ModifyMessage" Value="[WixBundleName] уже установлен. Его можно запустить, исправить или удалить." />
+	<String Id="ModifyLaunchButton" Value="&amp;Запустить Launcher" />
+	<String Id="ModifyRepairPageButton" Value="&amp;Исправить..." />
+	<String Id="ModifyRemovePageButton" Value="&amp;Удалить..." />
+	<String Id="BackButton" Value="&amp;Назад" />
+	<String Id="RepairHeader" Value="Исправление" />
+	<String Id="RepairMessage" Value="Файлы [WixBundleName] будут восстановлены, а ярлыки созданы или удалены по выбору ниже." />
+	<String Id="RemoveHeader" Value="Удаление" />
 	<String Id="ModifyRepairButton" Value="&amp;Исправить" />
 	<String Id="ModifyUninstallButton" Value="&amp;Удалить" />
 	<String Id="ModifyCancelButton" Value="&amp;Отмена" />

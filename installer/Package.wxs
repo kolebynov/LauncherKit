@@ -58,8 +58,9 @@ so upgrades and uninstalling keep them unless the user removes all data.
 		<!--
 		The launchers root is user-chosen (the bundle passes LAUNCHERSROOT; the MSI run on its own takes it on the command
 		line) and may be a folder holding other files, so removing all data deletes only what the launcher owns there:
-		its launcher directory, Tools\ and launcher.db*, then the root if it is left empty. The MSI keeps both directories
-		in the registry for that. An upgrade without LAUNCHERSROOT stays in the installed root.
+		its launcher directory, Tools\ and launcher.db*, then the root if it is left empty. The MSI keeps the Tools\
+		directory in the registry for that, next to LauncherDirectory. An upgrade without LAUNCHERSROOT stays in the
+		installed root.
 		-->
 		<Property Id="INSTALLEDLAUNCHERDIRECTORY">
 			<RegistrySearch Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="LauncherDirectory" Type="raw" />
@@ -82,16 +83,19 @@ so upgrades and uninstalling keep them unless the user removes all data.
 		<Feature Id="Launcher">
 			<Files Directory="LAUNCHERDIR" Include="!(bindpath.Launcher)\**" />
 
-			<!-- LaunchersRoot is the root the launcher's log collector reads (LaunchersRootDirectoryManager). -->
+			<!--
+			LaunchersRoot is the root the launcher's log collector reads (LaunchersRootDirectoryManager); LauncherDirectory
+			is what the setup bundle's Launch button starts the launcher from.
+			-->
 			<Component Directory="LAUNCHERSROOT">
 				<RegistryValue Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
 				<RegistryValue Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="DesktopShortcut" Type="string" Value="[DESKTOPSHORTCUT]" />
 				<RegistryValue Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="StartMenuShortcut" Type="string" Value="[STARTMENUSHORTCUT]" />
 				<RegistryValue Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="LaunchersRoot" Type="string" Value="[LAUNCHERSROOT]" />
+				<RegistryValue Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="LauncherDirectory" Type="string" Value="[LAUNCHERDIR]" />
 				<RemoveFolder Directory="LAUNCHERDIR" On="uninstall" />
 				<RemoveFolder On="uninstall" />
 <?if $(var.LauncherInstallerFolderChoice) = "yes" ?>
-				<RegistryValue Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="LauncherDirectory" Type="string" Value="[LAUNCHERDIR]" />
 				<RegistryValue Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="ToolsDirectory" Type="string" Value="[LAUNCHERSROOT]Tools\" />
 				<util:RemoveFolderEx On="uninstall" Property="INSTALLEDLAUNCHERDIRECTORY"
 				                     Condition='REMOVEALLDATA = 1 AND REMOVE ~= "ALL" AND NOT UPGRADINGPRODUCTCODE' />
@@ -111,13 +115,16 @@ so upgrades and uninstalling keep them unless the user removes all data.
 				<RemoveRegistryKey Action="removeOnUninstall" Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" />
 			</Component>
 
-			<!-- The Start menu shortcut is also what Windows Search finds the launcher by. -->
-			<Component Directory="ProgramMenuFolder" Condition="STARTMENUSHORTCUT = 1">
+			<!--
+			The Start menu shortcut is also what Windows Search finds the launcher by. Transitive: a repair (the bundle's
+			Repair page) re-evaluates the conditions, so it adds or removes the shortcuts the user changed.
+			-->
+			<Component Directory="ProgramMenuFolder" Condition="STARTMENUSHORTCUT = 1" Transitive="yes">
 				<Shortcut Name="$(var.LauncherDisplayName)" Target="[LAUNCHERDIR]$(var.LauncherAppExecutableName)" WorkingDirectory="LAUNCHERDIR" Icon="LauncherIcon" />
 				<RegistryValue Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="StartMenuShortcutCreated" Type="integer" Value="1" KeyPath="yes" />
 			</Component>
 
-			<Component Directory="DesktopFolder" Condition="DESKTOPSHORTCUT = 1">
+			<Component Directory="DesktopFolder" Condition="DESKTOPSHORTCUT = 1" Transitive="yes">
 				<Shortcut Name="$(var.LauncherDisplayName)" Target="[LAUNCHERDIR]$(var.LauncherAppExecutableName)" WorkingDirectory="LAUNCHERDIR" Icon="LauncherIcon" />
 				<RegistryValue Root="HKCU" Key="$(var.LauncherRegistryKeyPath)" Name="DesktopShortcutCreated" Type="integer" Value="1" KeyPath="yes" />
 			</Component>
