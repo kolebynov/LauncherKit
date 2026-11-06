@@ -1,0 +1,69 @@
+@* Asks for the code of a language to add to a LocalizedField. Closes with the trimmed code once it is a valid
+   language not in ExistingLanguages; the field then shows the value row for it. *@
+
+@* The dialog's focus trap focuses its own placeholder by default (DefaultFocus.Element), which beats AutoFocus. *@
+<MudDialog DefaultFocus="DefaultFocus.FirstChild">
+	<DialogContent>
+		@* A plain element, so the scoped styles in AddLanguageDialog.razor.css can reach the field through ::deep. *@
+		<div class="language-code">
+			<MudTextField T="string" Value="@_language" ValueChanged="OnLanguageChanged" Immediate="true"
+						  Label="Код языка (ru, en, en-US)" HelperText="@HelperText" Error="@(_error is not null)" ErrorText="@_error"
+						  Variant="Variant.Outlined" Margin="Margin.Dense" OnKeyDown="OnKeyDown" />
+		</div>
+	</DialogContent>
+	<DialogActions>
+		<MudButton OnClick="Cancel">Отмена</MudButton>
+		<MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Accept">Добавить</MudButton>
+	</DialogActions>
+</MudDialog>
+
+@code {
+	private string? _language;
+	private string? _error;
+
+	[CascadingParameter] public required IMudDialogInstance MudDialog { get; set; }
+
+	[Parameter, EditorRequired] public required IReadOnlyCollection<string> ExistingLanguages { get; set; }
+
+	[Parameter] public string? DefaultLanguage { get; set; }
+
+	private string? HelperText => string.IsNullOrWhiteSpace(DefaultLanguage) ? null : $"Язык по умолчанию: {DefaultLanguage}";
+
+	protected override void OnInitialized()
+	{
+		// The default language is the one a field needs first, so it is offered while missing.
+		if (!string.IsNullOrWhiteSpace(DefaultLanguage) && !Contains(DefaultLanguage))
+		{
+			_language = DefaultLanguage;
+		}
+	}
+
+	private void OnLanguageChanged(string? language)
+	{
+		_language = language;
+		_error = null;
+	}
+
+	private void OnKeyDown(KeyboardEventArgs args)
+	{
+		if (args.Key == "Enter")
+		{
+			Accept();
+		}
+	}
+
+	private void Accept()
+	{
+		var language = _language?.Trim();
+		_error = FeedRules.Language(language) ?? (Contains(language!) ? "Этот язык уже добавлен." : null);
+		if (_error is null)
+		{
+			MudDialog.Close(DialogResult.Ok(language!));
+		}
+	}
+
+	private void Cancel() => MudDialog.Cancel();
+
+	private bool Contains(string language) =>
+		ExistingLanguages.Any(x => string.Equals(x, language, StringComparison.OrdinalIgnoreCase));
+}

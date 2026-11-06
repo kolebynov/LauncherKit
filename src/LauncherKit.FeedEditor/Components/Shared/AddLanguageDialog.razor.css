@@ -1,0 +1,7 @@
+/* While its label is not raised, MudBlazor gives an outlined field's hidden notch legend zero width but leaves its
+   label text in it, which wraps word by word and overflows the field. The scrolling dialog content then shows
+   scrollbars until focus widens the legend. Clip the text; a raised label's legend still sizes to it. */
+.language-code ::deep .mud-input-outlined-border > legend {
+	overflow: hidden;
+	white-space: nowrap;
+}

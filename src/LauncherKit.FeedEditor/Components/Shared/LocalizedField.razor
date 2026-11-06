@@ -1,7 +1,8 @@
 @* One value per language, each a full-width row labelled "{Label} ({language})" with its remove button beside it,
-   followed by the row adding a language. The field has no heading of its own, so it lines up with plain fields in
-   neighbouring grid columns. *@
+   followed by the button adding a language: it asks for the language code in a dialog, then shows the new value row
+   focused. The field has no heading of its own, so it lines up with plain fields in neighbouring grid columns. *@
 @inject FeedSession Session
+@inject IDialogService DialogService
 
 <MudStack Spacing="2">
 	@foreach (var language in (Value?.Keys.ToArray() ?? []))
@@ -10,12 +11,13 @@
 			<div class="flex-grow-1" style="min-width: 0">
 				@if (IsPath)
 				{
-					<S3PathField Value="@(Value![language])" ValueChanged="@(text => SetTextAsync(language, text))" Label="@($"{Label} ({language})")" Required="true" />
+					<S3PathField Value="@(Value![language])" ValueChanged="@(text => SetTextAsync(language, text))" Label="@($"{Label} ({language})")" Required="true"
+								 AutoFocus="@(language == _addedLanguage)" />
 				}
 				else
 				{
 					<MudTextField T="string" Value="@(Value![language])" ValueChanged="@(text => SetTextAsync(language, text))" Label="@($"{Label} ({language})")" Required="true"
-								  Sizing="InputSizing.Auto" MaxLines="6" Variant="Variant.Outlined" Margin="Margin.Dense" />
+								  AutoFocus="@(language == _addedLanguage)" Sizing="InputSizing.Auto" MaxLines="6" Variant="Variant.Outlined" Margin="Margin.Dense" />
 				}
 			</div>
 			<MudTooltip Text="@($"Удалить язык {language}")">
@@ -24,10 +26,9 @@
 			</MudTooltip>
 		</MudStack>
 	}
-	<MudStack Row="true" AlignItems="AlignItems.Start" Spacing="1">
-		<MudTextField @bind-Value="_language" Label="@($"{Label}: код нового языка (ru, en, en-US)")" Variant="Variant.Outlined" Margin="Margin.Dense"
-					  Class="flex-grow-1" HelperText="@HelperText" Error="@(_error is not null)" ErrorText="@_error" />
-		<MudButton StartIcon="@Icons.Material.Filled.Add" Class="flex-shrink-0 mt-1" OnClick="AddAsync">Добавить язык</MudButton>
+	<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+		<MudButton StartIcon="@Icons.Material.Filled.Add" Class="flex-shrink-0" OnClick="AddAsync">@($"{Label}: добавить язык")</MudButton>
+		<MudText Typo="Typo.caption" Class="mud-text-secondary">@HelperText</MudText>
 	</MudStack>
 </MudStack>
 
@@ -38,8 +39,7 @@
 	[Parameter] public bool IsPath { get; set; }
 	[Parameter] public bool Optional { get; set; }
 	[CascadingParameter(Name = FeedChangedCascade.Name)] public EventCallback FeedChanged { get; set; }
-	private string? _language;
-	private string? _error;
+	private string? _addedLanguage;
 
 	private string HelperText =>
 		$"{(Optional ? "Необязательное поле. Если задано, нужен" : "Обязателен")} язык по умолчанию: {Session.Feed?.DefaultLanguage}";
@@ -49,22 +49,23 @@
 		Value as Dictionary<string, string> ?? (Value is null ? [] : new Dictionary<string, string>(Value));
 	private async Task AddAsync()
 	{
-		var language = _language?.Trim();
-		if (FeedRules.Language(language) is { } error)
+		var dialog = await DialogService.ShowAsync<AddLanguageDialog>(
+			$"{Label}: новый язык",
+			new DialogParameters<AddLanguageDialog>
+			{
+				{ x => x.ExistingLanguages, Value?.Keys.ToArray() ?? [] },
+				{ x => x.DefaultLanguage, Session.Feed?.DefaultLanguage },
+			},
+			new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+		if (await dialog.Result is not { Canceled: false, Data: string language })
 		{
-			_error = error;
 			return;
 		}
+
 		var values = EditableValues();
-		if (values.Keys.Any(x => string.Equals(x, language, StringComparison.OrdinalIgnoreCase)))
-		{
-			_error = "Этот язык уже добавлен.";
-			return;
-		}
-		values.Add(language!, string.Empty);
+		values.Add(language, string.Empty);
 		Value = values;
-		_language = null;
-		_error = null;
+		_addedLanguage = language;
 		await ValueChanged.InvokeAsync(values);
 		await FeedChanged.InvokeAsync();
 	}

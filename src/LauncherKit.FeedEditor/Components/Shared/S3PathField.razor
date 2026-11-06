@@ -15,7 +15,7 @@
 <MudAutocomplete T="string" Value="@Value" ValueChanged="OnValueChanged" Label="@Label" Required="@Required"
 				 Validation="@(Required ? FeedRules.Required : null)" HelperText="@HelperText" Clearable="@(!Required)"
 				 SearchFunc="Search" CoerceValue="true" MaxItems="MaxSuggestions" OpenOnFocus="true"
-				 Variant="Variant.Outlined" Margin="Margin.Dense" ReadOnly="@(_upload is not null)">
+				 Variant="Variant.Outlined" Margin="Margin.Dense" ReadOnly="@(_upload is not null)" AutoFocus="@AutoFocus">
 	<MoreItemsTemplate>
 		<MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Показаны первые @MaxSuggestions совпадений; уточните запрос, чтобы сузить список.</MudText>
 	</MoreItemsTemplate>
@@ -67,6 +67,9 @@ else if (!string.IsNullOrWhiteSpace(Value) && !Session.ObjectKeys.Contains(Value
 
 	[Parameter]
 	public string? HelperText { get; set; }
+
+	[Parameter]
+	public bool AutoFocus { get; set; }
 
 	/// <summary>
 	/// Receives the SHA-256 (uppercase hex) of the file at <see cref="Value"/> once it is known: after a file is
