@@ -48,6 +48,7 @@
 	<data name="FeedLoading" xml:space="preserve"><value>Загрузка данных с сервера…</value></data>
 	<data name="FeedUnavailableFeatures" xml:space="preserve"><value>Пока данные не загружены, установка и обновление сборки, графпаков, модов и лаунчера недоступны.</value></data>
 	<data name="GraphPackStepTitle" xml:space="preserve"><value>Выберите граф-пак</value></data>
+	<data name="MarkdownLoadFailed" xml:space="preserve"><value>Не удалось загрузить текст. Проверьте подключение к интернету и попробуйте ещё раз.</value></data>
 	<data name="MicroBackupArchiveFiles" xml:space="preserve"><value>Резервное копирование файлов из {0}</value></data>
 	<data name="MicroChangeProfile" xml:space="preserve"><value>Смена профиля на {0}</value></data>
 	<data name="MicroCheckFileHash" xml:space="preserve"><value>Проверка хеша файла</value></data>

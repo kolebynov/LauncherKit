@@ -11,6 +11,7 @@
 		<PackageReference Include="Avalonia.Desktop"/>
 		<PackageReference Include="Avalonia.Fonts.Inter"/>
 		<PackageReference Include="CommunityToolkit.Mvvm"/>
+		<PackageReference Include="Markdown.Avalonia.Tight"/>
 		<PackageReference Include="Microsoft.Extensions.Localization"/>
 		<PackageReference Include="R3Extensions.Avalonia"/>
 		<PackageReference Include="Serilog"/>

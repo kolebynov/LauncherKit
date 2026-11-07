@@ -46,6 +46,7 @@ public sealed class DesktopStrings
 	public const string FeedLoading = nameof(FeedLoading);
 	public const string FeedUnavailableFeatures = nameof(FeedUnavailableFeatures);
 	public const string GraphPackStepTitle = nameof(GraphPackStepTitle);
+	public const string MarkdownLoadFailed = nameof(MarkdownLoadFailed);
 	public const string MicroBackupArchiveFiles = nameof(MicroBackupArchiveFiles);
 	public const string MicroChangeProfile = nameof(MicroChangeProfile);
 	public const string MicroCheckFileHash = nameof(MicroCheckFileHash);

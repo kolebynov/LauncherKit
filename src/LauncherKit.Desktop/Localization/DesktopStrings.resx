@@ -47,6 +47,7 @@
 	<data name="FeedLoading" xml:space="preserve"><value>Loading server data…</value></data>
 	<data name="FeedUnavailableFeatures" xml:space="preserve"><value>Installing and updating the modpack, graphics packs, mods and launcher is unavailable until the data has loaded.</value></data>
 	<data name="GraphPackStepTitle" xml:space="preserve"><value>Select a graphics pack</value></data>
+	<data name="MarkdownLoadFailed" xml:space="preserve"><value>Could not load the text. Check your internet connection and try again.</value></data>
 	<data name="MicroBackupArchiveFiles" xml:space="preserve"><value>Back up files from {0}</value></data>
 	<data name="MicroChangeProfile" xml:space="preserve"><value>Change profile to {0}</value></data>
 	<data name="MicroCheckFileHash" xml:space="preserve"><value>Verify file hash</value></data>
