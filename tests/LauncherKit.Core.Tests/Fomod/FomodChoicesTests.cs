@@ -1,6 +1,7 @@
 using FomodInstaller.Scripting.XmlScript;
 using LauncherKit.Core.Choices;
 using LauncherKit.Core.Fomod;
+using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Core.Tests.Fomod;
 
@@ -75,7 +76,7 @@ public sealed class FomodChoicesTests
 		Assert.Multiple(() =>
 		{
 			Assert.That(options[0].IsAvailable, Is.False);
-			Assert.That(options[0].UnavailableReason?.Value, Is.EqualTo(new ChoiceText.UnavailableFomodOption()));
+			Assert.That(options[0].UnavailableReason?.Value, Is.EqualTo(ChoiceText.UnavailableFomodOption.Instance));
 			Assert.That(options[1].IsAvailable, Is.True);
 		});
 	}

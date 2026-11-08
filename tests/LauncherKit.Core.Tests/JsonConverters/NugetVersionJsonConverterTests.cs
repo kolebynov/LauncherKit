@@ -1,4 +1,5 @@
 using System.Text.Json;
+using LauncherKit.Infrastructure;
 using NuGet.Versioning;
 using LauncherKit.Core.JsonConverters;
 
@@ -45,5 +46,5 @@ public sealed class NugetVersionJsonConverterTests
 		Assert.That(() => JsonSerializer.Deserialize<NuGetVersion>("\"not-a-version\"", options), Throws.InstanceOf<JsonException>());
 	}
 
-	private static JsonSerializerOptions CreateOptions() => new() { Converters = { new NugetVersionJsonConverter() } };
+	private static JsonSerializerOptions CreateOptions() => new() { Converters = { NugetVersionJsonConverter.Instance } };
 }

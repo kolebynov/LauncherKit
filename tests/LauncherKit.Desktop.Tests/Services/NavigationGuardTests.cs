@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Headless.NUnit;
 using LauncherKit.Desktop.Services;
+using LauncherKit.Infrastructure;
 using HandleResult = LauncherKit.Desktop.Services.IAppCloseHandler.HandleResult;
 
 namespace LauncherKit.Desktop.Tests.Services;
@@ -133,7 +134,7 @@ public sealed class NavigationGuardTests
 		var window = new MainViewWindow { CurrentContent = new StubGuard(() => ValueTask.FromResult(canNavigate)) };
 
 		// Act
-		var result = await new NavigationGuardCloseHandler().Handle(window);
+		var result = await NavigationGuardCloseHandler.Instance.Handle(window);
 
 		// Assert
 		Assert.That(result.Value, Is.InstanceOf(expected));
@@ -146,7 +147,7 @@ public sealed class NavigationGuardTests
 		var window = new MainViewWindow { CurrentContent = new object() };
 
 		// Act
-		var result = await new NavigationGuardCloseHandler().Handle(window);
+		var result = await NavigationGuardCloseHandler.Instance.Handle(window);
 
 		// Assert
 		Assert.That(result.Value, Is.InstanceOf<HandleResult.CanClose>());

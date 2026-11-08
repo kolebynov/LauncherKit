@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.ViewModels;
+using LauncherKit.Infrastructure;
 using NuGet.Versioning;
 using LauncherKit.Core.AppTasks;
 using LauncherKit.Core.Feed;
@@ -22,7 +23,7 @@ public sealed class OptionalModsViewModelTests
 		var compatible = CreateMod("Compatible", "[2.0.0,3.0.0)");
 		var incompatible = CreateMod("Incompatible", "[3.0.0,4.0.0)");
 		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.Use<IUiDispatcher>(new HomeCardsDispatcher());
+		mocker.Use<IUiDispatcher>(HomeCardsDispatcher.Instance);
 		var modpackVersionProvider = mocker.GetMock<IModpackVersionProvider>();
 		modpackVersionProvider.SetupGet(x => x.InstalledModpackVersion).Returns(NuGetVersion.Parse("2.5.0"));
 		modpackVersionProvider.SetupAdd(x => x.PropertyChanged += It.IsAny<PropertyChangedEventHandler>());
@@ -56,7 +57,7 @@ public sealed class OptionalModsViewModelTests
 		var version = NuGetVersion.Parse("2.5.0");
 		var state = ModInstallState.NotInstalled;
 		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.Use<IUiDispatcher>(new HomeCardsDispatcher());
+		mocker.Use<IUiDispatcher>(HomeCardsDispatcher.Instance);
 		var provider = mocker.GetMock<IModpackVersionProvider>();
 		provider.SetupGet(x => x.InstalledModpackVersion).Returns(version);
 		provider.SetupAdd(x => x.PropertyChanged += It.IsAny<PropertyChangedEventHandler>());

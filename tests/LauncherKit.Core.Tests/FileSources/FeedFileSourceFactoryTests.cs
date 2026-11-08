@@ -1,4 +1,5 @@
 using System.Net;
+using LauncherKit.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using RichardSzalay.MockHttp;
@@ -25,7 +26,7 @@ public sealed class FeedFileSourceFactoryTests
 		MockHttpClientFactory.Factory(mocker, AppConstants.S3HttpClient, handler);
 		mocker.Use<ILoggerFactory>(NullLoggerFactory.Instance);
 		mocker.Use(TimeProvider.System);
-		mocker.Use<IDownloadRateLimiter>(new UnlimitedDownloadRateLimiter());
+		mocker.Use<IDownloadRateLimiter>(UnlimitedDownloadRateLimiter.Instance);
 		var sut = mocker.CreateInstance<FeedFileSourceFactory>(enablePrivate: true);
 		var download = new DownloadInfo { S3Path = "dir/file.bin" };
 

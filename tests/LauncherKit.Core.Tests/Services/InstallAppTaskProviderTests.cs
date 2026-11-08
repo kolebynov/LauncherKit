@@ -1,3 +1,4 @@
+using LauncherKit.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuGet.Versioning;
@@ -58,8 +59,8 @@ public sealed class InstallAppTaskProviderTests
 		{
 			Assert.That(names, Is.EqualTo(new object[]
 		{
-				new MicroTaskDescription.Custom("rollback 1.0.0"), new MicroTaskDescription.DeletePreviousVersion(), new MicroTaskDescription.DeleteBackups(), new MicroTaskDescription.Custom("download 2.0.0"),
-				new MicroTaskDescription.PreparingInstallation(), new MicroTaskDescription.Custom("install 2.0.0"), new MicroTaskDescription.Custom("steps 2.0.0"), new MicroTaskDescription.UpdateModMetadata(), new MicroTaskDescription.FinishInstallation(),
+				new MicroTaskDescription.Custom("rollback 1.0.0"), MicroTaskDescription.DeletePreviousVersion.Instance, MicroTaskDescription.DeleteBackups.Instance, new MicroTaskDescription.Custom("download 2.0.0"),
+				MicroTaskDescription.PreparingInstallation.Instance, new MicroTaskDescription.Custom("install 2.0.0"), new MicroTaskDescription.Custom("steps 2.0.0"), MicroTaskDescription.UpdateModMetadata.Instance, MicroTaskDescription.FinishInstallation.Instance,
 			}));
 			mocker.GetMock<IInstallBackupService>().Verify(x => x.StartInstallation(BackupId("2.0.0"), CancellationToken.None), Times.Once);
 			mocker.GetMock<IInstallBackupService>().Verify(x => x.FinishInstallation(BackupId("2.0.0")), Times.Once);
@@ -110,10 +111,10 @@ public sealed class InstallAppTaskProviderTests
 		{
 			Assert.That(names, Is.EqualTo(new object[]
 		{
-				new MicroTaskDescription.DeleteBackups(), new MicroTaskDescription.Custom("download 2.0.0"), new MicroTaskDescription.PreparingInstallation(), new MicroTaskDescription.Custom("install 2.0.0"), new MicroTaskDescription.Custom("steps 2.0.0"),
-				new MicroTaskDescription.UpdateModMetadata(), new MicroTaskDescription.FinishInstallation(),
-				new MicroTaskDescription.Custom("download 2.1.0"), new MicroTaskDescription.Custom("extract 2.1.0"), new MicroTaskDescription.Custom("steps 2.1.0"), new MicroTaskDescription.UpdateModMetadata(),
-				new MicroTaskDescription.Custom("download 2.2.0"), new MicroTaskDescription.Custom("extract 2.2.0"), new MicroTaskDescription.Custom("steps 2.2.0"), new MicroTaskDescription.UpdateModMetadata(),
+				MicroTaskDescription.DeleteBackups.Instance, new MicroTaskDescription.Custom("download 2.0.0"), MicroTaskDescription.PreparingInstallation.Instance, new MicroTaskDescription.Custom("install 2.0.0"), new MicroTaskDescription.Custom("steps 2.0.0"),
+				MicroTaskDescription.UpdateModMetadata.Instance, MicroTaskDescription.FinishInstallation.Instance,
+				new MicroTaskDescription.Custom("download 2.1.0"), new MicroTaskDescription.Custom("extract 2.1.0"), new MicroTaskDescription.Custom("steps 2.1.0"), MicroTaskDescription.UpdateModMetadata.Instance,
+				new MicroTaskDescription.Custom("download 2.2.0"), new MicroTaskDescription.Custom("extract 2.2.0"), new MicroTaskDescription.Custom("steps 2.2.0"), MicroTaskDescription.UpdateModMetadata.Instance,
 			}));
 			foreach (var version in new[] { "2.0.0", "2.1.0", "2.2.0" })
 			{
@@ -148,7 +149,7 @@ public sealed class InstallAppTaskProviderTests
 		var names = await RunMicroTasks(mocker, appTask);
 
 		// Assert
-		Assert.That(names, Is.EqualTo(new object[] { new MicroTaskDescription.Custom("download 2.2.0"), new MicroTaskDescription.Custom("extract 2.2.0"), new MicroTaskDescription.Custom("steps 2.2.0"), new MicroTaskDescription.UpdateModMetadata() }));
+		Assert.That(names, Is.EqualTo(new object[] { new MicroTaskDescription.Custom("download 2.2.0"), new MicroTaskDescription.Custom("extract 2.2.0"), new MicroTaskDescription.Custom("steps 2.2.0"), MicroTaskDescription.UpdateModMetadata.Instance }));
 	}
 
 	[Test]
@@ -190,9 +191,9 @@ public sealed class InstallAppTaskProviderTests
 		// Assert
 		Assert.That(names, Is.EqualTo(new object[]
 		{
-			new MicroTaskDescription.Custom("rollback 1.2.0"), new MicroTaskDescription.Custom("rollback 1.1.0"), new MicroTaskDescription.Custom("rollback 1.0.0"), new MicroTaskDescription.DeletePreviousVersion(), new MicroTaskDescription.DeleteBackups(),
-			new MicroTaskDescription.Custom("download 2.0.0"), new MicroTaskDescription.PreparingInstallation(), new MicroTaskDescription.Custom("install 2.0.0"), new MicroTaskDescription.Custom("steps 2.0.0"),
-			new MicroTaskDescription.UpdateModMetadata(), new MicroTaskDescription.FinishInstallation(),
+			new MicroTaskDescription.Custom("rollback 1.2.0"), new MicroTaskDescription.Custom("rollback 1.1.0"), new MicroTaskDescription.Custom("rollback 1.0.0"), MicroTaskDescription.DeletePreviousVersion.Instance, MicroTaskDescription.DeleteBackups.Instance,
+			new MicroTaskDescription.Custom("download 2.0.0"), MicroTaskDescription.PreparingInstallation.Instance, new MicroTaskDescription.Custom("install 2.0.0"), new MicroTaskDescription.Custom("steps 2.0.0"),
+			MicroTaskDescription.UpdateModMetadata.Instance, MicroTaskDescription.FinishInstallation.Instance,
 		}));
 	}
 
@@ -236,10 +237,10 @@ public sealed class InstallAppTaskProviderTests
 		// Assert
 		Assert.That(names, Is.EqualTo(new object[]
 		{
-			new MicroTaskDescription.Custom("rollback 2.0.0"), new MicroTaskDescription.DeletePreviousVersion(), new MicroTaskDescription.DeleteBackups(),
-			new MicroTaskDescription.Custom("download 2.0.0"), new MicroTaskDescription.PreparingInstallation(), new MicroTaskDescription.Custom("install 2.0.0"), new MicroTaskDescription.Custom("steps 2.0.0"), new MicroTaskDescription.UpdateModMetadata(),
-			new MicroTaskDescription.FinishInstallation(),
-			new MicroTaskDescription.Custom("download 2.1.0"), new MicroTaskDescription.Custom("extract 2.1.0"), new MicroTaskDescription.Custom("steps 2.1.0"), new MicroTaskDescription.UpdateModMetadata(),
+			new MicroTaskDescription.Custom("rollback 2.0.0"), MicroTaskDescription.DeletePreviousVersion.Instance, MicroTaskDescription.DeleteBackups.Instance,
+			new MicroTaskDescription.Custom("download 2.0.0"), MicroTaskDescription.PreparingInstallation.Instance, new MicroTaskDescription.Custom("install 2.0.0"), new MicroTaskDescription.Custom("steps 2.0.0"), MicroTaskDescription.UpdateModMetadata.Instance,
+			MicroTaskDescription.FinishInstallation.Instance,
+			new MicroTaskDescription.Custom("download 2.1.0"), new MicroTaskDescription.Custom("extract 2.1.0"), new MicroTaskDescription.Custom("steps 2.1.0"), MicroTaskDescription.UpdateModMetadata.Instance,
 		}));
 	}
 
@@ -266,7 +267,7 @@ public sealed class InstallAppTaskProviderTests
 		// Assert
 		Assert.Multiple(() =>
 		{
-			Assert.That(names, Is.EqualTo(new object[] { new MicroTaskDescription.Custom("rollback 1.0.0"), new MicroTaskDescription.UninstallMod("Mod"), new MicroTaskDescription.DeleteBackups() }));
+			Assert.That(names, Is.EqualTo(new object[] { new MicroTaskDescription.Custom("rollback 1.0.0"), new MicroTaskDescription.UninstallMod("Mod"), MicroTaskDescription.DeleteBackups.Instance }));
 			modOrganizer.Verify(x => x.UninstallMod("Mod", CancellationToken.None), Times.Once);
 		});
 	}
@@ -315,7 +316,7 @@ public sealed class InstallAppTaskProviderTests
 		var names = await RunMicroTasks(mocker, sut.CreateModUninstallAppTask(mod));
 
 		// Assert
-		Assert.That(names, Is.EqualTo(new object[] { new MicroTaskDescription.Custom("rollback 1.0.0"), new MicroTaskDescription.UninstallMod("Mod"), new MicroTaskDescription.DeleteBackups() }));
+		Assert.That(names, Is.EqualTo(new object[] { new MicroTaskDescription.Custom("rollback 1.0.0"), new MicroTaskDescription.UninstallMod("Mod"), MicroTaskDescription.DeleteBackups.Instance }));
 	}
 
 	[Test]

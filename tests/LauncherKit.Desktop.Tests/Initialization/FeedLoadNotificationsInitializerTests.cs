@@ -1,3 +1,4 @@
+using LauncherKit.Infrastructure;
 using Microsoft.Extensions.Time.Testing;
 using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.ViewModels;
@@ -15,10 +16,10 @@ public sealed class FeedLoadStatusViewModelTests
 		using var events = new Subject<FeedLoadEvent>();
 		var clock = new FakeTimeProvider();
 		using var sut = Create(events, clock);
-		events.OnNext(new FeedLoadEvent.Started());
+		events.OnNext(FeedLoadEvent.Started.Instance);
 		clock.Advance(FeedLoadStatusViewModel.ProgressDelay - TimeSpan.FromMilliseconds(1));
 		Assert.That(sut.Status, Is.TypeOf<FeedLoadStatus.Idle>());
-		events.OnNext(new FeedLoadEvent.Succeeded());
+		events.OnNext(FeedLoadEvent.Succeeded.Instance);
 		clock.Advance(FeedLoadStatusViewModel.ProgressDelay);
 		Assert.That(sut.Status, Is.TypeOf<FeedLoadStatus.Idle>());
 	}
@@ -29,10 +30,10 @@ public sealed class FeedLoadStatusViewModelTests
 		using var events = new Subject<FeedLoadEvent>();
 		var clock = new FakeTimeProvider();
 		using var sut = Create(events, clock);
-		events.OnNext(new FeedLoadEvent.Started());
+		events.OnNext(FeedLoadEvent.Started.Instance);
 		clock.Advance(FeedLoadStatusViewModel.ProgressDelay);
 		Assert.That(sut.Status, Is.TypeOf<FeedLoadStatus.Loading>());
-		events.OnNext(new FeedLoadEvent.Succeeded());
+		events.OnNext(FeedLoadEvent.Succeeded.Instance);
 		Assert.That(sut.Status, Is.TypeOf<FeedLoadStatus.Idle>());
 	}
 
@@ -43,12 +44,12 @@ public sealed class FeedLoadStatusViewModelTests
 		var clock = new FakeTimeProvider();
 		using var sut = Create(events, clock);
 		var error = new InvalidOperationException("feed unavailable");
-		events.OnNext(new FeedLoadEvent.Started());
+		events.OnNext(FeedLoadEvent.Started.Instance);
 		events.OnNext(new FeedLoadEvent.Failed(error));
 		clock.Advance(FeedLoadStatusViewModel.ProgressDelay);
 		Assert.That(sut.Status, Is.EqualTo(new FeedLoadStatus.Failed(error)));
-		events.OnNext(new FeedLoadEvent.Started());
-		events.OnNext(new FeedLoadEvent.Succeeded());
+		events.OnNext(FeedLoadEvent.Started.Instance);
+		events.OnNext(FeedLoadEvent.Succeeded.Instance);
 		Assert.That(sut.Status, Is.TypeOf<FeedLoadStatus.Idle>());
 	}
 
@@ -56,7 +57,7 @@ public sealed class FeedLoadStatusViewModelTests
 	{
 		var feed = new Mock<IFeedProvider>(MockBehavior.Strict);
 		feed.SetupGet(x => x.LoadEvents).Returns(events);
-		return new FeedLoadStatusViewModel(feed.Object, clock, new ImmediateDispatcher());
+		return new FeedLoadStatusViewModel(feed.Object, clock, ImmediateDispatcher.Instance);
 	}
 
 	private sealed class ImmediateDispatcher : IUiDispatcher

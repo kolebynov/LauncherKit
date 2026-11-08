@@ -56,8 +56,8 @@ internal sealed class SelectRequiredModMicroTask : IAppMicroTask
 			.ToArray();
 		ChoiceStep step = new()
 		{
-			Title = new ChoiceText.RequiredModsStepTitle(),
-			Subtitle = new ChoiceText.SelectOneModSubtitle(),
+			Title = ChoiceText.RequiredModsStepTitle.Instance,
+			Subtitle = ChoiceText.SelectOneModSubtitle.Instance,
 			SelectionMode = ChoiceSelectionMode.ExactlyOne,
 			Options = options,
 		};

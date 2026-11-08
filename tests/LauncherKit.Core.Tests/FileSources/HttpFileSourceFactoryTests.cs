@@ -1,3 +1,4 @@
+using LauncherKit.Infrastructure;
 using Microsoft.Extensions.Logging.Abstractions;
 using RichardSzalay.MockHttp;
 using LauncherKit.Core.FileSources;
@@ -22,7 +23,7 @@ public sealed class HttpFileSourceFactoryTests
 		});
 		using var client = handler.ToHttpClient();
 		var sut = new HttpFileSourceFactory(
-			client, NullLoggerFactory.Instance, TimeProvider.System, new UnlimitedDownloadRateLimiter());
+			client, NullLoggerFactory.Instance, TimeProvider.System, UnlimitedDownloadRateLimiter.Instance);
 
 		var source = sut.Create(uri, hash);
 		var size = await source.GetFileSize(CancellationToken.None);

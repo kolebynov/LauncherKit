@@ -243,7 +243,7 @@ public sealed class LogsCollectorTests
 			});
 		return new LogsCollector(mocker.Get<IFileSystemUtils>(),
 			[new LauncherLogsSource(mocker.Get<ILaunchersRootDirectoryManager>()),
-				new SkseLogsSource(mocker.Get<IFileSystemUtils>()), new ModOrganizerLogsSource()],
+				new SkseLogsSource(mocker.Get<IFileSystemUtils>()), ModOrganizerLogsSource.Instance],
 			mocker.Get<ILogger<LogsCollector>>(), mocker.Get<TimeProvider>());
 	}
 }

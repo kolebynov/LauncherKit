@@ -4,6 +4,7 @@ using Avalonia.Headless.NUnit;
 using LauncherKit.Core.AppTasks;
 using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.Localization;
+using LauncherKit.Infrastructure;
 using Microsoft.Extensions.Localization;
 
 namespace LauncherKit.Desktop.Tests.Services;
@@ -82,7 +83,7 @@ public sealed class PendingTasksCloseHandlerTests
 		queue.SetupRemove(x => x.PropertyChanged -= It.IsAny<PropertyChangedEventHandler>());
 		mocker.GetMock<IStringLocalizer<DesktopStrings>>().Setup(x => x[It.IsAny<string>()])
 			.Returns<string>(key => new LocalizedString(key, key));
-		mocker.Use<IUiDispatcher>(new ImmediateUiDispatcher());
+		mocker.Use<IUiDispatcher>(ImmediateUiDispatcher.Instance);
 		return mocker;
 	}
 }

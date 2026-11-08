@@ -1,3 +1,4 @@
+using LauncherKit.Infrastructure;
 using R3;
 using LauncherKit.Core.AppTasks.MicroTasks;
 using LauncherKit.Core.FileStorage;
@@ -69,7 +70,7 @@ public sealed class ExtractSevenZipMicroTaskTests
 				ArchivePath, SkyrimDirectory, true, CancellationToken.None))
 			.Returns(Task.CompletedTask);
 		var sut = new ExtractSevenZipEntryMicroTask(mocker.GetMock<IFileStorageService>().Object, sevenZip.Object,
-			new MicroTaskDescription.UpdateModpackVersion(), "archive.7z", SkyrimRelativePath.Root, SkyrimDirectory, @"Data\version.txt");
+			MicroTaskDescription.UpdateModpackVersion.Instance, "archive.7z", SkyrimRelativePath.Root, SkyrimDirectory, @"Data\version.txt");
 		using var subject = new Subject<MicroTaskStep>();
 
 		// Act

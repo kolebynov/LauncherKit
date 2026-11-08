@@ -215,7 +215,7 @@ public sealed class FirstSetupViewModelTests
 		using var skyrim = new TempDirectory();
 		var mocker = CreateMocker(new AppSettings());
 		mocker.GetMock<ISkyrimInstallationChecker>().Setup(x => x.CheckSkyrimDirectory(skyrim.Path))
-			.Returns(new SkyrimDirectoryCheckResult.NotSkyrimDirectory());
+			.Returns(SkyrimDirectoryCheckResult.NotSkyrimDirectory.Instance);
 		var steps = CreateKitSteps(mocker, out var context);
 		var sut = CreateSut(mocker, context, steps);
 		await sut.Start();
@@ -404,7 +404,7 @@ public sealed class FirstSetupViewModelTests
 	private static AutoMocker CreateMocker(AppSettings app)
 	{
 		var mocker = ProductTestSupport.CreateMocker();
-		mocker.Use<IUiDispatcher>(new ImmediateUiDispatcher());
+		mocker.Use<IUiDispatcher>(ImmediateUiDispatcher.Instance);
 		mocker.GetMock<ISkyrimDirectoryFinder>().Setup(x => x.FindSkyrimDirectory()).Returns((string?)null);
 		var storage = mocker.GetMock<IGlobalKeyValueStorage>();
 		storage.Setup(x => x.HasKey(AvailabilityCheckState.CheckSucceededKey)).Returns(false);

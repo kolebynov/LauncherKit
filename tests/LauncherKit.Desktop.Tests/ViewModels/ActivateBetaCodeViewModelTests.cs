@@ -1,5 +1,6 @@
 using LauncherKit.Desktop.ViewModels;
 using LauncherKit.Core.Feed;
+using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Desktop.Tests.ViewModels;
 
@@ -30,7 +31,7 @@ public sealed class ActivateBetaCodeViewModelTests
 		var mocker = new AutoMocker(MockBehavior.Strict);
 		mocker.GetMock<IFeedProvider>()
 			.Setup(x => x.ActivateBetaCode("valid", CancellationToken.None))
-			.ReturnsAsync(new ActivateBetaCodeResult.Success());
+			.ReturnsAsync(ActivateBetaCodeResult.Success.Instance);
 		var sut = mocker.CreateInstance<ActivateBetaCodeViewModel>();
 		sut.BetaCode = "valid";
 
@@ -52,7 +53,7 @@ public sealed class ActivateBetaCodeViewModelTests
 		var mocker = new AutoMocker(MockBehavior.Strict);
 		mocker.GetMock<IFeedProvider>()
 			.Setup(x => x.ActivateBetaCode("invalid", CancellationToken.None))
-			.ReturnsAsync(new ActivateBetaCodeResult.InvalidBetaCode());
+			.ReturnsAsync(ActivateBetaCodeResult.InvalidBetaCode.Instance);
 		var sut = mocker.CreateInstance<ActivateBetaCodeViewModel>();
 		sut.BetaCode = "invalid";
 

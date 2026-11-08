@@ -3,6 +3,7 @@ using LauncherKit.Desktop.Extensions;
 using CommunityToolkit.Mvvm.Input;
 using R3;
 using LauncherKit.Core.Models;
+using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Desktop.ViewModels;
 
@@ -74,7 +75,7 @@ public partial class ModCardViewModel : ViewModelBase
 		installCommand.ObserveCanExecuteChange()
 			.Subscribe(canExecute =>
 			{
-				UnavailableReason = canExecute ? null : unavailableReasonFunc?.Invoke() ?? new InstallUnavailableReason.Updating();
+				UnavailableReason = canExecute ? null : unavailableReasonFunc?.Invoke() ?? InstallUnavailableReason.Updating.Instance;
 				IsAvailable = canExecute;
 			});
 		uninstallCommand.ObserveCanExecuteChange()

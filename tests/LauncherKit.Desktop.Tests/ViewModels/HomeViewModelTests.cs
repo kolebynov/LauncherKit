@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.ViewModels;
+using LauncherKit.Infrastructure;
 using NuGet.Versioning;
 using R3;
 using LauncherKit.Core.AppTasks;
@@ -53,7 +54,7 @@ public sealed class HomeViewModelTests
 		using var events = new Subject<AppTaskQueue.Event>();
 		using var beta = new Subject<Unit>();
 		var mocker = CreateMocker(events, beta);
-		var task = new AppTask("DeleteOldSaves", new AppTaskDescription.DeleteOldSaves(), _ => [], [], null);
+		var task = new AppTask("DeleteOldSaves", AppTaskDescription.DeleteOldSaves.Instance, _ => [], [], null);
 		Action<DeletedSavesInfo>? report = null;
 		mocker.GetMock<IAppTaskProvider>().Setup(x => x.CreateDeleteOldSavesTask(keep, It.IsAny<Action<DeletedSavesInfo>>()))
 			.Callback<int, Action<DeletedSavesInfo>>((_, callback) => report = callback).Returns(task);
@@ -154,7 +155,7 @@ public sealed class HomeViewModelTests
 		var feedItem = new ModpackFeedItem { InitialVersion = version, Version = version, DownloadInfo = new DownloadInfo { S3Path = "modpack.7z" } };
 		var selected = new AvailableModpackVersion(feedItem, version, false);
 		var task = new AppTask("Install", new AppTaskDescription.Custom("Install"), _ => [], [], null);
-		var info = new ModpackUpdateInfo { UpdateAppTask = task, UpdateType = new UpdateType.InitialInstall(), Version = version };
+		var info = new ModpackUpdateInfo { UpdateAppTask = task, UpdateType = UpdateType.InitialInstall.Instance, Version = version };
 		mocker.GetMock<IUpdateProvider>().Setup(x => x.GetModpackInstallInfo(feedItem, It.IsAny<CancellationToken>())).ReturnsAsync(info);
 		mocker.GetMock<IAppTaskQueue>().Setup(x => x.EnqueueAndWaitForCompletion(task, It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 		mocker.GetMock<IModpackVersionProvider>().Setup(x => x.RefreshInstalledModpackVersion());
@@ -167,7 +168,7 @@ public sealed class HomeViewModelTests
 	private static AutoMocker CreateMocker(Subject<AppTaskQueue.Event> events, Subject<Unit> beta)
 	{
 		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.Use<IUiDispatcher>(new HomeCardsDispatcher());
+		mocker.Use<IUiDispatcher>(HomeCardsDispatcher.Instance);
 		mocker.GetMock<IAppTaskQueue>().SetupGet(x => x.Events).Returns(events);
 		var provider = mocker.GetMock<IModpackVersionProvider>();
 		provider.SetupGet(x => x.InstalledModpackVersion).Returns(NuGetVersion.Parse("3.2.0"));

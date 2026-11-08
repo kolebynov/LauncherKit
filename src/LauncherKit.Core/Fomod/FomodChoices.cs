@@ -1,5 +1,6 @@
 using FomodInstaller.Scripting.XmlScript;
 using LauncherKit.Core.Choices;
+using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Core.Fomod;
 
@@ -57,7 +58,7 @@ public sealed class FomodChoices
 			Name = new ChoiceText.Content(option.Name),
 			Description = new ChoiceText.Content(option.Description),
 			IsRequired = staticType == OptionType.Required,
-			UnavailableReason = staticType == OptionType.NotUsable ? new ChoiceText.UnavailableFomodOption() : (ChoiceText?)null,
+			UnavailableReason = staticType == OptionType.NotUsable ? ChoiceText.UnavailableFomodOption.Instance : (ChoiceText?)null,
 		};
 		_options.Add(choiceOption, option);
 		return choiceOption;

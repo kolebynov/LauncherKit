@@ -98,7 +98,7 @@ public sealed class AppTaskProviderTests
 		var mocker = LauncherKit.TestSupport.ProductTestSupport.CreateMocker(MockBehavior.Strict);
 		OptionsStubs.Snapshot(mocker, new AppSettings { SkyrimDirectory = @"C:\Skyrim" });
 		var factory = mocker.GetMock<IMicroTasksFactory>();
-		MicroTaskDescription deleteModOrganizer = new MicroTaskDescription.DeleteModOrganizer();
+		MicroTaskDescription deleteModOrganizer = MicroTaskDescription.DeleteModOrganizer.Instance;
 		factory.Setup(x => x.CreateDeleteFileSystemItemsMicroTask(
 				It.Is<IReadOnlyCollection<SkyrimRelativePath>>(paths => paths.Single().Path == "Example MO"), true,
 				deleteModOrganizer))
@@ -151,8 +151,8 @@ public sealed class AppTaskProviderTests
 		var factory = mocker.GetMock<IMicroTasksFactory>();
 		factory.Setup(x => x.CreateDownloadFileMicroTask(It.Is<DownloadFileSource>(source => ReferenceEquals(source.Value, patch.DownloadInfo))))
 			.Returns(Marker("download"));
-		MicroTaskDescription extractPatch = new MicroTaskDescription.ExtractModpackPatch();
-		MicroTaskDescription updateVersion = new MicroTaskDescription.UpdateModpackVersion();
+		MicroTaskDescription extractPatch = MicroTaskDescription.ExtractModpackPatch.Instance;
+		MicroTaskDescription updateVersion = MicroTaskDescription.UpdateModpackVersion.Instance;
 		factory.Setup(x => x.CreateExtractSevenZipExceptMicroTask("patch.7z", SkyrimRelativePath.Root,
 				ProductTestSupport.CreateProduct().ModpackVersionFile, extractPatch))
 			.Returns(Marker("extract without version"));
@@ -675,9 +675,9 @@ public sealed class AppTaskProviderTests
 		factory.Setup(x => x.CreateDownloadFileMicroTask(It.Is<DownloadFileSource>(source =>
 				((DownloadInfo)source.Value!).S3Path == "modpack.7z")))
 			.Returns(Marker("download modpack"));
-		MicroTaskDescription deletePreviousVersion = new MicroTaskDescription.DeletePreviousVersion();
-		MicroTaskDescription deleteBackups = new MicroTaskDescription.DeleteBackups();
-		MicroTaskDescription? extractModpack = new MicroTaskDescription.ExtractModpack();
+		MicroTaskDescription deletePreviousVersion = MicroTaskDescription.DeletePreviousVersion.Instance;
+		MicroTaskDescription deleteBackups = MicroTaskDescription.DeleteBackups.Instance;
+		MicroTaskDescription? extractModpack = MicroTaskDescription.ExtractModpack.Instance;
 		MicroTaskDescription installPrerequisite = new MicroTaskDescription.InstallPrerequisite("CustomRuntime");
 		factory.Setup(x => x.CreateDeleteFileSystemItemsMicroTask(
 				It.IsAny<IReadOnlyCollection<SkyrimRelativePath>>(), true, deletePreviousVersion))

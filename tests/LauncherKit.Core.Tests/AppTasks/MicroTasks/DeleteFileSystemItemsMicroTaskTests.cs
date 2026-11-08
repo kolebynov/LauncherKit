@@ -22,7 +22,7 @@ public sealed class DeleteFileSystemItemsMicroTaskTests
 		mocker.Use(temp.Path);
 		mocker.Use<IReadOnlyCollection<SkyrimRelativePath>>([relativePath]);
 		mocker.Use(true);
-		mocker.Use<MicroTaskDescription>(new MicroTaskDescription.DeleteFiles());
+		mocker.Use<MicroTaskDescription>(MicroTaskDescription.DeleteFiles.Instance);
 		mocker.GetMock<IFileSystemUtils>()
 			.Setup(x => x.SafeDeleteFile(absolutePath))
 			.Returns(FileSystemUtils.SafeDeleteResult.Success.Instance);
@@ -49,7 +49,7 @@ public sealed class DeleteFileSystemItemsMicroTaskTests
 		mocker.Use(temp.Path);
 		mocker.Use<IReadOnlyCollection<SkyrimRelativePath>>([relativePath]);
 		mocker.Use(true);
-		mocker.Use<MicroTaskDescription>(new MicroTaskDescription.DeleteFiles());
+		mocker.Use<MicroTaskDescription>(MicroTaskDescription.DeleteFiles.Instance);
 		mocker.GetMock<IFileSystemUtils>()
 			.Setup(x => x.SafeDeleteFile(absolutePath))
 			.Returns(new FileSystemUtils.SafeDeleteResult.Error(cause));

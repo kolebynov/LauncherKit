@@ -3,6 +3,7 @@ using LauncherKit.Desktop.Converters;
 using LauncherKit.Desktop.Localization;
 using LauncherKit.Desktop.ViewModels;
 using LauncherKit.Desktop.ViewModels.Setup;
+using LauncherKit.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using LauncherKit.Core.Feed;
@@ -27,8 +28,8 @@ public sealed class SetupAccountFactTextsTests
 			foreach (var membership in Enum.GetValues<DiscordMembership>()) AssertResolved(texts.Get(membership));
 			ActivateBetaCodeResult[] results =
 			[
-				new ActivateBetaCodeResult.Success(), new ActivateBetaCodeResult.AlreadyActivated(),
-				new ActivateBetaCodeResult.InvalidBetaCode(),
+				ActivateBetaCodeResult.Success.Instance, ActivateBetaCodeResult.AlreadyActivated.Instance,
+				ActivateBetaCodeResult.InvalidBetaCode.Instance,
 			];
 			foreach (var result in results) AssertResolved(texts.Get(result));
 			var setup = new SetupError(new Version(0, 1, 2), new Version(3, 4, 5));
@@ -46,7 +47,7 @@ public sealed class SetupAccountFactTextsTests
 	public void Converter_BoxedNativeUnionAndTypedErrorCollection_MapsFacts()
 	{
 		var converter = SetupAccountFactConverter.Instance;
-		object result = (ActivateBetaCodeResult)new ActivateBetaCodeResult.InvalidBetaCode();
+		object result = (ActivateBetaCodeResult)ActivateBetaCodeResult.InvalidBetaCode.Instance;
 		Assert.That(converter.Convert(result, typeof(string), null, CultureInfo.InvariantCulture),
 			Is.EqualTo(LocalizationMarkup.SetupAccountFactTexts.Get((ActivateBetaCodeResult)result).Value));
 		var errors = new object[] { DirectoryValidationError.InvalidPath, DirectoryValidationError.SkyrimDirectoryConflict };

@@ -1,3 +1,4 @@
+using LauncherKit.Infrastructure;
 using NuGet.Versioning;
 using LauncherKit.Core.AppTasks;
 using LauncherKit.Core.AppTasks.ModpackComponents;
@@ -99,9 +100,9 @@ public sealed class ModpackComponentChoicesTests
 		{
 			Assert.That(sut.Steps.Select(x => x.SelectionMode),
 				Is.EqualTo(new[] { ChoiceSelectionMode.ExactlyOne, ChoiceSelectionMode.ExactlyOne }));
-			Assert.That(sut.Steps[0].Options.Select(x => x.Name.Value), Is.EqualTo(new object[] { new ChoiceText.Content("Lite"), new ChoiceText.Content("Full"), new ChoiceText.NoneOption() }));
+			Assert.That(sut.Steps[0].Options.Select(x => x.Name.Value), Is.EqualTo(new object[] { new ChoiceText.Content("Lite"), new ChoiceText.Content("Full"), ChoiceText.NoneOption.Instance }));
 			Assert.That(sut.Steps[0].Options.Select(x => x.UnavailableReason?.Value),
-				Is.EqualTo(new object?[] { new ChoiceText.UnavailableGraphPackUpdating(), null, null }));
+				Is.EqualTo(new object?[] { ChoiceText.UnavailableGraphPackUpdating.Instance, null, null }));
 			Assert.That(sut.Steps[1].Options.Select(x => x.IsAvailable), Is.EqualTo(new[] { true, true }));
 			Assert.That(selection.InstallTasks.GetValueOrDefault("GraphPack"), Is.Null);
 			Assert.That((selection.InstallTasks.GetValueOrDefault("EnglishVoices") != null), Is.False);

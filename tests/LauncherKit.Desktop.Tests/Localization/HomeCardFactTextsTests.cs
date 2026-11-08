@@ -1,6 +1,7 @@
 using System.Globalization;
 using LauncherKit.Desktop.Localization;
 using LauncherKit.Desktop.ViewModels;
+using LauncherKit.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 
@@ -21,8 +22,8 @@ public sealed class HomeCardFactTextsTests
 			using var provider = new ServiceCollection().AddLauncherKitLocalization().BuildServiceProvider();
 			var texts = provider.GetRequiredService<HomeCardFactTexts>();
 			AssertResolved(texts.Get(ModpackInstallUnavailableReason.NoAvailableVersions));
-			AssertResolved(texts.Get(new ModCardViewModel.InstallUnavailableReason.Updating()));
-			AssertResolved(texts.Get(new ModCardViewModel.InstallUnavailableReason.ModpackTaskQueued()));
+			AssertResolved(texts.Get(ModCardViewModel.InstallUnavailableReason.Updating.Instance));
+			AssertResolved(texts.Get(ModCardViewModel.InstallUnavailableReason.ModpackTaskQueued.Instance));
 			var conflict = texts.Get(new ModCardViewModel.InstallUnavailableReason.OtherGraphPackInstalled("Example pack"));
 			AssertResolved(conflict);
 			Assert.That(conflict.Value, Does.Contain("Example pack"));

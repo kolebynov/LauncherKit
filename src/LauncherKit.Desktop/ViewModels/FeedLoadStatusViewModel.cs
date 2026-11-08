@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Services;
+using LauncherKit.Infrastructure;
 using R3;
 using LauncherKit.Core.Feed;
 
@@ -24,7 +25,7 @@ public partial class FeedLoadStatusViewModel : ViewModelBase, IDisposable
 	private readonly IUiDispatcher _dispatcher;
 
 	[ObservableProperty]
-	public partial FeedLoadStatus Status { get; private set; } = new FeedLoadStatus.Idle();
+	public partial FeedLoadStatus Status { get; private set; } = FeedLoadStatus.Idle.Instance;
 
 	public FeedLoadStatusViewModel(IFeedProvider feedProvider, TimeProvider timeProvider, IUiDispatcher dispatcher)
 	{
@@ -40,10 +41,10 @@ public partial class FeedLoadStatusViewModel : ViewModelBase, IDisposable
 		{
 			case FeedLoadEvent.Started:
 				_delay.Disposable = Observable.Timer(ProgressDelay, _timeProvider).ObserveOnUi(_dispatcher)
-					.Subscribe(_ => Status = new FeedLoadStatus.Loading());
+					.Subscribe(_ => Status = FeedLoadStatus.Loading.Instance);
 				break;
 			case FeedLoadEvent.Succeeded:
-				Status = new FeedLoadStatus.Idle();
+				Status = FeedLoadStatus.Idle.Instance;
 				break;
 			case FeedLoadEvent.Failed(var exception):
 				Status = new FeedLoadStatus.Failed(exception);

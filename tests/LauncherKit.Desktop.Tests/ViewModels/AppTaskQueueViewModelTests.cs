@@ -1,5 +1,6 @@
 using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.ViewModels;
+using LauncherKit.Infrastructure;
 using R3;
 using LauncherKit.Core.AppTasks;
 using LauncherKit.Core.AppTasks.MicroTasks;
@@ -16,7 +17,7 @@ public sealed class AppTaskQueueViewModelTests
 		// Arrange
 		using var events = new Subject<AppTaskQueue.Event>();
 		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.Use<IUiDispatcher>(new ImmediateDispatcher());
+		mocker.Use<IUiDispatcher>(ImmediateDispatcher.Instance);
 		mocker.GetMock<IAppTaskQueue>().SetupGet(x => x.Events).Returns(events);
 		using var sut = mocker.CreateInstance<AppTaskQueueViewModel>();
 		var task = new AppTask("install", new AppTaskDescription.Custom("Install"), _ => [], [], null);
@@ -39,14 +40,14 @@ public sealed class AppTaskQueueViewModelTests
 	{
 		using var events = new Subject<AppTaskQueue.Event>();
 		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.Use<IUiDispatcher>(new ImmediateDispatcher());
+		mocker.Use<IUiDispatcher>(ImmediateDispatcher.Instance);
 		mocker.GetMock<IAppTaskQueue>().SetupGet(x => x.Events).Returns(events);
 		using var sut = mocker.CreateInstance<AppTaskQueueViewModel>();
 		var task = new AppTask("install", new AppTaskDescription.Custom("Install"), _ => [], [], null);
 		events.OnNext(new AppTaskQueue.Event.TaskQueued(task));
 		var projection = sut.AppTasks.Single();
 		using var context = new ChoiceSelectionContext(new ChoiceText.Content("Choices"), [], CancellationToken.None);
-		projection.SetRunningMicroTask(new MicroTaskDescription.Preparing(), Observable.Return<MicroTaskStep>(new MicroTaskStep.SelectChoices(context)));
+		projection.SetRunningMicroTask(MicroTaskDescription.Preparing.Instance, Observable.Return<MicroTaskStep>(new MicroTaskStep.SelectChoices(context)));
 		events.OnNext(new AppTaskQueue.Event.TaskRemoved(task, 0));
 		Assert.Multiple(() =>
 		{

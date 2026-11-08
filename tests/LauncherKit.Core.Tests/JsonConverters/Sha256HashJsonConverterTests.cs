@@ -1,6 +1,7 @@
 using System.Text.Json;
 using LauncherKit.Core.JsonConverters;
 using LauncherKit.Core.Models;
+using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Core.Tests.JsonConverters;
 
@@ -68,5 +69,5 @@ public sealed class Sha256HashJsonConverterTests
 		Assert.That(() => JsonSerializer.Deserialize<Sha256Hash>("\"not-a-hash\"", options), Throws.InstanceOf<FormatException>());
 	}
 
-	private static JsonSerializerOptions CreateOptions() => new() { Converters = { new Sha256HashJsonConverter() } };
+	private static JsonSerializerOptions CreateOptions() => new() { Converters = { Sha256HashJsonConverter.Instance } };
 }

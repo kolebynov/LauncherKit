@@ -1,11 +1,12 @@
 using LauncherKit.Core.Choices;
 using LauncherKit.Core.Feed;
+using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Core.AppTasks.ModpackComponents;
 
 public sealed class ModpackComponentChoices
 {
-	public static readonly ChoiceText Title = new ChoiceText.ModpackComponentsTitle();
+	public static readonly ChoiceText Title = ChoiceText.ModpackComponentsTitle.Instance;
 
 	private readonly ModpackComponentsSelection _selection;
 	private readonly List<(string Id, ChoiceStep Step, IReadOnlyList<GraphPackComponent> Offers)> _steps = [];
@@ -23,15 +24,15 @@ public sealed class ModpackComponentChoices
 			var options = component.Options.Select(option => new ChoiceOption
 			{
 				Name = component.Definition.Kind == InstallComponentKind.Mod
-					? new ChoiceText.YesOption()
+					? ChoiceText.YesOption.Instance
 					: new ChoiceText.Content(option.Name),
 				Description = new ChoiceText.ComponentOptionDescription(option.Name, option.Recommendation,
 					option.InstallTask == null ? null : option.Downloads.Sum(getDownloadSize),
 					component.Definition.Kind == InstallComponentKind.Mod),
 				IsSelectedByDefault = ReferenceEquals(option, defaultOption),
-				UnavailableReason = option.InstallTask == null ? new ChoiceText.UnavailableGraphPackUpdating() : (ChoiceText?)null,
+				UnavailableReason = option.InstallTask == null ? ChoiceText.UnavailableGraphPackUpdating.Instance : (ChoiceText?)null,
 			}).ToList();
-			options.Add(new ChoiceOption { Name = new ChoiceText.NoneOption(), Description = new ChoiceText.Content(""), IsSelectedByDefault = defaultOption == null });
+			options.Add(new ChoiceOption { Name = ChoiceText.NoneOption.Instance, Description = new ChoiceText.Content(""), IsSelectedByDefault = defaultOption == null });
 			var step = new ChoiceStep
 			{
 				Title = new ChoiceText.Content(component.Definition.Title.Resolve()),

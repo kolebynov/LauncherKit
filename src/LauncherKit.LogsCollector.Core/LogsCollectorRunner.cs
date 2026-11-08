@@ -18,7 +18,7 @@ public static class LogsCollectorRunner
 		var fileSystemUtils = new FileSystemUtils(loggerFactory.CreateLogger<FileSystemUtils>());
 		var rootDirectoryManager = createRootDirectoryManager(fileSystemUtils, new RegistryManager());
 		var collector = new LogsCollector(fileSystemUtils,
-			[new LauncherLogsSource(rootDirectoryManager), new SkseLogsSource(fileSystemUtils), new ModOrganizerLogsSource()],
+			[new LauncherLogsSource(rootDirectoryManager), new SkseLogsSource(fileSystemUtils), ModOrganizerLogsSource.Instance],
 			loggerFactory.CreateLogger<LogsCollector>(), TimeProvider.System);
 		var error = await collector.CollectLogs(Directory.GetCurrentDirectory(), null, cancellationToken);
 

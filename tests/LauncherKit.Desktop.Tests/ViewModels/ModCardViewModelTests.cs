@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.Input;
 using LauncherKit.Desktop.Localization;
 using LauncherKit.Desktop.ViewModels;
+using LauncherKit.Infrastructure;
 using Microsoft.Extensions.Localization;
 using LauncherKit.Core.Models;
 
@@ -211,8 +212,8 @@ public sealed class ModCardViewModelTests
 		Assert.Multiple(() =>
 		{
 			Assert.That(texts.Get(ModpackInstallUnavailableReason.NoAvailableVersions).Name, Is.EqualTo(DesktopStrings.ModpackInstallUnavailable));
-			Assert.That(texts.Get(new ModCardViewModel.InstallUnavailableReason.Updating()).Name, Is.EqualTo(DesktopStrings.ModUpdating));
-			Assert.That(texts.Get(new ModCardViewModel.InstallUnavailableReason.ModpackTaskQueued()).Name, Is.EqualTo(DesktopStrings.ModpackTaskQueued));
+			Assert.That(texts.Get(ModCardViewModel.InstallUnavailableReason.Updating.Instance).Name, Is.EqualTo(DesktopStrings.ModUpdating));
+			Assert.That(texts.Get(ModCardViewModel.InstallUnavailableReason.ModpackTaskQueued.Instance).Name, Is.EqualTo(DesktopStrings.ModpackTaskQueued));
 			Assert.That(texts.Get(new ModCardViewModel.InstallUnavailableReason.OtherGraphPackInstalled("Other")).Name, Is.EqualTo(DesktopStrings.OtherGraphPackInstalled));
 		});
 		strings.Verify(x => x[DesktopStrings.OtherGraphPackInstalled, It.IsAny<object[]>()], Times.Once);

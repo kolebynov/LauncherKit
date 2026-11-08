@@ -1,5 +1,6 @@
 using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.ViewModels;
+using LauncherKit.Infrastructure;
 using R3;
 using LauncherKit.Core.AppTasks;
 using LauncherKit.Core.AppTasks.MicroTasks;
@@ -15,12 +16,12 @@ public sealed class AppTaskViewModelTests
 	{
 		// Arrange
 		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.Use<IUiDispatcher>(new ImmediateDispatcher());
+		mocker.Use<IUiDispatcher>(ImmediateDispatcher.Instance);
 		mocker.Use(new AppTask("task", new AppTaskDescription.Custom("Task"), _ => [], [], null));
 		var sut = mocker.CreateInstance<AppTaskViewModel>();
 
 		// Act
-		sut.SetRunningMicroTask(new MicroTaskDescription.DownloadFile("archive.zip"), Observable.Return<MicroTaskStep>(new MicroTaskStep.MicroOperation(new MicroTaskDescription.Preparing())));
+		sut.SetRunningMicroTask(new MicroTaskDescription.DownloadFile("archive.zip"), Observable.Return<MicroTaskStep>(new MicroTaskStep.MicroOperation(MicroTaskDescription.Preparing.Instance)));
 		var progress = sut.ProgressViewModel;
 		var failure = new InvalidOperationException("failed");
 		sut.SetError(failure);
@@ -29,7 +30,7 @@ public sealed class AppTaskViewModelTests
 		Assert.Multiple(() =>
 		{
 			Assert.That(progress, Is.TypeOf<UnknownProgressViewModel>());
-			Assert.That(((UnknownProgressViewModel)progress!).Operation?.Value, Is.EqualTo(new MicroTaskDescription.Preparing()));
+			Assert.That(((UnknownProgressViewModel)progress!).Operation?.Value, Is.EqualTo(MicroTaskDescription.Preparing.Instance));
 			Assert.That(sut.ProgressViewModel, Is.Null);
 			Assert.That(sut.Error, Is.SameAs(failure));
 		});
@@ -39,11 +40,11 @@ public sealed class AppTaskViewModelTests
 	public void SelectChoicesStep_ProjectsSelectionAndCompletionClearsIt()
 	{
 		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.Use<IUiDispatcher>(new ImmediateDispatcher());
+		mocker.Use<IUiDispatcher>(ImmediateDispatcher.Instance);
 		mocker.Use(new AppTask("task", new AppTaskDescription.Custom("Task"), _ => [], [], null));
 		var sut = mocker.CreateInstance<AppTaskViewModel>();
 		using var context = new ChoiceSelectionContext(new ChoiceText.Content("Choices"), [], CancellationToken.None);
-		sut.SetRunningMicroTask(new MicroTaskDescription.Preparing(), Observable.Return<MicroTaskStep>(new MicroTaskStep.SelectChoices(context)));
+		sut.SetRunningMicroTask(MicroTaskDescription.Preparing.Instance, Observable.Return<MicroTaskStep>(new MicroTaskStep.SelectChoices(context)));
 		var selection = sut.ChoiceSelection;
 		selection!.GoNext();
 		sut.Complete();
@@ -60,12 +61,12 @@ public sealed class AppTaskViewModelTests
 	public void ReplacingMicroTask_UnsubscribesOldChoiceSteps()
 	{
 		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.Use<IUiDispatcher>(new ImmediateDispatcher());
+		mocker.Use<IUiDispatcher>(ImmediateDispatcher.Instance);
 		mocker.Use(new AppTask("task", new AppTaskDescription.Custom("Task"), _ => [], [], null));
 		var sut = mocker.CreateInstance<AppTaskViewModel>();
 		using var steps = new Subject<MicroTaskStep>();
 		using var context = new ChoiceSelectionContext(new ChoiceText.Content("Choices"), [], CancellationToken.None);
-		sut.SetRunningMicroTask(new MicroTaskDescription.Preparing(), steps);
+		sut.SetRunningMicroTask(MicroTaskDescription.Preparing.Instance, steps);
 		sut.Complete();
 		steps.OnNext(new MicroTaskStep.SelectChoices(context));
 		Assert.That(sut.ChoiceSelection, Is.Null);

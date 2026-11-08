@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.ViewModels;
+using LauncherKit.Infrastructure;
 using NuGet.Versioning;
 using R3;
 using LauncherKit.Core.AppTasks;
@@ -126,7 +127,7 @@ public sealed class GraphPacksViewModelTests
 	{
 		var modpackVersion = NuGetVersion.Parse("3.2.0");
 		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.Use<IUiDispatcher>(new HomeCardsDispatcher());
+		mocker.Use<IUiDispatcher>(HomeCardsDispatcher.Instance);
 		mocker.GetMock<IAppTaskQueue>().SetupGet(x => x.Events).Returns(events);
 		var modpackVersionProvider = mocker.GetMock<IModpackVersionProvider>();
 		modpackVersionProvider.SetupGet(x => x.InstalledModpackVersion).Returns(modpackVersion);

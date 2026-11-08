@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Services;
 using CommunityToolkit.Mvvm.Input;
+using LauncherKit.Infrastructure;
 using R3;
 using LauncherKit.Core.AppTasks;
 using LauncherKit.Core.Feed;
@@ -174,10 +175,10 @@ public partial class GraphPacksViewModel : BaseActivatableViewModel, IDisposable
 				() => _installAppTaskProvider.GetModInstallState(graphPack, modpackVersion), _installCommands[i],
 				_uninstallCommands[i],
 				() => IsModpackInstalling
-					? new ModCardViewModel.InstallUnavailableReason.ModpackTaskQueued()
+					? ModCardViewModel.InstallUnavailableReason.ModpackTaskQueued.Instance
 					: availableItem == null
-						? new ModCardViewModel.InstallUnavailableReason.Updating()
-						: GetOtherGraphPackReason(graphPack.Name) ?? new ModCardViewModel.InstallUnavailableReason.Updating(),
+						? ModCardViewModel.InstallUnavailableReason.Updating.Instance
+						: GetOtherGraphPackReason(graphPack.Name) ?? ModCardViewModel.InstallUnavailableReason.Updating.Instance,
 				installRequiresNewGame: true, uninstallRequiresNewGame: true);
 		}
 

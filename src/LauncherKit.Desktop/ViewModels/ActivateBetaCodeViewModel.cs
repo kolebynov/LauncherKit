@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LauncherKit.Core.Feed;
+using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Desktop.ViewModels;
 
@@ -21,6 +22,6 @@ public partial class ActivateBetaCodeViewModel : ViewModelBase
 
 	[RelayCommand]
 	private async Task ActivateBetaCode() => Result = string.IsNullOrEmpty(BetaCode)
-		? new ActivateBetaCodeResult.InvalidBetaCode()
+		? ActivateBetaCodeResult.InvalidBetaCode.Instance
 		: await _feedProvider.ActivateBetaCode(BetaCode, CancellationToken.None);
 }
