@@ -22,6 +22,6 @@ internal sealed class FeedFileSourceFactory : IFeedFileSourceFactory
 
 	public IFileSource Create(DownloadInfo downloadInfo, Uri feedBaseUri) =>
 		new HttpFileSource(
-			_httpClientFactory.CreateClient(AppConstants.S3HttpClient), _loggerFactory, _timeProvider,
+			_httpClientFactory.CreateClient(AppConstants.S3DownloadHttpClient), _loggerFactory, _timeProvider,
 			_rateLimiter, new Uri(feedBaseUri, downloadInfo.S3Path), downloadInfo.Hash);
 }

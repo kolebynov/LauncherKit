@@ -180,6 +180,7 @@ public abstract class LauncherKitApp : Application
 			.MinimumLevel.Information()
 			.MinimumLevel.Override("Polly", LogEventLevel.Warning)
 			.MinimumLevel.Override($"System.Net.Http.HttpClient.{AppConstants.S3HttpClient}.ClientHandler", LogEventLevel.Warning)
+			.MinimumLevel.Override($"System.Net.Http.HttpClient.{AppConstants.S3DownloadHttpClient}.ClientHandler", LogEventLevel.Warning)
 			.MinimumLevel.Override($"System.Net.Http.HttpClient.{AppConstants.HttpFileSourceHttpClient}.ClientHandler", LogEventLevel.Warning)
 			.MinimumLevel.Override($"System.Net.Http.HttpClient.{AppConstants.AnalyticsHttpClient}.ClientHandler", LogEventLevel.Warning)
 			.WriteTo.File(

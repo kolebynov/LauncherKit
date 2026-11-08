@@ -1,7 +1,10 @@
+using System.Net;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Time.Testing;
 using NuGet.Versioning;
+using Polly.Timeout;
 using LauncherKit.Core.Db;
 using LauncherKit.Core.AppTasks;
 using LauncherKit.Core.Extensions;
@@ -228,6 +231,96 @@ public sealed class ServiceCollectionExtensionsTests
 			Assert.That(() => services.ReplaceService<BaseService>(_ => new DerivedService()), Throws.InvalidOperationException);
 			Assert.That(services.Select(x => x.ImplementationType), Has.All.EqualTo(typeof(BaseService)));
 		});
+	}
+
+	[Test]
+	public async Task S3HttpClient_BodyStallsAfterHeaders_TimesOut()
+	{
+		// Arrange
+		var timeProvider = new FakeTimeProvider();
+		await using var provider = BuildProviderWithStallingServer(AppConstants.S3HttpClient, timeProvider);
+		using var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(AppConstants.S3HttpClient);
+
+		// Act
+		var request = client.GetStringAsync(new Uri("https://main.example/feed.json"));
+		for (var i = 0; i < 120 && !request.IsCompleted; i++)
+		{
+			timeProvider.Advance(TimeSpan.FromSeconds(1));
+			await Task.Delay(10);
+		}
+
+		// Assert
+		Assert.That(request.IsCompleted, Is.True, "The request did not finish within 120 seconds of fake time");
+		Assert.That(() => request, Throws.InstanceOf<TimeoutRejectedException>());
+	}
+
+	[Test]
+	public async Task S3DownloadHttpClient_BodyStallsAfterHeaders_ReturnsResponseWithoutReadingBody()
+	{
+		// Arrange
+		await using var provider = BuildProviderWithStallingServer(AppConstants.S3DownloadHttpClient, new FakeTimeProvider());
+		using var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(AppConstants.S3DownloadHttpClient);
+		using var request = new HttpRequestMessage(HttpMethod.Get, new Uri("https://main.example/file.7z"));
+
+		// Act
+		using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
+			.WaitAsync(TimeSpan.FromSeconds(10));
+
+		// Assert
+		Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+	}
+
+	/// <summary>Builds the core services whose <paramref name="clientName"/> client talks to a server that sends the headers and then stalls the body.</summary>
+	private static ServiceProvider BuildProviderWithStallingServer(string clientName, TimeProvider timeProvider)
+	{
+		var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+		{
+			["Urls:Feed:MainUrl"] = "https://main.example",
+		}).Build();
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		mocker.GetMock<IAppVersionProvider>().SetupGet(x => x.Version).Returns(NuGetVersion.Parse("1.0.0"));
+		var services = new ServiceCollection();
+		services.AddLogging();
+		services.AddSingleton(timeProvider);
+		services.AddSingleton(mocker.GetMock<IAppVersionProvider>().Object);
+		services.AddLauncherKitCore(configuration, ProductTestSupport.CreateProduct());
+		services.AddHttpClient(clientName).ConfigurePrimaryHttpMessageHandler(() => new StallingBodyHandler());
+		return services.BuildServiceProvider();
+	}
+
+	private sealed class StallingBodyHandler : HttpMessageHandler
+	{
+		protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+		{
+			var content = new StreamContent(new StallingStream());
+			content.Headers.ContentLength = 1000;
+			return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = content, RequestMessage = request });
+		}
+	}
+
+	/// <summary>A body whose reads never complete until cancelled.</summary>
+	private sealed class StallingStream : Stream
+	{
+		public override bool CanRead => true;
+		public override bool CanSeek => false;
+		public override bool CanWrite => false;
+		public override long Length => throw new NotSupportedException();
+		public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+
+		public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+		{
+			await Task.Delay(Timeout.Infinite, cancellationToken);
+			return 0;
+		}
+
+		public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+			ReadAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
+
+		public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+		public override void Flush() => throw new NotSupportedException();
+		public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+		public override void SetLength(long value) => throw new NotSupportedException();
+		public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 	}
 
 	private sealed class OtherService;
