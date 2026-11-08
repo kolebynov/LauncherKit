@@ -23,7 +23,7 @@ public sealed class FeedFileSourceFactoryTests
 		handler.Expect(HttpMethod.Head, directUri.AbsoluteUri).Respond(_ => Response(10));
 		handler.Expect(HttpMethod.Head, proxyUri.AbsoluteUri).Respond(_ => Response(20));
 		var mocker = new AutoMocker(MockBehavior.Strict);
-		MockHttpClientFactory.Factory(mocker, AppConstants.S3HttpClient, handler);
+		MockHttpClientFactory.Factory(mocker, AppConstants.S3DownloadHttpClient, handler);
 		mocker.Use<ILoggerFactory>(NullLoggerFactory.Instance);
 		mocker.Use(TimeProvider.System);
 		mocker.Use<IDownloadRateLimiter>(UnlimitedDownloadRateLimiter.Instance);

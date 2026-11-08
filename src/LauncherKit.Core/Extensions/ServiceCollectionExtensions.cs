@@ -70,47 +70,15 @@ public static class ServiceCollectionExtensions
 			})
 			.UseSocketsHttpHandler()
 			.AddResilienceHandler("Resilience", (builder, _) => builder
-				.AddTimeout(GetDefaultTotalTimeoutOptions())
-				.AddRetry(GetDefaultRetryOptions())
-				.AddTimeout(GetDefaultAttemptTimeoutOptions()))
+				.AddTimeout(GetTimeoutOptions())
+				.AddRetry(GetDefaultRetryOptions()))
 			.SelectPipelineByAuthority();
 
-		services.AddHttpClient(AppConstants.S3HttpClient)
-			.ConfigureHttpClient((sp, client) =>
-			{
-				var versionProvider = sp.GetRequiredService<IAppVersionProvider>();
-				ConfigureCloudflareClient(client, versionProvider, sp, "Feed");
-			})
-			.UseSocketsHttpHandler((h, _) =>
-			{
-				h.AutomaticDecompression = DecompressionMethods.None;
-				h.AllowAutoRedirect = true;
-				h.EnableMultipleHttp2Connections = true;
-				h.MaxConnectionsPerServer = int.MaxValue;
-			})
-			.AddResilienceHandler("Resilience", (builder, _) =>
-			{
-				var retryOptions = GetDefaultRetryOptions();
-				var shouldHandle = retryOptions.ShouldHandle;
-				retryOptions.ShouldHandle = arguments =>
-				{
-					var httpRequestKey = new ResiliencePropertyKey<HttpRequestMessage>("Resilience.Http.RequestMessage");
-					if (arguments.Outcome.Result is not { } response ||
-					    !arguments.Context.Properties.TryGetValue(httpRequestKey, out var request))
-					{
-						return shouldHandle(arguments);
-					}
-
-					return request.Headers.Range != null && response is { IsSuccessStatusCode: true, StatusCode: not HttpStatusCode.PartialContent }
-						? ValueTask.FromResult(true)
-						: shouldHandle(arguments);
-				};
-
-				builder
-					.AddTimeout(GetDefaultTotalTimeoutOptions())
-					.AddRetry(retryOptions)
-					.AddTimeout(GetDefaultAttemptTimeoutOptions());
-			});
+		// The resilience timeout covers only the handlers inside it, so a body read after SendAsync returns is not
+		// timed out. Documents are therefore buffered inside the pipeline; downloads stream and watch for stalls themselves.
+		services.AddS3HttpClient(AppConstants.S3HttpClient)
+			.AddHttpMessageHandler(() => new ResponseBufferingHandler());
+		services.AddS3HttpClient(AppConstants.S3DownloadHttpClient);
 
 		services.AddConfiguredScopeInitializer<LegacyPartialDownloadsInitializer>();
 		services.AddConfiguredScopeInitializer<CleanupOldDataInitializer>();
@@ -306,6 +274,47 @@ public static class ServiceCollectionExtensions
 		return services;
 	}
 
+	private static IHttpClientBuilder AddS3HttpClient(this IServiceCollection services, string name)
+	{
+		var clientBuilder = services.AddHttpClient(name);
+		clientBuilder
+			.ConfigureHttpClient((sp, client) =>
+			{
+				var versionProvider = sp.GetRequiredService<IAppVersionProvider>();
+				ConfigureCloudflareClient(client, versionProvider, sp, "Feed");
+			})
+			.UseSocketsHttpHandler((h, _) =>
+			{
+				h.AutomaticDecompression = DecompressionMethods.None;
+				h.AllowAutoRedirect = true;
+				h.EnableMultipleHttp2Connections = true;
+				h.MaxConnectionsPerServer = int.MaxValue;
+			})
+			.AddResilienceHandler("Resilience", (builder, _) =>
+			{
+				var retryOptions = GetDefaultRetryOptions();
+				var shouldHandle = retryOptions.ShouldHandle;
+				retryOptions.ShouldHandle = arguments =>
+				{
+					var httpRequestKey = new ResiliencePropertyKey<HttpRequestMessage>("Resilience.Http.RequestMessage");
+					if (arguments.Outcome.Result is not { } response ||
+					    !arguments.Context.Properties.TryGetValue(httpRequestKey, out var request))
+					{
+						return shouldHandle(arguments);
+					}
+
+					return request.Headers.Range != null && response is { IsSuccessStatusCode: true, StatusCode: not HttpStatusCode.PartialContent }
+						? ValueTask.FromResult(true)
+						: shouldHandle(arguments);
+				};
+
+				builder
+					.AddTimeout(GetTimeoutOptions())
+					.AddRetry(retryOptions);
+			});
+		return clientBuilder;
+	}
+
 	private static void ConfigureCloudflareClient(HttpClient client, IAppVersionProvider versionProvider,
 		IServiceProvider services, string urlName)
 	{
@@ -324,13 +333,12 @@ public static class ServiceCollectionExtensions
 		UseJitter = true,
 	};
 
-	private static HttpTimeoutStrategyOptions GetDefaultTotalTimeoutOptions() => new()
+	/// <summary>
+	/// One timeout over all attempts of a request, outside the retry: an attempt that stalls is not cut short to retry,
+	/// it ends the request.
+	/// </summary>
+	private static HttpTimeoutStrategyOptions GetTimeoutOptions() => new()
 	{
-		Timeout = TimeSpan.FromSeconds(30),
-	};
-
-	private static HttpTimeoutStrategyOptions GetDefaultAttemptTimeoutOptions() => new()
-	{
-		Timeout = TimeSpan.FromSeconds(10),
+		Timeout = TimeSpan.FromSeconds(15),
 	};
 }
