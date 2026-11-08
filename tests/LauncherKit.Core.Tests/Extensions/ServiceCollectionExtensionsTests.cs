@@ -238,27 +238,27 @@ public sealed class ServiceCollectionExtensionsTests
 	{
 		// Arrange
 		var timeProvider = new FakeTimeProvider();
-		await using var provider = BuildProviderWithStallingServer(AppConstants.S3HttpClient, timeProvider);
+		var bodyReadStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+		await using var provider = BuildProviderWithStallingServer(AppConstants.S3HttpClient, timeProvider, bodyReadStarted);
 		using var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(AppConstants.S3HttpClient);
 
 		// Act
 		var request = client.GetStringAsync(new Uri("https://main.example/feed.json"));
-		for (var i = 0; i < 120 && !request.IsCompleted; i++)
-		{
-			timeProvider.Advance(TimeSpan.FromSeconds(1));
-			await Task.Delay(10);
-		}
+		// The resilience timeout is started before the body read, so the clock can move past it now.
+		await bodyReadStarted.Task;
+		timeProvider.Advance(TimeSpan.FromSeconds(15));
 
 		// Assert
-		Assert.That(request.IsCompleted, Is.True, "The request did not finish within 120 seconds of fake time");
-		Assert.That(() => request, Throws.InstanceOf<TimeoutRejectedException>());
+		// The real-time limit only keeps a broken timeout from hanging the run.
+		Assert.That(async () => await request.WaitAsync(TimeSpan.FromSeconds(30)), Throws.InstanceOf<TimeoutRejectedException>());
 	}
 
 	[Test]
 	public async Task S3DownloadHttpClient_BodyStallsAfterHeaders_ReturnsResponseWithoutReadingBody()
 	{
 		// Arrange
-		await using var provider = BuildProviderWithStallingServer(AppConstants.S3DownloadHttpClient, new FakeTimeProvider());
+		await using var provider = BuildProviderWithStallingServer(
+			AppConstants.S3DownloadHttpClient, new FakeTimeProvider(), new TaskCompletionSource());
 		using var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(AppConstants.S3DownloadHttpClient);
 		using var request = new HttpRequestMessage(HttpMethod.Get, new Uri("https://main.example/file.7z"));
 
@@ -271,7 +271,8 @@ public sealed class ServiceCollectionExtensionsTests
 	}
 
 	/// <summary>Builds the core services whose <paramref name="clientName"/> client talks to a server that sends the headers and then stalls the body.</summary>
-	private static ServiceProvider BuildProviderWithStallingServer(string clientName, TimeProvider timeProvider)
+	private static ServiceProvider BuildProviderWithStallingServer(
+		string clientName, TimeProvider timeProvider, TaskCompletionSource bodyReadStarted)
 	{
 		var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
 		{
@@ -284,22 +285,22 @@ public sealed class ServiceCollectionExtensionsTests
 		services.AddSingleton(timeProvider);
 		services.AddSingleton(mocker.GetMock<IAppVersionProvider>().Object);
 		services.AddLauncherKitCore(configuration, ProductTestSupport.CreateProduct());
-		services.AddHttpClient(clientName).ConfigurePrimaryHttpMessageHandler(() => new StallingBodyHandler());
+		services.AddHttpClient(clientName).ConfigurePrimaryHttpMessageHandler(() => new StallingBodyHandler(bodyReadStarted));
 		return services.BuildServiceProvider();
 	}
 
-	private sealed class StallingBodyHandler : HttpMessageHandler
+	private sealed class StallingBodyHandler(TaskCompletionSource bodyReadStarted) : HttpMessageHandler
 	{
 		protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
 		{
-			var content = new StreamContent(new StallingStream());
+			var content = new StreamContent(new StallingStream(bodyReadStarted));
 			content.Headers.ContentLength = 1000;
 			return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = content, RequestMessage = request });
 		}
 	}
 
-	/// <summary>A body whose reads never complete until cancelled.</summary>
-	private sealed class StallingStream : Stream
+	/// <summary>A body whose reads never complete until cancelled; the first read completes <c>readStarted</c>.</summary>
+	private sealed class StallingStream(TaskCompletionSource readStarted) : Stream
 	{
 		public override bool CanRead => true;
 		public override bool CanSeek => false;
@@ -309,6 +310,7 @@ public sealed class ServiceCollectionExtensionsTests
 
 		public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
 		{
+			readStarted.TrySetResult();
 			await Task.Delay(Timeout.Infinite, cancellationToken);
 			return 0;
 		}
