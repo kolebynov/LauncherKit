@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using R3;
 using LauncherKit.Core.AppTasks.ModpackComponents;
 using LauncherKit.Core.Backups;
+using LauncherKit.Core.Feed.Install;
 using LauncherKit.Core.Feed.Mods;
 using LauncherKit.Core.FileSources;
 using LauncherKit.Core.FileStorage;
@@ -102,6 +103,9 @@ public sealed class MicroTasksFactory : IMicroTasksFactory
 	public IAppMicroTask CreateSelectRequiredModMicroTask(InstallStepContext context, IReadOnlyList<string> requiredMods) =>
 		new SelectRequiredModMicroTask(context, _loggerFactory.CreateLogger<SelectRequiredModMicroTask>(),
 			_modOrganizerService, requiredMods);
+
+	public IAppMicroTask CreateSelectChoicesMicroTask(InstallStepContext context, InstallAction.SelectChoices action) =>
+		new SelectChoicesMicroTask(context, _loggerFactory.CreateLogger<SelectChoicesMicroTask>(), action);
 
 	public IAppMicroTask CreateSelectModpackComponentsMicroTask(ModpackComponentsOffer offer) =>
 		new SelectModpackComponentsMicroTask(offer, _downloadServerFallback, _feedFileSourceFactory);

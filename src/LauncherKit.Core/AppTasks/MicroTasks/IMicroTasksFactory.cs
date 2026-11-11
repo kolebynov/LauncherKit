@@ -2,6 +2,7 @@ using System.Diagnostics;
 using R3;
 using LauncherKit.Core.AppTasks.ModpackComponents;
 using LauncherKit.Core.Backups;
+using LauncherKit.Core.Feed.Install;
 using LauncherKit.Core.Feed.Mods;
 using LauncherKit.Core.Models;
 
@@ -43,6 +44,9 @@ public interface IMicroTasksFactory
 		bool throwForNonZeroExitCode, MicroTaskDescription description);
 
 	IAppMicroTask CreateSelectRequiredModMicroTask(InstallStepContext context, IReadOnlyList<string> requiredMods);
+
+	/// <summary>Asks the action's choices and records them in <paramref name="context"/>.</summary>
+	IAppMicroTask CreateSelectChoicesMicroTask(InstallStepContext context, InstallAction.SelectChoices action);
 
 	IAppMicroTask CreateSelectModpackComponentsMicroTask(ModpackComponentsOffer offer);
 }

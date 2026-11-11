@@ -30,9 +30,9 @@ public static class FeedValidator
 				var patchLocation = $"{location} › Патч {Label(patch.Version, patchIndex)}";
 				errors.Check(patchLocation, "Версия", FeedRules.Version, patch.Version);
 				errors.DownloadInfo(patchLocation, patch.DownloadInfo);
-				foreach (var (step, stepIndex) in patch.InstallSteps.Select((x, i) => (x, i)))
+				foreach (var stepIndex in Enumerable.Range(0, patch.InstallSteps.Count))
 				{
-					errors.InstallStep($"{patchLocation} › Шаг {stepIndex}", step, stepIndex, null);
+					errors.InstallStep($"{patchLocation} › Шаг {stepIndex}", patch.InstallSteps, stepIndex, null);
 				}
 			}
 		}
@@ -247,9 +247,9 @@ public static class FeedValidator
 				Check(itemLocation, "Поддерживаемые версии сборки", FeedRules.VersionRange, item.SupportedModpackVersion);
 				DownloadInfo($"{itemLocation} › Архив мода", item.ArchiveDownloadInfo);
 				Placement($"{itemLocation} › Размещение", item.Placement, mod.Name);
-				foreach (var (step, stepIndex) in item.InstallSteps.Select((x, i) => (x, i)))
+				foreach (var stepIndex in Enumerable.Range(0, item.InstallSteps.Count))
 				{
-					InstallStep($"{itemLocation} › Шаг {stepIndex}", step, stepIndex, mod.Name);
+					InstallStep($"{itemLocation} › Шаг {stepIndex}", item.InstallSteps, stepIndex, mod.Name);
 				}
 
 				var itemVersion = NuGetVersion.TryParse(item.Version, out var parsedItemVersion) ? parsedItemVersion : null;
@@ -275,9 +275,9 @@ public static class FeedValidator
 					}
 
 					DownloadInfo(patchLocation, patch.DownloadInfo);
-					foreach (var (step, stepIndex) in patch.InstallSteps.Select((x, i) => (x, i)))
+					foreach (var stepIndex in Enumerable.Range(0, patch.InstallSteps.Count))
 					{
-						InstallStep($"{patchLocation} › Шаг {stepIndex}", step, stepIndex, mod.Name);
+						InstallStep($"{patchLocation} › Шаг {stepIndex}", patch.InstallSteps, stepIndex, mod.Name);
 					}
 				}
 			}
@@ -308,11 +308,12 @@ public static class FeedValidator
 		}
 
 		/// <summary>
-		/// Checks the step at <paramref name="stepIndex"/> of a step list installed for the mod <paramref name="modName"/>,
-		/// or for an сборки patch when <see langword="null"/>.
+		/// Checks the step at <paramref name="stepIndex"/> of <paramref name="steps"/>, a step list installed for the mod
+		/// <paramref name="modName"/>, or for an сборки patch when <see langword="null"/>.
 		/// </summary>
-		public void InstallStep(string location, ModInstallStepModel step, int stepIndex, string? modName)
+		public void InstallStep(string location, IReadOnlyList<ModInstallStepModel> steps, int stepIndex, string? modName)
 		{
+			var step = steps[stepIndex];
 			if (step.Actions.Count == 0)
 			{
 				Add(location, "Нужно хотя бы одно действие.");
@@ -324,9 +325,25 @@ public static class FeedValidator
 				{
 					Add($"{location} › Условие", $"Должно ссылаться на предыдущий шаг, а ссылается на шаг {condition.StepIndex}.");
 				}
+				else if (!string.IsNullOrWhiteSpace(condition.Key) && !PublishedKeys(steps[condition.StepIndex]).Contains(condition.Key))
+				{
+					Add($"{location} › Условие › Ключ", $"Шаг {condition.StepIndex} не задаёт ключ «{condition.Key}».");
+				}
+				else if (ChoiceKeys(steps[condition.StepIndex]).Contains(condition.Key)
+				         && condition.Value is not (SelectChoicesAction.Selected or SelectChoicesAction.NotSelected))
+				{
+					Add($"{location} › Условие › Значение",
+						$"Вариант выбора имеет значение «{SelectChoicesAction.Selected}» или «{SelectChoicesAction.NotSelected}».");
+				}
 
 				Check($"{location} › Условие", "Ключ", FeedRules.Required, condition.Key);
 				Check($"{location} › Условие", "Значение", FeedRules.Required, condition.Value);
+			}
+
+			// Every key the step publishes is read from the same context, so it must be published once.
+			foreach (var duplicate in PublishedKeys(step).GroupBy(x => x, StringComparer.Ordinal).Where(x => x.Count() > 1))
+			{
+				Add(location, $"Ключ «{duplicate.Key}» задаётся в шаге больше одного раза.");
 			}
 
 			foreach (var (action, actionIndex) in step.Actions.Select((x, i) => (x, i)))
@@ -334,6 +351,16 @@ public static class FeedValidator
 				InstallAction($"{location} › Действие {actionIndex + 1}", action, modName);
 			}
 		}
+
+		private static IEnumerable<string> ChoiceKeys(ModInstallStepModel step) =>
+			step.Actions.OfType<SelectChoicesAction>().SelectMany(x => x.Steps).SelectMany(x => x.Options).Select(x => x.Id)
+				.Where(x => !string.IsNullOrWhiteSpace(x));
+
+		/// <summary>The context keys the step's actions set, which conditions of later steps can read.</summary>
+		private static IEnumerable<string> PublishedKeys(ModInstallStepModel step) =>
+			step.Actions.OfType<SelectRequiredModAction>().Any()
+				? ChoiceKeys(step).Append(ModInstallConditionModel.SelectedModKey)
+				: ChoiceKeys(step);
 
 		private void InstallAction(string location, ModInstallActionModel action, string? modName)
 		{
@@ -352,6 +379,9 @@ public static class FeedValidator
 					break;
 				case SelectRequiredModAction selectRequiredMod:
 					Lines(location, "Моды", selectRequiredMod.Mods);
+					break;
+				case SelectChoicesAction selectChoices:
+					SelectChoices(location, selectChoices);
 					break;
 				case ActivateModsAction activateMods:
 					Lines(location, "Моды", activateMods.Mods);
@@ -374,6 +404,41 @@ public static class FeedValidator
 					break;
 				default:
 					throw new ArgumentException($"Unsupported mod install action type {action.GetType()}.", nameof(action));
+			}
+		}
+
+		private void SelectChoices(string location, SelectChoicesAction action)
+		{
+			Localized(location, "Заголовок окна", action.Title);
+			if (action.Steps.Count == 0)
+			{
+				Add($"{location} › Страницы", "Нужна хотя бы одна страница.");
+			}
+
+			foreach (var (step, stepIndex) in action.Steps.Select((x, i) => (x, i)))
+			{
+				var stepLocation = $"{location} › Страница {stepIndex + 1}";
+				Localized(stepLocation, "Заголовок", step.Title);
+				Localized(stepLocation, "Подзаголовок", step.Subtitle, optional: true);
+				if (step.Options.Count == 0)
+				{
+					Add($"{stepLocation} › Варианты", "Нужен хотя бы один вариант.");
+				}
+
+				// One of these modes cannot be satisfied when two options are always selected.
+				if (step.SelectionMode is ChoiceSelectionMode.ExactlyOne or ChoiceSelectionMode.AtMostOne
+				    && step.Options.Count(x => x.IsRequired) > 1)
+				{
+					Add($"{stepLocation} › Варианты", "При выборе не больше одного варианта обязательным может быть только один.");
+				}
+
+				foreach (var (option, optionIndex) in step.Options.Select((x, i) => (x, i)))
+				{
+					var optionLocation = $"{stepLocation} › Вариант {Label(option.Id, optionIndex)}";
+					Check(optionLocation, "Идентификатор", FeedRules.Required, option.Id);
+					Localized(optionLocation, "Название", option.Name);
+					Localized(optionLocation, "Описание", option.Description, optional: true);
+				}
 			}
 		}
 	}

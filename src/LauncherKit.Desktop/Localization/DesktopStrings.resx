@@ -84,6 +84,7 @@
 	<data name="MicroRevertArchiveExtraction" xml:space="preserve"><value>Revert extraction of {0}</value></data>
 	<data name="MicroRevertPluginsMerge" xml:space="preserve"><value>Revert plugin merge from {0}</value></data>
 	<data name="MicroRunProcess" xml:space="preserve"><value>Run {0}</value></data>
+	<data name="MicroSelectChoices" xml:space="preserve"><value>Select installation options</value></data>
 	<data name="MicroSelectModpackComponents" xml:space="preserve"><value>Select installation components</value></data>
 	<data name="MicroSelectRequiredMod" xml:space="preserve"><value>Select a required mod</value></data>
 	<data name="MicroUninstallMod" xml:space="preserve"><value>Uninstall mod {0}</value></data>

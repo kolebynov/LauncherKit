@@ -16,7 +16,7 @@ namespace LauncherKit.FeedEditor.Tests.Storage;
 public sealed class FeedSessionTests
 {
 	private const string Bucket = "launcher";
-	private const string FeedKey = "feedV11.json";
+	private const string FeedKey = "feedV12.json";
 	private const string ETag = "\"etag-1\"";
 
 	[Test]

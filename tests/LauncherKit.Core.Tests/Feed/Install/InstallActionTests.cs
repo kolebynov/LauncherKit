@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using LauncherKit.Core.Choices;
 using LauncherKit.Core.Feed;
 using LauncherKit.Core.Feed.Install;
 using LauncherKit.Core.Feed.Mods;
@@ -18,6 +19,26 @@ public sealed class InstallActionTests
 			new InstallAction.InstallMod(new DownloadInfo { S3Path = "Mods/b.zip", Hash = new Sha256Hash(Hash) }, "B", new ModPlacement.NextToMod("A", ModListSide.Below)),
 			$$$"""{"$type":"InstallMod","DownloadInfo":{"S3Path":"Mods/b.zip","Hash":"{{{Hash}}}","FileName":"b.zip"},"ModName":"B","Placement":{"$type":"NextToMod","ModName":"A","Side":"Below"}}""");
 		yield return Case(new InstallAction.SelectRequiredMod(["A", "B"]), """{"$type":"SelectRequiredMod","Mods":["A","B"]}""");
+		yield return Case(
+			new InstallAction.SelectChoices(new LocalizedText { ["ru"] = "Title ru", ["en"] = "Title" },
+			[
+				new InstallChoiceStep
+				{
+					Title = new LocalizedText { ["ru"] = "Page" },
+					Subtitle = new LocalizedText { ["ru"] = "Subtitle" },
+					SelectionMode = ChoiceSelectionMode.AtLeastOne,
+					Options =
+					[
+						new InstallChoiceOption { Id = "A", Name = new LocalizedText { ["ru"] = "Option A" }, IsRequired = true },
+						new InstallChoiceOption
+						{
+							Id = "B", Name = new LocalizedText { ["ru"] = "Option B" }, Description = new LocalizedText { ["ru"] = "About B" },
+							IsSelectedByDefault = true,
+						},
+					],
+				},
+			]),
+			"""{"$type":"SelectChoices","Title":{"ru":"Title ru","en":"Title"},"Steps":[{"Title":{"ru":"Page"},"Subtitle":{"ru":"Subtitle"},"SelectionMode":"AtLeastOne","Options":[{"Id":"A","Name":{"ru":"Option A"},"Description":null,"IsRequired":true,"IsSelectedByDefault":false},{"Id":"B","Name":{"ru":"Option B"},"Description":{"ru":"About B"},"IsRequired":false,"IsSelectedByDefault":true}]}]}""");
 		yield return Case(new InstallAction.ActivateMods(true, ["A"]), """{"$type":"ActivateMods","Activate":true,"Mods":["A"]}""");
 		yield return Case(
 			new InstallAction.ActivatePlugins(false, ["a.esp"]),

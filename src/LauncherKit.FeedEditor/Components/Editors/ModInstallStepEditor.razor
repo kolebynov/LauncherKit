@@ -22,8 +22,21 @@
 				</MudSelect>
 			</MudItem>
 			<MudItem xs="12" sm="6" md="3">
-				<MudTextField @bind-Value="condition.Key" Label="Ключ" Required="true" Validation="@FeedRules.Required"
-							  Variant="Variant.Outlined" Margin="Margin.Dense" />
+				@if (ConditionKeys(condition.StepIndex) is { Count: > 0 } keys)
+				{
+					<MudSelect @bind-Value="condition.Key" Label="Ключ" Variant="Variant.Outlined" Margin="Margin.Dense"
+							   Required="true" Validation="@FeedRules.Required">
+						@foreach (var key in keys)
+						{
+							<MudSelectItem Value="key">@key</MudSelectItem>
+						}
+					</MudSelect>
+				}
+				else
+				{
+					<MudTextField @bind-Value="condition.Key" Label="Ключ" Required="true" Validation="@FeedRules.Required"
+								  Variant="Variant.Outlined" Margin="Margin.Dense" />
+				}
 			</MudItem>
 			<MudItem xs="12" sm="6" md="2">
 				<MudSelect @bind-Value="condition.Operator" Label="Оператор" Variant="Variant.Outlined" Margin="Margin.Dense">
@@ -32,7 +45,15 @@
 				</MudSelect>
 			</MudItem>
 			<MudItem xs="12" sm="6" md="4">
-				@if (SelectableMods(condition) is { Count: > 0 } mods)
+				@if (IsChoiceKey(condition))
+				{
+					<MudSelect @bind-Value="condition.Value" Label="Значение" Variant="Variant.Outlined" Margin="Margin.Dense"
+							   Required="true" Validation="@FeedRules.Required">
+						<MudSelectItem Value="@SelectChoicesAction.Selected">выбран (@SelectChoicesAction.Selected)</MudSelectItem>
+						<MudSelectItem Value="@SelectChoicesAction.NotSelected">не выбран (@SelectChoicesAction.NotSelected)</MudSelectItem>
+					</MudSelect>
+				}
+				else if (SelectableMods(condition) is { Count: > 0 } mods)
 				{
 					<MudSelect @bind-Value="condition.Value" Label="Значение" Variant="Variant.Outlined" Margin="Margin.Dense"
 							   Required="true" Validation="@FeedRules.Required">
@@ -77,12 +98,41 @@
 	[Parameter]
 	public bool CanRollback { get; set; } = true;
 
-	private void SetConditional(bool conditional) =>
-		Step.Condition = conditional ? new ModInstallConditionModel { StepIndex = StepIndex - 1 } : null;
+	private void SetConditional(bool conditional)
+	{
+		if (!conditional)
+		{
+			Step.Condition = null;
+			return;
+		}
+
+		var stepIndex = StepIndex - 1;
+		var choiceKey = ChoiceKeys(stepIndex).FirstOrDefault();
+		Step.Condition = choiceKey is null
+			? new ModInstallConditionModel { StepIndex = stepIndex }
+			: new ModInstallConditionModel { StepIndex = stepIndex, Key = choiceKey, Value = SelectChoicesAction.Selected };
+	}
+
+	private IReadOnlyList<ModInstallActionModel> StepActions(int stepIndex) =>
+		stepIndex >= 0 && stepIndex < Steps.Count ? Steps[stepIndex].Actions : [];
+
+	/// <summary>The option IDs of the referenced step's "Предложить выбор параметров" actions.</summary>
+	private IEnumerable<string> ChoiceKeys(int stepIndex) =>
+		StepActions(stepIndex).OfType<SelectChoicesAction>()
+			.SelectMany(x => x.Steps).SelectMany(x => x.Options).Select(x => x.Id)
+			.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct();
+
+	/// <summary>The keys the referenced step publishes, offered for selection when there are any.</summary>
+	private List<string> ConditionKeys(int stepIndex) =>
+		(StepActions(stepIndex).OfType<SelectRequiredModAction>().Any() ? [ModInstallConditionModel.SelectedModKey] : Array.Empty<string>())
+			.Concat(ChoiceKeys(stepIndex))
+			.ToList();
+
+	private bool IsChoiceKey(ModInstallConditionModel condition) => ChoiceKeys(condition.StepIndex).Contains(condition.Key);
 
 	/// <summary>Mods offered by the referenced step's "Select required mod" action, the values a SelectedMod condition can match.</summary>
 	private List<string> SelectableMods(ModInstallConditionModel condition) =>
-		condition.Key == ModInstallConditionModel.SelectedModKey && condition.StepIndex >= 0 && condition.StepIndex < Steps.Count
-			? Steps[condition.StepIndex].Actions.OfType<SelectRequiredModAction>().SelectMany(x => x.Mods).Distinct().ToList()
+		condition.Key == ModInstallConditionModel.SelectedModKey
+			? StepActions(condition.StepIndex).OfType<SelectRequiredModAction>().SelectMany(x => x.Mods).Distinct().ToList()
 			: [];
 }

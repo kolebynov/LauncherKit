@@ -19,6 +19,19 @@ public closed record InstallAction
 
 	public sealed record SelectRequiredMod(IReadOnlyList<string> Mods) : InstallAction;
 
+	/// <summary>
+	/// Asks the user to go through <paramref name="Steps"/> in a dialog titled <paramref name="Title"/>, then records in
+	/// its install step's context, under each option's <see cref="InstallChoiceOption.Id"/>, <see cref="Selected"/> or
+	/// <see cref="NotSelected"/>, for the conditions of later steps. It asks on every installation and has nothing to
+	/// roll back.
+	/// </summary>
+	public sealed record SelectChoices(LocalizedText Title, IReadOnlyList<InstallChoiceStep> Steps) : InstallAction
+	{
+		public const string Selected = "true";
+
+		public const string NotSelected = "false";
+	}
+
 	public sealed record ActivateMods(bool Activate, IReadOnlyList<string> Mods) : InstallAction;
 
 	public sealed record ActivatePlugins(bool Activate, IReadOnlyList<string> Plugins) : InstallAction;

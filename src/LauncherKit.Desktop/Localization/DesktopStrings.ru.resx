@@ -85,6 +85,7 @@
 	<data name="MicroRevertArchiveExtraction" xml:space="preserve"><value>Отмена распаковки {0}</value></data>
 	<data name="MicroRevertPluginsMerge" xml:space="preserve"><value>Отмена объединения плагинов из {0}</value></data>
 	<data name="MicroRunProcess" xml:space="preserve"><value>Запуск {0}</value></data>
+	<data name="MicroSelectChoices" xml:space="preserve"><value>Выбор параметров установки</value></data>
 	<data name="MicroSelectModpackComponents" xml:space="preserve"><value>Выбор компонентов установки</value></data>
 	<data name="MicroSelectRequiredMod" xml:space="preserve"><value>Выбор обязательного мода</value></data>
 	<data name="MicroUninstallMod" xml:space="preserve"><value>Удаление мода {0}</value></data>

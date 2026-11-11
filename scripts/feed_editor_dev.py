@@ -4,7 +4,7 @@ The fake bucket is an in-memory S3 subset served on localhost (the requests Feed
 GetObject, HeadObject, PutObject with If-Match, ListObjectsV2, multipart uploads and CORS preflights; signatures are
 not checked). Each run starts from the same data:
 
-- the feed under `feedV11.json` (--feed);
+- the feed under `feedV12.json` (--feed);
 - an object for every bucket path the feed names (downloads, logos, descriptions, changelogs) with small fixed content
   and `x-amz-meta-checksum-sha256` metadata holding that content's SHA-256, so picking such a path fills its hash;
 - `Smoke/` objects for the other cases: `no-checksum.7z` (no metadata), `invalid-checksum.7z` (metadata that is not a
@@ -35,8 +35,8 @@ from xml.sax.saxutils import escape
 SCRIPT_DIR = Path(__file__).resolve().parent
 KIT_DIR = SCRIPT_DIR.parent
 EDITOR_PROJECT = KIT_DIR / 'src' / 'LauncherKit.FeedEditor'
-DEFAULT_FEED = KIT_DIR / 'tests' / 'LauncherKit.FeedEditor.Tests' / 'Fixtures' / 'feedV11.json'
-FEED_KEY = 'feedV11.json'
+DEFAULT_FEED = KIT_DIR / 'tests' / 'LauncherKit.FeedEditor.Tests' / 'Fixtures' / 'feedV12.json'
+FEED_KEY = 'feedV12.json'
 DEFAULT_EDITOR_PORT = 5090
 DEFAULT_R2_PORT = 5005
 DENIED_ACCESS_KEY = 'denied'
@@ -83,7 +83,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--bucket', required=True, help='consumer bucket name for the fake R2 service')
     parser.add_argument('--port', type=int, default=DEFAULT_EDITOR_PORT, help='feed editor port (default %(default)s)')
     parser.add_argument('--r2-port', type=int, default=DEFAULT_R2_PORT, help='fake R2 port (default %(default)s)')
-    parser.add_argument('--feed', type=Path, default=DEFAULT_FEED, help='V11 feed JSON (default: the editor V11 fixture)')
+    parser.add_argument('--feed', type=Path, default=DEFAULT_FEED, help='V12 feed JSON (default: the editor V12 fixture)')
     parser.add_argument('--no-editor', action='store_true', help='serve only the fake bucket')
     return parser.parse_args()
 

@@ -175,6 +175,24 @@ public sealed class FeedJsonTests
 											Placement = new ModPlacementModel { Kind = ModPlacementKind.NextToMod, ModName = "A", Side = ModListSide.Above },
 										},
 										new SelectRequiredModAction { Mods = { "A", "B" } },
+										new SelectChoicesAction
+										{
+											Title = Text("Выбор"),
+											Steps =
+											{
+												new ChoiceStepModel
+												{
+													Title = Text("Страница"),
+													Subtitle = new Dictionary<string, string> { ["ru"] = "Подзаголовок", ["en"] = "Subtitle" },
+													SelectionMode = ChoiceSelectionMode.AtMostOne,
+													Options =
+													{
+														new ChoiceOptionModel { Id = "A", Name = Text("А"), Description = Text("Описание"), IsRequired = true },
+														new ChoiceOptionModel { Id = "B", Name = Text("Б"), IsSelectedByDefault = true },
+													},
+												},
+											},
+										},
 										new ActivateModsAction { Activate = false, Mods = { "A" } },
 										new ActivatePluginsAction { Activate = true, Plugins = { "a.esp" } },
 										new RemoveFileSystemItemAction { Paths = { "old" } },
@@ -193,7 +211,7 @@ public sealed class FeedJsonTests
 											Placement = new ModPlacementModel { Kind = ModPlacementKind.NextToMod, ModName = "B", Side = ModListSide.Below },
 										},
 									},
-									Condition = new ModInstallConditionModel { StepIndex = 0, Operator = CompareOperator.NotEqual, Value = "A" },
+									Condition = new ModInstallConditionModel { StepIndex = 0, Key = "B", Operator = CompareOperator.NotEqual, Value = SelectChoicesAction.Selected },
 								},
 							},
 						},

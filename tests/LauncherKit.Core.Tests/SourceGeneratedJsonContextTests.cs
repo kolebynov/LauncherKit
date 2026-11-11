@@ -10,7 +10,7 @@ public sealed class SourceGeneratedJsonContextTests
 	public void FeedData_ConvertedRealFeed_ReadsEveryCaseAsItsType()
 	{
 		// Arrange
-		var feedJson = ReadFixture("feedV11.json");
+		var feedJson = ReadFixture("feedV12.json");
 		var mods = JsonNode.Parse(feedJson)!["Mods"]!.AsArray();
 
 		// Act
@@ -27,7 +27,7 @@ public sealed class SourceGeneratedJsonContextTests
 	public void FeedData_ConvertedRealFeed_WritesSameCases()
 	{
 		// Arrange
-		var feedJson = ReadFixture("feedV11.json");
+		var feedJson = ReadFixture("feedV12.json");
 		var feed = JsonSerializer.Deserialize(feedJson, SourceGeneratedJsonContext.Default.FeedData);
 
 		// Act

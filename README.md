@@ -2,7 +2,7 @@
 
 LauncherKit is the reusable core of Windows desktop launchers for Skyrim Special Edition modpacks managed by Mod Organizer 2. A consumer adds its product identity, views and branding; the kit supplies everything else:
 
-- **Feed-driven installs and updates.** Modpacks, modpack patches, optional mods, graph packs, install components and launcher updates come from a JSON feed (`feedV11.json`) served over HTTP from a main server with a proxy fallback.
+- **Feed-driven installs and updates.** Modpacks, modpack patches, optional mods, graph packs, install components and launcher updates come from a JSON feed (`feedV12.json`) served over HTTP from a main server with a proxy fallback.
 - **Task queue.** Installs run as dependency-aware task graphs with progress, resume and cancellation. Downloads are resumable and multi-part with hash checks; a file storage tracks every download.
 - **Installation steps.** 7-Zip extraction and FOMOD installers, Mod Organizer profile, mod list and plugin management, and backups that let installed mods be rolled back and uninstalled.
 - **Accounts and analytics.** Discord account linking (OAuth with PKCE) with role-based beta access, beta codes, and anonymous installation analytics.
@@ -315,7 +315,7 @@ The configuration is read in this order, each source overriding the previous: `G
 
 ```json
 {
-	"Feed": { "FeedPath": "feedV11.json" },
+	"Feed": { "FeedPath": "feedV12.json" },
 	"Urls": {
 		"Feed": { "MainUrl": "https://feed.example.com", "ProxyUrl": "https://proxy.feed.example.com" },
 		"Analytics": { "MainUrl": "https://analytics.example.com", "ProxyUrl": "https://proxy.analytics.example.com" }
@@ -436,8 +436,8 @@ class Build : LauncherBuild
 
 ### 9. Feed, feed editor and analytics
 
-- **Feed.** `feedV11.json` lists launcher versions, modpacks and their patches and changelogs, install components, prerequisites, graph packs and optional mods. Text is localized with a required `DefaultLanguage`. Downloads carry SHA-256 hashes, and install steps are declarative (`installMod`, `extractArchive`, `removeFileSystemItem`, `mergePlugins`, ...). The C# contracts are in `src/LauncherKit.Core/Feed`.
-- **Feed editor.** Edits the feed stored in a Cloudflare R2 bucket; each user signs in with their own R2 credentials. The consumer supplies its bucket as `R2:ServiceUrl` and `R2:BucketName` (`R2:FeedKey` defaults to `feedV11.json`), e.g. as `R2__ServiceUrl`/`R2__BucketName` environment variables. Run it with `dotnet run --project kit/src/LauncherKit.FeedEditor`, or in Docker: its `Dockerfile` builds from the consumer root, with a `compose.yaml` and `.dockerignore` there. The bucket needs CORS rules for direct uploads (see AGENTS.md).
+- **Feed.** `feedV12.json` lists launcher versions, modpacks and their patches and changelogs, install components, prerequisites, graph packs and optional mods. Text is localized with a required `DefaultLanguage`. Downloads carry SHA-256 hashes, and install steps are declarative (`installMod`, `extractArchive`, `removeFileSystemItem`, `mergePlugins`, ...); later steps can depend on what the user picked in a `selectChoices` dialog. The C# contracts are in `src/LauncherKit.Core/Feed`.
+- **Feed editor.** Edits the feed stored in a Cloudflare R2 bucket; each user signs in with their own R2 credentials. The consumer supplies its bucket as `R2:ServiceUrl` and `R2:BucketName` (`R2:FeedKey` defaults to `feedV12.json`), e.g. as `R2__ServiceUrl`/`R2__BucketName` environment variables. Run it with `dotnet run --project kit/src/LauncherKit.FeedEditor`, or in Docker: its `Dockerfile` builds from the consumer root, with a `compose.yaml` and `.dockerignore` there. The bucket needs CORS rules for direct uploads (see AGENTS.md).
 - **Analytics.** `workers/analytics` receives the installation reports the launcher sends on every start. The consumer owns the Wrangler configuration (routes, dataset, secrets):
 
 ```powershell

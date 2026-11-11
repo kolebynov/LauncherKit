@@ -5,6 +5,7 @@ namespace LauncherKit.FeedEditor.Feed.Json;
 [JsonSerializable(typeof(FeedModel))]
 [JsonSerializable(typeof(InstallModAction))]
 [JsonSerializable(typeof(SelectRequiredModAction))]
+[JsonSerializable(typeof(SelectChoicesAction))]
 [JsonSerializable(typeof(ActivateModsAction))]
 [JsonSerializable(typeof(ActivatePluginsAction))]
 [JsonSerializable(typeof(RemoveFileSystemItemAction))]

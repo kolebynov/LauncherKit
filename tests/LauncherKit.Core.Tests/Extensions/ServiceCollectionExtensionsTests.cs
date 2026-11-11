@@ -70,7 +70,7 @@ public sealed class ServiceCollectionExtensionsTests
 		{
 			["App:AppDataDirectory"] = temp.Path,
 			["App:SkyrimDirectory"] = temp.Path,
-			["Feed:FeedPath"] = "feedV11.json",
+			["Feed:FeedPath"] = "feedV12.json",
 			["Urls:Feed:MainUrl"] = "https://main.example",
 			["Urls:Feed:ProxyUrl"] = "https://proxy.example",
 			["Urls:Analytics:MainUrl"] = "https://analytics.example",
@@ -102,7 +102,7 @@ public sealed class ServiceCollectionExtensionsTests
 		Assert.Multiple(() =>
 		{
 			Assert.That(app.AppDataDirectory, Is.EqualTo(temp.Path));
-			Assert.That(feed.FeedPath, Is.EqualTo("feedV11.json"));
+			Assert.That(feed.FeedPath, Is.EqualTo("feedV12.json"));
 			Assert.That(urls.Urls.Keys, Is.EquivalentTo(new[] { "Feed", "Analytics" }));
 			Assert.That(urls.Urls["Feed"].MainUrl, Is.EqualTo(new Uri("https://main.example")));
 			Assert.That(urls.Urls["Analytics"].ProxyUrl, Is.EqualTo(new Uri("https://proxy.analytics.example")));

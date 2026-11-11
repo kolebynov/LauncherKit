@@ -14,6 +14,7 @@ public sealed partial class TaskTexts
 		MicroTaskDescription.MergePlugins(var fileName) => strings[DesktopStrings.MicroMergePlugins, fileName],
 		MicroTaskDescription.DeleteFiles => strings[DesktopStrings.MicroDeleteFiles],
 		MicroTaskDescription.SelectRequiredMod => strings[DesktopStrings.MicroSelectRequiredMod],
+		MicroTaskDescription.SelectChoices => strings[DesktopStrings.MicroSelectChoices],
 		MicroTaskDescription.SelectModpackComponents => strings[DesktopStrings.MicroSelectModpackComponents],
 		MicroTaskDescription.RunProcess(var fileName) => strings[DesktopStrings.MicroRunProcess, fileName],
 		MicroTaskDescription.GameStarted(var name) => strings[DesktopStrings.MicroGameStarted, name],

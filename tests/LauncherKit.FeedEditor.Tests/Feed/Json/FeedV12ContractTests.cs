@@ -7,7 +7,7 @@ using LauncherKit.FeedEditor.Feed.Json;
 namespace LauncherKit.FeedEditor.Tests.Feed.Json;
 
 [TestFixture]
-public sealed class FeedV11ContractTests
+public sealed class FeedV12ContractTests
 {
 	[Test]
 	public void Serialize_Fixture_WritesGenericNamesComponentsAndPrerequisites()
