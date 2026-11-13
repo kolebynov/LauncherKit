@@ -83,6 +83,7 @@ public sealed class DesktopStrings
 	public const string MicroRevertArchiveExtraction = nameof(MicroRevertArchiveExtraction);
 	public const string MicroRevertPluginsMerge = nameof(MicroRevertPluginsMerge);
 	public const string MicroRunProcess = nameof(MicroRunProcess);
+	public const string MicroSelectChoices = nameof(MicroSelectChoices);
 	public const string MicroSelectModpackComponents = nameof(MicroSelectModpackComponents);
 	public const string MicroSelectRequiredMod = nameof(MicroSelectRequiredMod);
 	public const string MicroUninstallMod = nameof(MicroUninstallMod);

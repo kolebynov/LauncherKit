@@ -82,6 +82,134 @@ public sealed class FeedValidatorTests
 		Assert.That(result, Is.Empty);
 	}
 
+	[TestCase(SelectChoicesAction.Selected)]
+	[TestCase(SelectChoicesAction.NotSelected)]
+	public void Validate_ConditionOnChoiceOption_ReturnsNoErrors(string value)
+	{
+		// Arrange
+		var feed = FeedWithModSteps(
+			new ModInstallStepModel { Actions = { Choices(ChoiceSelectionMode.Any, Option("A"), Option("B")) } },
+			new ModInstallStepModel
+			{
+				Actions = { new ActivateModsAction { Mods = { "A" } } },
+				Condition = new ModInstallConditionModel { StepIndex = 0, Key = "B", Value = value },
+			});
+
+		// Act
+		var result = FeedValidator.Validate(feed);
+
+		// Assert
+		Assert.That(result, Is.Empty);
+	}
+
+	[Test]
+	public void Validate_ConditionOnChoiceOptionWithOtherValue_ReportsValue()
+	{
+		// Arrange
+		var feed = FeedWithModSteps(
+			new ModInstallStepModel { Actions = { Choices(ChoiceSelectionMode.Any, Option("A")) } },
+			new ModInstallStepModel
+			{
+				Actions = { new ActivateModsAction { Mods = { "A" } } },
+				Condition = new ModInstallConditionModel { StepIndex = 0, Key = "A", Value = "A" },
+			});
+
+		// Act
+		var result = FeedValidator.Validate(feed);
+
+		// Assert
+		Assert.That(result.Select(x => x.Location), Is.EqualTo(new[] { "Мод M 1.0.0 › Шаг 1 › Условие › Значение" }));
+	}
+
+	[Test]
+	public void Validate_ConditionKeyTheStepDoesNotSet_ReportsKey()
+	{
+		// Arrange
+		var feed = FeedWithModSteps(
+			new ModInstallStepModel { Actions = { Choices(ChoiceSelectionMode.Any, Option("A")) } },
+			new ModInstallStepModel
+			{
+				Actions = { new ActivateModsAction { Mods = { "A" } } },
+				Condition = new ModInstallConditionModel { StepIndex = 0, Value = "A" },
+			});
+
+		// Act
+		var result = FeedValidator.Validate(feed);
+
+		// Assert
+		Assert.That(result.Select(x => x.Location), Is.EqualTo(new[] { "Мод M 1.0.0 › Шаг 1 › Условие › Ключ" }));
+	}
+
+	[Test]
+	public void Validate_StepSettingKeyTwice_ReportsStep()
+	{
+		// Arrange
+		var feed = FeedWithModSteps(
+			new ModInstallStepModel
+			{
+				Actions =
+				{
+					new SelectRequiredModAction { Mods = { "A" } },
+					Choices(ChoiceSelectionMode.Any, Option(ModInstallConditionModel.SelectedModKey), Option("B")),
+					Choices(ChoiceSelectionMode.Any, Option("B")),
+				},
+			});
+
+		// Act
+		var result = FeedValidator.Validate(feed);
+
+		// Assert
+		Assert.That(result.Select(x => x.Location), Is.EqualTo(new[] { "Мод M 1.0.0 › Шаг 0", "Мод M 1.0.0 › Шаг 0" }));
+	}
+
+	[Test]
+	public void Validate_IncompleteChoices_ReportsEachMissingPart()
+	{
+		// Arrange
+		var emptyPage = new ChoiceStepModel { Title = new Dictionary<string, string> { ["ru"] = "Страница" } };
+		var feed = FeedWithModSteps(new ModInstallStepModel
+		{
+			Actions =
+			{
+				new SelectChoicesAction(),
+				new SelectChoicesAction { Title = new Dictionary<string, string> { ["ru"] = "Выбор" }, Steps = { emptyPage } },
+				Choices(ChoiceSelectionMode.Any, new ChoiceOptionModel()),
+			},
+		});
+
+		// Act
+		var result = FeedValidator.Validate(feed);
+
+		// Assert
+		Assert.That(result.Select(x => x.Location), Is.EquivalentTo(new[]
+		{
+			"Мод M 1.0.0 › Шаг 0 › Действие 1 › Заголовок окна",
+			"Мод M 1.0.0 › Шаг 0 › Действие 1 › Страницы",
+			"Мод M 1.0.0 › Шаг 0 › Действие 2 › Страница 1 › Варианты",
+			"Мод M 1.0.0 › Шаг 0 › Действие 3 › Страница 1 › Вариант #1 › Идентификатор",
+			"Мод M 1.0.0 › Шаг 0 › Действие 3 › Страница 1 › Вариант #1 › Название",
+		}));
+	}
+
+	[TestCase(ChoiceSelectionMode.ExactlyOne, 1)]
+	[TestCase(ChoiceSelectionMode.AtMostOne, 1)]
+	[TestCase(ChoiceSelectionMode.AtLeastOne, 0)]
+	[TestCase(ChoiceSelectionMode.Any, 0)]
+	public void Validate_TwoRequiredOptions_ReportsOnlyForSingleSelection(ChoiceSelectionMode mode, int expectedErrors)
+	{
+		// Arrange
+		var first = Option("A");
+		var second = Option("B");
+		first.IsRequired = second.IsRequired = true;
+		var feed = FeedWithModSteps(new ModInstallStepModel { Actions = { Choices(mode, first, second) } });
+
+		// Act
+		var result = FeedValidator.Validate(feed);
+
+		// Assert
+		Assert.That(result, Has.Count.EqualTo(expectedErrors));
+	}
+
 	[Test]
 	public void Validate_ActionWithoutRequiredList_ReportsError()
 	{
@@ -412,6 +540,16 @@ public sealed class FeedValidatorTests
 		// Assert
 		Assert.That(result.Select(x => x.Location), Is.EquivalentTo(new[] { "Роли разработчиков", "Роль разработчика #3 › ID" }));
 	}
+
+	private static SelectChoicesAction Choices(ChoiceSelectionMode mode, params ChoiceOptionModel[] options)
+	{
+		var page = new ChoiceStepModel { Title = new Dictionary<string, string> { ["ru"] = "Страница" }, SelectionMode = mode };
+		page.Options.AddRange(options);
+		return new SelectChoicesAction { Title = new Dictionary<string, string> { ["ru"] = "Выбор" }, Steps = { page } };
+	}
+
+	private static ChoiceOptionModel Option(string id) =>
+		new() { Id = id, Name = new Dictionary<string, string> { ["ru"] = id } };
 
 	private static FeedModel FeedWithModSteps(params ModInstallStepModel[] steps)
 	{

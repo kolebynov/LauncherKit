@@ -25,6 +25,58 @@ public sealed class SelectRequiredModAction : ModInstallActionModel
 	public List<string> Mods { get; init; } = [];
 }
 
+/// <summary>
+/// Asks the user to go through <see cref="Steps"/> in a dialog titled <see cref="Title"/>; each option's
+/// <see cref="ChoiceOptionModel.Id"/> then holds <see cref="Selected"/> or <see cref="NotSelected"/> for the conditions of
+/// later steps.
+/// </summary>
+public sealed class SelectChoicesAction : ModInstallActionModel
+{
+	public const string Selected = "true";
+
+	public const string NotSelected = "false";
+
+	public Dictionary<string, string> Title { get; init => field = value ?? []; } = [];
+
+	public List<ChoiceStepModel> Steps { get; init => field = value ?? []; } = [];
+}
+
+/// <summary>How many options of a choice page the user must select, as the launcher's <c>ChoiceSelectionMode</c>.</summary>
+public enum ChoiceSelectionMode
+{
+	Any,
+	AtLeastOne,
+	AtMostOne,
+	ExactlyOne,
+	All,
+}
+
+/// <summary>One page of a <see cref="SelectChoicesAction"/>.</summary>
+public sealed class ChoiceStepModel : FeedEntity
+{
+	public Dictionary<string, string> Title { get; init => field = value ?? []; } = [];
+
+	public IReadOnlyDictionary<string, string>? Subtitle { get; set; }
+
+	public ChoiceSelectionMode SelectionMode { get; set; } = ChoiceSelectionMode.ExactlyOne;
+
+	public List<ChoiceOptionModel> Options { get; init => field = value ?? []; } = [];
+}
+
+public sealed class ChoiceOptionModel : FeedEntity
+{
+	/// <summary>The condition key under which the launcher records whether the option was selected.</summary>
+	public string Id { get; set; } = string.Empty;
+
+	public Dictionary<string, string> Name { get; init => field = value ?? []; } = [];
+
+	public IReadOnlyDictionary<string, string>? Description { get; set; }
+
+	public bool IsRequired { get; set; }
+
+	public bool IsSelectedByDefault { get; set; }
+}
+
 public sealed class ActivateModsAction : ModInstallActionModel
 {
 	public bool Activate { get; set; } = true;

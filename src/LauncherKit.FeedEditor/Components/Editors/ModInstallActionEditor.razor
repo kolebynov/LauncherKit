@@ -11,6 +11,9 @@
 		<StringListEditor Label="Моды" Items="selectRequiredMod.Mods" Required="true"
 						  HelperText="Пользователь выбирает один установленный мод; следующие шаги могут проверить его условием SelectedMod" />
 		break;
+	case SelectChoicesAction selectChoices:
+		<SelectChoicesEditor Action="selectChoices" />
+		break;
 	case ActivateModsAction activateMods:
 		<MudSwitch @bind-Value="activateMods.Activate" Label="@(activateMods.Activate ? "Включить" : "Отключить")" Color="Color.Primary" />
 		<StringListEditor Label="Моды" Items="activateMods.Mods" Required="true" />

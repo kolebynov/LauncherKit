@@ -67,7 +67,8 @@ public class ModFeedItem
 			InstallAction.InstallMod installMod => installMod.DownloadInfo,
 			InstallAction.ExtractArchive extractArchive => extractArchive.DownloadInfo,
 			InstallAction.MergePlugins mergePlugins => mergePlugins.DownloadInfo,
-			InstallAction.SelectRequiredMod or InstallAction.ActivateMods or InstallAction.ActivatePlugins
+			InstallAction.SelectRequiredMod or InstallAction.SelectChoices or InstallAction.ActivateMods
+				or InstallAction.ActivatePlugins
 				or InstallAction.RemoveFileSystemItem or InstallAction.ChangeProfile => null,
 		})
 		.OfType<DownloadInfo>();

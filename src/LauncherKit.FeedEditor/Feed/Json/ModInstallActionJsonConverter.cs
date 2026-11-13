@@ -17,6 +17,7 @@ internal sealed class ModInstallActionJsonConverter : JsonConverter<ModInstallAc
 		{
 			"InstallMod" => ReadCase<InstallModAction>(properties, options),
 			"SelectRequiredMod" => ReadCase<SelectRequiredModAction>(properties, options),
+			"SelectChoices" => ReadCase<SelectChoicesAction>(properties, options),
 			"ActivateMods" => ReadCase<ActivateModsAction>(properties, options),
 			"ActivatePlugins" => ReadCase<ActivatePluginsAction>(properties, options),
 			"RemoveFileSystemItem" => ReadCase<RemoveFileSystemItemAction>(properties, options),
@@ -36,6 +37,9 @@ internal sealed class ModInstallActionJsonConverter : JsonConverter<ModInstallAc
 				break;
 			case SelectRequiredModAction action:
 				WriteCase(writer, "SelectRequiredMod", action, options);
+				break;
+			case SelectChoicesAction action:
+				WriteCase(writer, "SelectChoices", action, options);
 				break;
 			case ActivateModsAction action:
 				WriteCase(writer, "ActivateMods", action, options);

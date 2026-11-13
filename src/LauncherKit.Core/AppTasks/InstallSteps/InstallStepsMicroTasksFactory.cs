@@ -67,7 +67,7 @@ public sealed class InstallStepsMicroTasksFactory : IInstallStepsMicroTasksFacto
 				{
 					InstallAction.InstallMod(_, var modName, _) => CreateRollbackIfAppliedMicroTask(y.Backup,
 						CreateRollbackInstallModMicroTask(modName)),
-					InstallAction.SelectRequiredMod => null,
+					InstallAction.SelectRequiredMod or InstallAction.SelectChoices => null,
 					InstallAction.ActivateMods(var activate, var mods) => CreateRollbackIfAppliedMicroTask(y.Backup,
 						CreateRollbackActivateModsMicroTask(mods, !activate)),
 					InstallAction.ActivatePlugins(var activate, var plugins) => CreateRollbackIfAppliedMicroTask(y.Backup,
@@ -248,6 +248,8 @@ public sealed class InstallStepsMicroTasksFactory : IInstallStepsMicroTasksFacto
 			],
 			InstallAction.SelectRequiredMod(var modNames) =>
 				[_microTasksFactory.CreateSelectRequiredModMicroTask(context.GetContextForStep(stepIndex), modNames)],
+			InstallAction.SelectChoices selectChoices =>
+				[_microTasksFactory.CreateSelectChoicesMicroTask(context.GetContextForStep(stepIndex), selectChoices)],
 			InstallAction.ActivateMods(var activate, var mods) =>
 			[
 				MarkingApplied(backup, _microTasksFactory.CreateDelegateMicroTask(

@@ -63,6 +63,7 @@ public sealed class DescriptionTextsTests
 				new MicroTaskDescription.MergePlugins("argument-marker"),
 				MicroTaskDescription.DeleteFiles.Instance,
 				MicroTaskDescription.SelectRequiredMod.Instance,
+				MicroTaskDescription.SelectChoices.Instance,
 				MicroTaskDescription.SelectModpackComponents.Instance,
 				new MicroTaskDescription.RunProcess("argument-marker"),
 				new MicroTaskDescription.GameStarted("program-marker"),

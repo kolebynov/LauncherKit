@@ -8,6 +8,7 @@ public static class ModInstallActionDisplay
 {
 	private const string InstallMod = "Установить мод";
 	private const string SelectRequiredMod = "Выбрать обязательный мод";
+	private const string SelectChoices = "Предложить выбор параметров";
 	private const string ActivateMods = "Включить/отключить моды";
 	private const string ActivatePlugins = "Включить/отключить плагины";
 	private const string RemoveFileSystemItem = "Удалить файлы и папки";
@@ -19,6 +20,7 @@ public static class ModInstallActionDisplay
 	[
 		new(InstallMod, () => new InstallModAction()),
 		new(SelectRequiredMod, () => new SelectRequiredModAction()),
+		new(SelectChoices, () => new SelectChoicesAction()),
 		new(ActivateMods, () => new ActivateModsAction()),
 		new(ActivatePlugins, () => new ActivatePluginsAction()),
 		new(RemoveFileSystemItem, () => new RemoveFileSystemItemAction()),
@@ -31,6 +33,7 @@ public static class ModInstallActionDisplay
 	{
 		InstallModAction a => $"{InstallMod} {a.ModName}: {a.DownloadInfo.S3Path}",
 		SelectRequiredModAction a => $"{SelectRequiredMod}: {string.Join(", ", a.Mods)}",
+		SelectChoicesAction a => $"{SelectChoices}: {string.Join(", ", a.Steps.SelectMany(x => x.Options).Select(x => x.Id))}",
 		ActivateModsAction a => $"{(a.Activate ? "Включить" : "Отключить")} моды: {string.Join(", ", a.Mods)}",
 		ActivatePluginsAction a => $"{(a.Activate ? "Включить" : "Отключить")} плагины: {string.Join(", ", a.Plugins)}",
 		RemoveFileSystemItemAction a => $"{RemoveFileSystemItem}: {string.Join(", ", a.Paths)}{(a.FailOnFailedDelete ? string.Empty : " (ошибки пропускаются)")}",

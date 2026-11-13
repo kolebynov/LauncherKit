@@ -10,6 +10,7 @@ public union MicroTaskDescription(
 	MicroTaskDescription.MergePlugins,
 	MicroTaskDescription.DeleteFiles,
 	MicroTaskDescription.SelectRequiredMod,
+	MicroTaskDescription.SelectChoices,
 	MicroTaskDescription.SelectModpackComponents,
 	MicroTaskDescription.RunProcess,
 	MicroTaskDescription.GameStarted,
@@ -61,6 +62,8 @@ public union MicroTaskDescription(
 	public sealed record DeleteFiles;
 
 	public sealed record SelectRequiredMod;
+
+	public sealed record SelectChoices;
 
 	public sealed record SelectModpackComponents;
 

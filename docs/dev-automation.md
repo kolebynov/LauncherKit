@@ -153,7 +153,7 @@ action.
 
 Check feed editor changes without R2 credentials with `kit/scripts/feed_editor_dev.py`. It serves a fake R2 bucket (an in-memory S3 subset on `http://127.0.0.1:5005`, explicit `--bucket`: `GetObject`, `HeadObject`, `PutObject` with `If-Match`, `ListObjectsV2`, multipart uploads through presigned URLs, and CORS for the browser upload; signatures are not checked) and runs the editor on `http://127.0.0.1:5090` pointed at it (`--port`, `--r2-port`; `--no-editor` serves only the bucket for an editor started elsewhere).
 
-Every run serves the feed `feedV11.json` from `kit/tests/LauncherKit.FeedEditor.Tests/Fixtures/feedV11.json` (`--feed`; its object key is `R2:FeedKey`). Every bucket path named in the feed, including each localized markdown path, exists with small fixed content and SHA-256 metadata. `Smoke/no-checksum.7z`, `Smoke/invalid-checksum.7z` and `Smoke/uppercase-checksum.7z` cover other metadata cases. Any access key signs in except `denied`. Saves and uploads live in memory until restart. The script uses only the Python standard library.
+Every run serves the feed `feedV12.json` from `kit/tests/LauncherKit.FeedEditor.Tests/Fixtures/feedV12.json` (`--feed`; its object key is `R2:FeedKey`). Every bucket path named in the feed, including each localized markdown path, exists with small fixed content and SHA-256 metadata. `Smoke/no-checksum.7z`, `Smoke/invalid-checksum.7z` and `Smoke/uppercase-checksum.7z` cover other metadata cases. Any access key signs in except `denied`. Saves and uploads live in memory until restart. The script uses only the Python standard library.
 
 ```powershell
 python kit\scripts\feed_editor_dev.py --bucket my-bucket

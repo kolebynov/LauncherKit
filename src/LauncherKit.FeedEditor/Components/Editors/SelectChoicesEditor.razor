@@ -1,0 +1,54 @@
+@* Edits a "Предложить выбор параметров" action: the dialog title and its pages, each with its options. *@
+<MudStack Spacing="2">
+	<LocalizedField Value="Action.Title" Label="Заголовок окна" />
+	<MudText Typo="Typo.caption" Class="mud-text-secondary">
+		Пользователь проходит страницы по порядку. Для каждого варианта шаг запоминает под его идентификатором «true», если вариант выбран, и «false», если нет; следующие шаги проверяют это условием с ключом-идентификатором. Выбор спрашивается при каждой установке.
+	</MudText>
+	<MudText Typo="Typo.subtitle2">Страницы</MudText>
+	<ListEditor TItem="ChoiceStepModel" Items="Action.Steps" Factories="StepFactories" Title="StepTitle" AddToEnd="true">
+		<ItemContent Context="step">
+			<MudStack Spacing="2">
+				<LocalizedField Value="step.Title" Label="Заголовок" />
+				<LocalizedField @bind-Value="step.Subtitle" Label="Подзаголовок" Optional="true" />
+				<MudSelect @bind-Value="step.SelectionMode" Label="Сколько вариантов выбрать" Variant="Variant.Outlined" Margin="Margin.Dense">
+					<MudSelectItem Value="ChoiceSelectionMode.ExactlyOne">ровно один</MudSelectItem>
+					<MudSelectItem Value="ChoiceSelectionMode.AtMostOne">не больше одного</MudSelectItem>
+					<MudSelectItem Value="ChoiceSelectionMode.AtLeastOne">хотя бы один</MudSelectItem>
+					<MudSelectItem Value="ChoiceSelectionMode.Any">любое количество</MudSelectItem>
+					<MudSelectItem Value="ChoiceSelectionMode.All">все</MudSelectItem>
+				</MudSelect>
+				<MudText Typo="Typo.subtitle2">Варианты</MudText>
+				<ListEditor TItem="ChoiceOptionModel" Items="step.Options" Factories="OptionFactories" Title="OptionTitle" AddToEnd="true">
+					<ItemContent Context="option">
+						<MudStack Spacing="2">
+							<MudTextField @bind-Value="option.Id" Label="Идентификатор" Required="true" Validation="@FeedRules.Required"
+										  HelperText="Ключ условия следующих шагов; уникален в пределах шага установки"
+										  Variant="Variant.Outlined" Margin="Margin.Dense" />
+							<LocalizedField Value="option.Name" Label="Название" />
+							<LocalizedField @bind-Value="option.Description" Label="Описание" Optional="true" />
+							<MudStack Row="true" Wrap="Wrap.Wrap" Spacing="4">
+								<MudSwitch @bind-Value="option.IsRequired" Label="Обязательный (всегда выбран)" Color="Color.Primary" />
+								<MudSwitch @bind-Value="option.IsSelectedByDefault" Label="Выбран по умолчанию" Color="Color.Primary" />
+							</MudStack>
+						</MudStack>
+					</ItemContent>
+				</ListEditor>
+			</MudStack>
+		</ItemContent>
+	</ListEditor>
+</MudStack>
+
+@code {
+	private static readonly IReadOnlyList<ListItemFactory<ChoiceStepModel>> StepFactories = [new("страницу", () => new ChoiceStepModel())];
+
+	private static readonly IReadOnlyList<ListItemFactory<ChoiceOptionModel>> OptionFactories = [new("вариант", () => new ChoiceOptionModel())];
+
+	[Parameter, EditorRequired]
+	public required SelectChoicesAction Action { get; set; }
+
+	private string StepTitle(ChoiceStepModel step) =>
+		$"Страница {Action.Steps.IndexOf(step) + 1}: {string.Join(", ", step.Options.Select(x => x.Id))}";
+
+	private static string OptionTitle(ChoiceOptionModel option) =>
+		string.IsNullOrWhiteSpace(option.Id) ? "Вариант без идентификатора" : option.Id;
+}

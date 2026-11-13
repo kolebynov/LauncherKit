@@ -102,7 +102,10 @@ public sealed class ModInstallStepModel : FeedEntity
 
 public sealed class ModInstallConditionModel : FeedEntity
 {
-	/// <summary>The only key a step currently publishes: the mod picked by a <c>SelectRequiredMod</c> action.</summary>
+	/// <summary>
+	/// The key a <c>SelectRequiredMod</c> action publishes: the mod it picked. A <c>SelectChoices</c> action publishes its
+	/// option IDs instead.
+	/// </summary>
 	public const string SelectedModKey = "SelectedMod";
 
 	public int StepIndex { get; set; }
