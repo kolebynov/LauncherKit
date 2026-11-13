@@ -8,6 +8,7 @@ using LauncherKit.Core.AppTasks;
 using LauncherKit.Core.Feed;
 using LauncherKit.Core.Feed.Mods;
 using LauncherKit.Core.Models;
+using LauncherKit.Core.Services;
 using LauncherKit.Core.Services.Abstractions;
 using LauncherKit.Core.Utils;
 using LauncherKit.TestSupport;
@@ -31,7 +32,7 @@ public sealed class ModCategoryViewModelTests
 			Category("graph-packs", isExclusive: true, description: "[![Boosty](boosty.png)](https://boosty.test)"),
 			Category("mods"),
 		]);
-		using var sut = mocker.CreateInstance<ModCategoriesViewModel>();
+		var sut = mocker.CreateInstance<ModCategoriesViewModel>();
 
 		// Act
 		using var activation = await sut.Activator.Activate(CancellationToken.None);
@@ -58,7 +59,7 @@ public sealed class ModCategoryViewModelTests
 		var discontinued = Mod("Discontinued", "mods", "[2.0.0, 3.0.0)", isDiscontinued: true);
 		var otherCategory = Mod("Other", "graph-packs", "[3.0.0, 4.0.0)");
 		var mocker = CreateMocker(events, [supported, otherCategory, notUpdated, discontinued]);
-		var sut = CreateCategory(mocker, Category("mods"), out var owner);
+		var sut = CreateCategory(mocker, Category("mods"));
 
 		// Act
 		using var activation = await ActivateWithCards(mocker, sut, 2);
@@ -72,7 +73,6 @@ public sealed class ModCategoryViewModelTests
 			Assert.That(sut.Mods[0].InstallRequiresNewGame, Is.False);
 			Assert.That(sut.Mods[0].UninstallRequiresNewGame, Is.False);
 		});
-		owner.Dispose();
 	}
 
 	[Test]
@@ -81,7 +81,7 @@ public sealed class ModCategoryViewModelTests
 		// Arrange
 		using var events = new Subject<AppTaskQueue.Event>();
 		var mocker = CreateMocker(events, [Mod("Lite", "graph-packs", "[3.2.0, 3.3.0)", requiresNewGame: true)]);
-		var sut = CreateCategory(mocker, Category("graph-packs", isExclusive: true), out var owner);
+		var sut = CreateCategory(mocker, Category("graph-packs", isExclusive: true));
 		using var activation = await ActivateWithCards(mocker, sut, 1);
 		var installModpack = new AppTask(AppTaskProvider.InstallModpackTaskId, new AppTaskDescription.Custom("Modpack"), _ => [], [], null);
 		var installPatch = new AppTask($"{AppTaskProvider.InstallModpackPatchTaskIdPrefix}3.2.1", new AppTaskDescription.Custom("Patch"), _ => [], [], null);
@@ -104,10 +104,8 @@ public sealed class ModCategoryViewModelTests
 			Assert.That(unavailableWhileQueued, Is.TypeOf<ModCardViewModel.InstallUnavailableReason.ModpackTaskQueued>());
 			Assert.That(sut.Mods.Single().IsAvailable, Is.True);
 			Assert.That(sut.Mods.Single().InstallRequiresNewGame, Is.True);
-			Assert.That(sut.Mods.Single().UpdateRequiresNewGame, Is.False);
 			Assert.That(sut.Mods.Single().UninstallRequiresNewGame, Is.True);
 		});
-		owner.Dispose();
 	}
 
 	[Test]
@@ -116,7 +114,7 @@ public sealed class ModCategoryViewModelTests
 		// Arrange
 		using var events = new Subject<AppTaskQueue.Event>();
 		var mocker = CreateMocker(events, [Mod("Optional", "mods", "[3.2.0, 3.3.0)")]);
-		var sut = CreateCategory(mocker, Category("mods"), out var owner);
+		var sut = CreateCategory(mocker, Category("mods"));
 		using var activation = await ActivateWithCards(mocker, sut, 1);
 		var installModpack = new AppTask(AppTaskProvider.InstallModpackTaskId, new AppTaskDescription.Custom("Modpack"), _ => [], [], null);
 		events.OnNext(new AppTaskQueue.Event.TaskQueued(installModpack));
@@ -131,7 +129,6 @@ public sealed class ModCategoryViewModelTests
 			Assert.That(availableWhileQueued, Is.False);
 			Assert.That(sut.Mods.Single().IsAvailable, Is.True);
 		});
-		owner.Dispose();
 	}
 
 	[TestCase(true, false)]
@@ -142,8 +139,9 @@ public sealed class ModCategoryViewModelTests
 		using var events = new Subject<AppTaskQueue.Event>();
 		var hiddenInstalled = Mod("Old", "graph-packs", "[2.0.0, 3.0.0)", isDiscontinued: true);
 		var mocker = CreateMocker(events, [Mod("Lite", "graph-packs", "[3.2.0, 3.3.0)"), hiddenInstalled]);
-		mocker.GetMock<IModOrganizerService>().Setup(x => x.IsModInstalled("Old")).Returns(true);
-		var sut = CreateCategory(mocker, Category("graph-packs", isExclusive), out var owner);
+		mocker.GetMock<IInstallAppTaskProvider>().Setup(x => x.GetModInstallState(hiddenInstalled, ModpackVersion))
+			.Returns(ModInstallState.Installed(isUpdateAvailable: false, isUninstallSupported: true));
+		var sut = CreateCategory(mocker, Category("graph-packs", isExclusive));
 
 		// Act
 		using var activation = await ActivateWithCards(mocker, sut, 1);
@@ -155,7 +153,6 @@ public sealed class ModCategoryViewModelTests
 			Assert.That(sut.Mods.Single().UnavailableReason,
 				Is.EqualTo(expectedAvailable ? null : new ModCardViewModel.InstallUnavailableReason.OtherModInstalled("Old")));
 		});
-		owner.Dispose();
 	}
 
 	[Test]
@@ -164,24 +161,23 @@ public sealed class ModCategoryViewModelTests
 		using var events = new Subject<AppTaskQueue.Event>();
 		var mocker = CreateMocker(events, [Mod("Lite", "graph-packs", "[3.2.0, 3.3.0)", requiresNewGame: true)]);
 		var state = ModInstallState.NotInstalled;
-		var installed = false;
 		var install = new AppTask("InstallLite", new AppTaskDescription.Custom("Install"), _ => [], [], null);
 		var uninstall = new AppTask("UninstallLite", new AppTaskDescription.Custom("Uninstall"), _ => [], [], null);
 		mocker.GetMock<IInstallAppTaskProvider>()
 			.Setup(x => x.GetModInstallState(It.Is<ModFeedData>(m => m.Name == "Lite"), ModpackVersion))
 			.Returns(() => state);
-		mocker.GetMock<IModOrganizerService>().Setup(x => x.IsModInstalled("Lite")).Returns(() => installed);
 		mocker.GetMock<IInstallAppTaskProvider>()
 			.Setup(x => x.CreateModInstallAppTask(It.Is<ModFeedData>(m => m.Name == "Lite"), NuGetVersion.Parse("1.0.0"), It.IsAny<CancellationToken>()))
 			.ReturnsAsync(install);
 		mocker.GetMock<IInstallAppTaskProvider>()
 			.Setup(x => x.CreateModUninstallAppTask(It.Is<ModFeedData>(m => m.Name == "Lite"))).Returns(uninstall);
 		mocker.GetMock<IAppTaskQueue>().Setup(x => x.EnqueueAndWaitForCompletion(install, It.IsAny<CancellationToken>()))
-			.Callback(() => { installed = true; state = ModInstallState.Installed(isUpdateAvailable: false, isUninstallSupported: true); })
+			.Callback(() => state = ModInstallState.Installed(isUpdateAvailable: false, isUninstallSupported: true))
 			.Returns(Task.CompletedTask);
 		mocker.GetMock<IAppTaskQueue>().Setup(x => x.EnqueueAndWaitForCompletion(uninstall, It.IsAny<CancellationToken>()))
-			.Callback(() => { installed = false; state = ModInstallState.NotInstalled; }).Returns(Task.CompletedTask);
-		var sut = CreateCategory(mocker, Category("graph-packs", isExclusive: true), out var owner);
+			.Callback(() => state = ModInstallState.NotInstalled).Returns(Task.CompletedTask);
+		var category = Category("graph-packs", isExclusive: true);
+		var sut = CreateCategory(mocker, category);
 		using var activation = await ActivateWithCards(mocker, sut, 1);
 		var card = sut.Mods.Single();
 		await card.InstallCommand.ExecuteAsync(null);
@@ -192,14 +188,13 @@ public sealed class ModCategoryViewModelTests
 			new PropertyChangedEventArgs(nameof(IModpackVersionProvider.InstalledModpackVersion)));
 		await TaskAssert.Eventually(() => !ReferenceEquals(sut.Mods.Single(), card), "updated mod card");
 		card = sut.Mods.Single();
-		Assert.That(card.UpdateRequiresNewGame, Is.False);
+		using var cardActivation = await card.Activator.Activate(CancellationToken.None);
 		await card.InstallCommand.ExecuteAsync(null);
 		Assert.That(card.IsUpdateAvailable, Is.False);
 		await card.UninstallCommand.ExecuteAsync(null);
 		Assert.That(card.IsInstalled, Is.False);
 		mocker.GetMock<IAppTaskQueue>().Verify(x => x.EnqueueAndWaitForCompletion(install, It.IsAny<CancellationToken>()), Times.Exactly(2));
 		mocker.GetMock<IAppTaskQueue>().Verify(x => x.EnqueueAndWaitForCompletion(uninstall, It.IsAny<CancellationToken>()), Times.Once);
-		owner.Dispose();
 	}
 
 	[Test]
@@ -218,7 +213,7 @@ public sealed class ModCategoryViewModelTests
 			.ReturnsAsync(install);
 		mocker.GetMock<IAppTaskQueue>().Setup(x => x.EnqueueAndWaitForCompletion(install, It.IsAny<CancellationToken>()))
 			.Returns(installCompletion.Task);
-		using var owner = mocker.CreateInstance<ModCategoriesViewModel>();
+		var owner = mocker.CreateInstance<ModCategoriesViewModel>();
 		var ownerActivation = await owner.Activator.Activate(CancellationToken.None);
 		var category = owner.Categories.Single();
 		var categoryActivation = await ActivateWithCards(mocker, category, 2);
@@ -264,7 +259,7 @@ public sealed class ModCategoryViewModelTests
 		// The queue drops a duplicate of a queued task, so waiting for it completes at once.
 		mocker.GetMock<IAppTaskQueue>().Setup(x => x.EnqueueAndWaitForCompletion(install, It.IsAny<CancellationToken>()))
 			.Returns(() => enqueueCount++ == 0 ? installCompletion.Task : Task.CompletedTask);
-		using var owner = mocker.CreateInstance<ModCategoriesViewModel>();
+		var owner = mocker.CreateInstance<ModCategoriesViewModel>();
 		var ownerActivation = await owner.Activator.Activate(CancellationToken.None);
 		var category = owner.Categories.Single();
 		var categoryActivation = await ActivateWithCards(mocker, category, 2);
@@ -304,7 +299,6 @@ public sealed class ModCategoryViewModelTests
 			.Returns(() => installed
 				? ModInstallState.Installed(isUpdateAvailable: false, isUninstallSupported: true)
 				: ModInstallState.NotInstalled);
-		mocker.GetMock<IModOrganizerService>().Setup(x => x.IsModInstalled("Lite")).Returns(() => installed);
 		var install = new AppTask("InstallLite", new AppTaskDescription.Custom("Install"), _ => [], [], null);
 		var installCompletion = new TaskCompletionSource();
 		mocker.GetMock<IInstallAppTaskProvider>()
@@ -312,7 +306,7 @@ public sealed class ModCategoryViewModelTests
 			.ReturnsAsync(install);
 		mocker.GetMock<IAppTaskQueue>().Setup(x => x.EnqueueAndWaitForCompletion(install, It.IsAny<CancellationToken>()))
 			.Returns(installCompletion.Task);
-		using var owner = mocker.CreateInstance<ModCategoriesViewModel>();
+		var owner = mocker.CreateInstance<ModCategoriesViewModel>();
 		var ownerActivation = await owner.Activator.Activate(CancellationToken.None);
 		var category = owner.Categories.Single();
 		var categoryActivation = await ActivateWithCards(mocker, category, 2);
@@ -349,33 +343,34 @@ public sealed class ModCategoryViewModelTests
 		modpackVersionProvider.SetupGet(x => x.InstalledModpackVersion).Returns(ModpackVersion);
 		modpackVersionProvider.SetupAdd(x => x.PropertyChanged += It.IsAny<PropertyChangedEventHandler>());
 		modpackVersionProvider.SetupRemove(x => x.PropertyChanged -= It.IsAny<PropertyChangedEventHandler>());
+		modpackVersionProvider.Setup(x => x.RefreshInstalledModpackVersion());
 		mocker.GetMock<IFeedProvider>().Setup(x => x.GetModFeedDatas(It.IsAny<CancellationToken>())).ReturnsAsync(mods);
 		mocker.GetMock<IFeedUtils>().Setup(x => x.GetUri(It.IsAny<string>())).Returns<string>(p => new Uri("https://feed.test/" + p));
 		foreach (var mod in mods)
 		{
 			mocker.GetMock<IInstallAppTaskProvider>().Setup(x => x.GetModInstallState(mod, ModpackVersion)).Returns(ModInstallState.NotInstalled);
-			mocker.GetMock<IModOrganizerService>().Setup(x => x.IsModInstalled(mod.Name)).Returns(false);
 		}
+
+		mocker.Use<IInstallationService>(mocker.CreateInstance<InstallationService>());
 
 		return mocker;
 	}
 
-	private static ModCategoryViewModel CreateCategory(AutoMocker mocker, ModCategoryFeedData category, out ModCategoriesViewModel owner)
-	{
-		owner = mocker.CreateInstance<ModCategoriesViewModel>();
-		return new ModCategoryViewModel(category, owner, mocker.Get<IInstallAppTaskProvider>(), mocker.Get<IAppTaskQueue>(),
-			mocker.Get<IFeedProvider>(), mocker.Get<IModpackVersionProvider>(), mocker.Get<IModOrganizerService>(),
+	private static ModCategoryViewModel CreateCategory(AutoMocker mocker, ModCategoryFeedData category) =>
+		new(category, mocker.Get<IInstallationService>(), mocker.Get<IFeedProvider>(), mocker.Get<IModpackVersionProvider>(),
 			mocker.Get<IFeedUtils>(), mocker.Get<IUiDispatcher>());
-	}
 
+	/// <summary>Activates the category and, once its cards are loaded, each card, as their views do.</summary>
 	private static async Task<IDisposable> ActivateWithCards(AutoMocker mocker, ModCategoryViewModel sut, int count)
 	{
-		var activation = await sut.Activator.Activate(CancellationToken.None);
+		var activations = new CompositeDisposable { await sut.Activator.Activate(CancellationToken.None) };
 		mocker.GetMock<IModpackVersionProvider>().Raise(
 			x => x.PropertyChanged += null,
 			new PropertyChangedEventArgs(nameof(IModpackVersionProvider.InstalledModpackVersion)));
 		await TaskAssert.Eventually(() => sut.Mods.Count == count, "mod cards");
-		return activation;
+		foreach (var card in sut.Mods)
+			activations.Add(await card.Activator.Activate(CancellationToken.None));
+		return activations;
 	}
 
 	private static ModCategoryFeedData Category(string id, bool isExclusive = false, string? description = null) => new()

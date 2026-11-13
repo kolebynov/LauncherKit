@@ -8,6 +8,7 @@ using LauncherKit.Core.AppTasks;
 using LauncherKit.Core.Feed;
 using LauncherKit.Core.Feed.Modpacks;
 using LauncherKit.Core.Models;
+using LauncherKit.Core.Services;
 using LauncherKit.Core.Services.Abstractions;
 using LauncherKit.Core.Update;
 using LauncherKit.TestSupport;
@@ -185,6 +186,7 @@ public sealed class HomeViewModelTests
 			Launcher("1.3.0", "new.md"), Launcher("1.2.1", null), Launcher("1.2.0", "current.md"),
 		]);
 		mocker.GetMock<IAppVersionProvider>().SetupGet(x => x.Version).Returns(NuGetVersion.Parse("1.2.1"));
+		mocker.Use<IInstallationService>(mocker.CreateInstance<InstallationService>());
 		mocker.Use(mocker.CreateInstance<ModCategoriesViewModel>());
 		return mocker;
 	}

@@ -39,7 +39,7 @@ public sealed class FeedV12ContractTests
 		feed.Mods[0].DescriptionPath["en"] = "Mods/description.en.md";
 		feed.Mods[0].OptionDescription = new Dictionary<string, string> { ["ru"] = "4+ ГБ", ["en"] = "4 GB VRAM" };
 		feed.ModCategories[0].Title["en"] = "Graphics packs";
-		feed.ModCategories[0].DescriptionPath = new Dictionary<string, string> { ["ru"] = "gp.ru.md", ["en"] = "gp.en.md" };
+		feed.ModCategories[0].Description = new Dictionary<string, string> { ["ru"] = "[Boosty](gp.png)", ["en"] = "[Boosty EN](gp.png)" };
 		feed.ModpackChangelogs[0].Path["en"] = "Changelogs/modpack.en.md";
 		feed.Launchers[0].ChangelogPath = new Dictionary<string, string> { ["ru"] = "launcher.ru.md", ["en"] = "launcher.en.md" };
 		var editorJson = FeedJson.Serialize(feed);
@@ -57,7 +57,7 @@ public sealed class FeedV12ContractTests
 			{
 				Assert.That(JsonNode.DeepEquals(launcher["Mods"]![0]![field], editor["Mods"]![0]![field]), Is.True, $"Mod {field}");
 			}
-			foreach (var field in new[] { "Id", "Title", "DescriptionPath", "IsExclusive" })
+			foreach (var field in new[] { "Id", "Title", "Description", "IsExclusive" })
 			{
 				Assert.That(JsonNode.DeepEquals(launcher["ModCategories"]![0]![field], editor["ModCategories"]![0]![field]), Is.True, $"Category {field}");
 			}
@@ -251,7 +251,7 @@ public sealed class FeedV12ContractTests
 					feed.Mods[0].OptionDescription = values;
 					break;
 				case "category-description":
-					feed.ModCategories[0].DescriptionPath = values;
+					feed.ModCategories[0].Description = values;
 					break;
 				default:
 					feed.Launchers[0].ChangelogPath = values;
