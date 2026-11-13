@@ -11,8 +11,11 @@ public sealed class ModCategoryModel : FeedEntity
 
 	public Dictionary<string, string> Title { get; init => field = value ?? []; } = [];
 
-	/// <summary>Markdown shown at the top of the section; null means no description.</summary>
-	public IReadOnlyDictionary<string, string>? DescriptionPath { get; set; }
+	/// <summary>
+	/// Markdown shown in the section header beside the title, e.g. links with icons; relative links and images resolve
+	/// against the feed server. Null means no description.
+	/// </summary>
+	public IReadOnlyDictionary<string, string>? Description { get; set; }
 
 	/// <summary>Only one mod of the category can be installed at a time.</summary>
 	public bool IsExclusive { get; set; }

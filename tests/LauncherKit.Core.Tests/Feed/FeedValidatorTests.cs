@@ -259,7 +259,7 @@ public sealed class FeedValidatorTests
 			}],
 			ModCategories = [new ModCategoryFeedData
 			{
-				Id = "mods", Title = Text("CategoryTitle"), DescriptionPath = Text("CategoryDescription"),
+				Id = "mods", Title = Text("CategoryTitle"), Description = Text("CategoryDescription"),
 			}],
 			InstallComponents = [new InstallComponent
 			{

@@ -60,7 +60,7 @@ public static class FeedValidator
 			var location = $"Категория {Label(category.Id, index)}";
 			errors.Check(location, "Идентификатор", FeedRules.Required, category.Id);
 			errors.Localized(location, "Заголовок", category.Title);
-			errors.Localized(location, "Путь к описанию", category.DescriptionPath, optional: true);
+			errors.Localized(location, "Описание", category.Description, optional: true);
 		}
 
 		// Mods are identified by their Mod Organizer name across every category.

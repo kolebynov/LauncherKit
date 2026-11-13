@@ -134,8 +134,8 @@
         "ru": "Графпаки",
         "en": "Graphics packs"
       },
-      "DescriptionPath": {
-        "ru": "GraphPacks/Description.md"
+      "Description": {
+        "ru": "[![Boosty автора](GraphPacks/boosty.png)](https://boosty.to/mdgraphics)"
       },
       "IsExclusive": true
     },

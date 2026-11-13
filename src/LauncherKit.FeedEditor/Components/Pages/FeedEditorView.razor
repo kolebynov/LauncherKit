@@ -135,7 +135,8 @@
 									<LocalizedField Value="category.Title" Label="Заголовок" />
 								</MudItem>
 								<MudItem xs="12" md="6">
-									<LocalizedField @bind-Value="category.DescriptionPath" Label="Путь к описанию (Markdown)" IsPath="true" Optional="true" />
+									<LocalizedField @bind-Value="category.Description" Label="Описание в заголовке (Markdown)" Optional="true" />
+									<MudText Typo="Typo.caption">Например, ссылка с иконкой: [![Boosty](Icons/boosty.png)](https://boosty.to/...). Относительные пути — от корня фида</MudText>
 								</MudItem>
 								<MudItem xs="12" md="6">
 									<MudSwitch @bind-Value="category.IsExclusive" Label="Только один мод" Color="Color.Primary" />

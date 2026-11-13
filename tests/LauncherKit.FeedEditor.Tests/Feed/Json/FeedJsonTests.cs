@@ -108,7 +108,7 @@ public sealed class FeedJsonTests
 			},
 			ModCategories =
 			{
-				new ModCategoryModel { Id = "graph-packs", Title = Text("Графпаки"), DescriptionPath = Text("gp/category.md"), IsExclusive = true },
+				new ModCategoryModel { Id = "graph-packs", Title = Text("Графпаки"), Description = Text("[![Boosty](gp/boosty.png)](https://boosty.test)"), IsExclusive = true },
 				new ModCategoryModel { Id = "mods", Title = Text("Моды") },
 			},
 			InstallComponents =

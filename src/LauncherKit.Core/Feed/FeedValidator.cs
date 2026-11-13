@@ -140,9 +140,9 @@ public static class FeedValidator
 		foreach (var category in feed.ModCategories)
 		{
 			yield return category.Title;
-			if (category.DescriptionPath is { } descriptionPath)
+			if (category.Description is { } description)
 			{
-				yield return descriptionPath;
+				yield return description;
 			}
 		}
 

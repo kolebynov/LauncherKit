@@ -28,10 +28,9 @@ public sealed class ModCategoryViewModelTests
 		var mocker = CreateMocker(events, []);
 		mocker.GetMock<IFeedProvider>().Setup(x => x.GetModCategories(It.IsAny<CancellationToken>())).ReturnsAsync(
 		[
-			Category("graph-packs", isExclusive: true, description: "graph.md"),
+			Category("graph-packs", isExclusive: true, description: "[![Boosty](boosty.png)](https://boosty.test)"),
 			Category("mods"),
 		]);
-		mocker.GetMock<IFeedUtils>().Setup(x => x.GetUri("graph.md")).Returns(new Uri("https://feed.test/graph.md"));
 		using var sut = mocker.CreateInstance<ModCategoriesViewModel>();
 
 		// Act
@@ -42,8 +41,8 @@ public sealed class ModCategoryViewModelTests
 		{
 			Assert.That(sut.Categories.Select(x => x.Id), Is.EqualTo(new[] { "graph-packs", "mods" }));
 			Assert.That(sut.Categories.Select(x => x.Title), Is.EqualTo(new[] { "Title graph-packs", "Title mods" }));
-			Assert.That(sut.Categories.Select(x => x.DescriptionUri),
-				Is.EqualTo(new[] { new Uri("https://feed.test/graph.md"), null }));
+			Assert.That(sut.Categories.Select(x => x.Description),
+				Is.EqualTo(new[] { "[![Boosty](boosty.png)](https://boosty.test)", null }));
 			Assert.That(sut.Categories.Select(x => x.Mods.Count), Is.EqualTo(new[] { 0, 0 }));
 		});
 		mocker.GetMock<IFeedProvider>().Verify(x => x.GetModFeedDatas(It.IsAny<CancellationToken>()), Times.Never);
@@ -383,7 +382,7 @@ public sealed class ModCategoryViewModelTests
 	{
 		Id = id,
 		Title = new() { ["ru"] = $"Title {id}" },
-		DescriptionPath = description == null ? null : new() { ["ru"] = description },
+		Description = description == null ? null : new() { ["ru"] = description },
 		IsExclusive = isExclusive,
 	};
 

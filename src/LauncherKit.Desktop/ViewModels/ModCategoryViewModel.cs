@@ -55,8 +55,11 @@ public partial class ModCategoryViewModel : BaseActivatableViewModel
 
 	public string Title { get; }
 
-	/// <summary>The category's Markdown description, shown at the top of the section, if any.</summary>
-	public Uri? DescriptionUri { get; }
+	/// <summary>The category's Markdown description, shown in the section header, if any.</summary>
+	public string? Description { get; }
+
+	/// <summary>The feed server root, against which the description's relative links and images resolve.</summary>
+	public Uri DescriptionAssetRoot { get; }
 
 	[ObservableProperty]
 	public partial IReadOnlyList<ModCardViewModel> Mods { get; private set; } = [];
@@ -77,7 +80,8 @@ public partial class ModCategoryViewModel : BaseActivatableViewModel
 		_modOrganizerService = modOrganizerService;
 		_feedUtils = feedUtils;
 		Title = category.Title.Resolve();
-		DescriptionUri = category.DescriptionPath is { } descriptionPath ? feedUtils.GetUri(descriptionPath.Resolve()) : null;
+		Description = category.Description?.Resolve();
+		DescriptionAssetRoot = feedUtils.GetUri(string.Empty);
 
 		this.WhenActivated(d =>
 		{

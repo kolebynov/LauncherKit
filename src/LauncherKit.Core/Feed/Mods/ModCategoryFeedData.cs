@@ -8,8 +8,11 @@ public sealed class ModCategoryFeedData
 
 	public required LocalizedText Title { get; init; }
 
-	/// <summary>Markdown shown at the top of the section, if any.</summary>
-	public LocalizedText? DescriptionPath { get; init; }
+	/// <summary>
+	/// Markdown shown in the section header beside the title, if any, e.g. links with icons. Relative links and images
+	/// resolve against the feed server.
+	/// </summary>
+	public LocalizedText? Description { get; init; }
 
 	/// <summary>
 	/// Whether only one mod of the category can be installed at a time: while one is installed or being installed, the
