@@ -19,7 +19,11 @@ public sealed class FeedV12ContractTests
 			Assert.That(result["Modpacks"]!.AsArray(), Is.Not.Empty);
 			Assert.That(result["ModpackChangelogs"]!.AsArray(), Is.Not.Empty);
 			Assert.That(result["DefaultLanguage"]!.GetValue<string>(), Is.EqualTo("ru"));
-			Assert.That(result["InstallComponents"]![0]!["Kind"]!.GetValue<string>(), Is.EqualTo("GraphPack"));
+			Assert.That(result["InstallComponents"]![0]!["Kind"]!.GetValue<string>(), Is.EqualTo("ModChoice"));
+			Assert.That(result["InstallComponents"]![0]!["Options"]![0]!["ModName"]!.GetValue<string>(), Is.EqualTo("MD's Graphics Lite"));
+			Assert.That(result["InstallComponents"]![0]!["Options"]![0]!["IsDefault"]!.GetValue<bool>(), Is.True);
+			Assert.That(result["ModCategories"]![0]!["Id"]!.GetValue<string>(), Is.EqualTo("graph-packs"));
+			Assert.That(result["Mods"]![0]!["CategoryId"]!.GetValue<string>(), Is.EqualTo("graph-packs"));
 			Assert.That(result["InstallComponents"]![1]!["Kind"]!.GetValue<string>(), Is.EqualTo("Mod"));
 			Assert.That(result["InstallComponents"]![1]!["ModName"]!.GetValue<string>(), Is.EqualTo("WispShelter"));
 			Assert.That(result["Prerequisites"]![0]!["Id"]!.GetValue<string>(), Is.EqualTo("directx9"));
@@ -33,8 +37,9 @@ public sealed class FeedV12ContractTests
 		var feed = FeedJson.Deserialize(FeedFixtures.StoredFeedJson());
 		feed.Mods[0].DisplayName = new Dictionary<string, string> { ["ru"] = "Мод", ["en"] = "Mod" };
 		feed.Mods[0].DescriptionPath["en"] = "Mods/description.en.md";
-		feed.GraphPacks[0].Recommendation["en"] = "4 GB VRAM";
-		feed.GraphPacks[0].DescriptionPath["en"] = "GraphPacks/description.en.md";
+		feed.Mods[0].OptionDescription = new Dictionary<string, string> { ["ru"] = "4+ ГБ", ["en"] = "4 GB VRAM" };
+		feed.ModCategories[0].Title["en"] = "Graphics packs";
+		feed.ModCategories[0].DescriptionPath = new Dictionary<string, string> { ["ru"] = "gp.ru.md", ["en"] = "gp.en.md" };
 		feed.ModpackChangelogs[0].Path["en"] = "Changelogs/modpack.en.md";
 		feed.Launchers[0].ChangelogPath = new Dictionary<string, string> { ["ru"] = "launcher.ru.md", ["en"] = "launcher.en.md" };
 		var editorJson = FeedJson.Serialize(feed);
@@ -47,15 +52,22 @@ public sealed class FeedV12ContractTests
 			Assert.That(launcher["DefaultLanguage"]!.GetValue<string>(), Is.EqualTo("ru"));
 			Assert.That(JsonNode.DeepEquals(launcher["Mods"]![0]!["DisplayName"], editor["Mods"]![0]!["DisplayName"]), Is.True);
 			Assert.That(JsonNode.DeepEquals(launcher["Mods"]![0]!["DescriptionPath"], editor["Mods"]![0]!["DescriptionPath"]), Is.True);
-			Assert.That(JsonNode.DeepEquals(launcher["GraphPacks"]![0]!["Recommendation"], editor["GraphPacks"]![0]!["Recommendation"]), Is.True);
-			Assert.That(JsonNode.DeepEquals(launcher["GraphPacks"]![0]!["DescriptionPath"], editor["GraphPacks"]![0]!["DescriptionPath"]), Is.True);
+			Assert.That(JsonNode.DeepEquals(launcher["Mods"]![0]!["OptionDescription"], editor["Mods"]![0]!["OptionDescription"]), Is.True);
+			foreach (var field in new[] { "CategoryId", "IsDiscontinued", "RequiresNewGame" })
+			{
+				Assert.That(JsonNode.DeepEquals(launcher["Mods"]![0]![field], editor["Mods"]![0]![field]), Is.True, $"Mod {field}");
+			}
+			foreach (var field in new[] { "Id", "Title", "DescriptionPath", "IsExclusive" })
+			{
+				Assert.That(JsonNode.DeepEquals(launcher["ModCategories"]![0]![field], editor["ModCategories"]![0]![field]), Is.True, $"Category {field}");
+			}
 			Assert.That(JsonNode.DeepEquals(launcher["ModpackChangelogs"]![0]!["Path"], editor["ModpackChangelogs"]![0]!["Path"]), Is.True);
 			Assert.That(JsonNode.DeepEquals(launcher["Launchers"]![0]!["ChangelogPath"], editor["Launchers"]![0]!["ChangelogPath"]), Is.True);
 			Assert.That(launcher["Prerequisites"]![0]!["DownloadInfo"]!["S3Path"]!.GetValue<string>(), Is.EqualTo("Prerequisites/dxwebsetup.exe"));
 			Assert.That(launcher["Prerequisites"]![0]!["Arguments"]!.GetValue<string>(), Is.EqualTo("/silent"));
 			foreach (var componentIndex in Enumerable.Range(0, feed.InstallComponents.Count))
 			{
-				foreach (var field in new[] { "Id", "Kind", "ModName", "Title", "Description", "SupportedModpackVersion", "Order" })
+				foreach (var field in new[] { "Id", "Kind", "ModName", "Options", "Title", "Description", "SupportedModpackVersion", "Order" })
 				{
 					Assert.That(JsonNode.DeepEquals(launcher["InstallComponents"]![componentIndex]![field],
 						editor["InstallComponents"]![componentIndex]![field]), Is.True, $"Component {componentIndex}, {field}");
@@ -82,8 +94,9 @@ public sealed class FeedV12ContractTests
 	[TestCase("component-description")]
 	[TestCase("mod-description")]
 	[TestCase("mod-display-name")]
-	[TestCase("graph-recommendation")]
-	[TestCase("graph-description")]
+	[TestCase("option-description")]
+	[TestCase("category-title")]
+	[TestCase("category-description")]
 	[TestCase("modpack-changelog")]
 	[TestCase("launcher-changelog")]
 	public void Validate_LocalizedFieldMissingDefaultLanguage_RejectsFeed(string field)
@@ -196,12 +209,12 @@ public sealed class FeedV12ContractTests
 	}
 
 	[Test]
-	public void Validate_GraphPackComponentWithModReference_RejectsReference()
+	public void Validate_ModChoiceComponentWithModReference_RejectsReference()
 	{
 		var feed = FeedJson.Deserialize(FeedFixtures.StoredFeedJson());
 		feed.InstallComponents[0].ModName = feed.Mods[0].Name;
 		Assert.That(FeedValidator.Validate(feed).Select(error => error.Message),
-			Does.Contain("Выбор графпака не должен ссылаться на мод."));
+			Does.Contain("Выбор мода не должен ссылаться на отдельный мод."));
 	}
 
 	[Test]
@@ -226,16 +239,23 @@ public sealed class FeedV12ContractTests
 
 	private static Dictionary<string, string> LocalizedField(FeedModel feed, string field)
 	{
-		if (field is "mod-display-name" or "launcher-changelog")
+		if (field is "mod-display-name" or "launcher-changelog" or "option-description" or "category-description")
 		{
 			var values = new Dictionary<string, string> { ["ru"] = "Text" };
-			if (field == "mod-display-name")
+			switch (field)
 			{
-				feed.Mods[0].DisplayName = values;
-			}
-			else
-			{
-				feed.Launchers[0].ChangelogPath = values;
+				case "mod-display-name":
+					feed.Mods[0].DisplayName = values;
+					break;
+				case "option-description":
+					feed.Mods[0].OptionDescription = values;
+					break;
+				case "category-description":
+					feed.ModCategories[0].DescriptionPath = values;
+					break;
+				default:
+					feed.Launchers[0].ChangelogPath = values;
+					break;
 			}
 			return values;
 		}
@@ -245,8 +265,7 @@ public sealed class FeedV12ContractTests
 			"component-title" => feed.InstallComponents[0].Title,
 			"component-description" => feed.InstallComponents[0].Description,
 			"mod-description" => feed.Mods[0].DescriptionPath,
-			"graph-recommendation" => feed.GraphPacks[0].Recommendation,
-			"graph-description" => feed.GraphPacks[0].DescriptionPath,
+			"category-title" => feed.ModCategories[0].Title,
 			"modpack-changelog" => feed.ModpackChangelogs[0].Path,
 			_ => throw new ArgumentOutOfRangeException(nameof(field)),
 		};

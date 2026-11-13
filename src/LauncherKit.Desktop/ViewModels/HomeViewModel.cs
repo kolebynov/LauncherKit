@@ -47,12 +47,11 @@ public partial class HomeViewModel : BaseActivatableViewModel, IDisposable
 	public partial AppTaskViewModel? AppTaskViewModel { get; private set; }
 
 	public Observable<DeletedSavesInfo> OldSavesDeleted => _oldSavesDeleted;
-	public GraphPacksViewModel GraphPacksViewModel { get; }
-	public OptionalModsViewModel OptionalModsViewModel { get; }
+	public ModCategoriesViewModel ModCategoriesViewModel { get; }
 
 	public HomeViewModel(IAppTaskProvider appTaskProvider, IAppTaskQueue appTaskQueue,
-		IModpackVersionProvider modpackVersionProvider, IUpdateProvider updateProvider, GraphPacksViewModel graphPacksViewModel,
-		OptionalModsViewModel optionalModsViewModel, IFeedProvider feedProvider,
+		IModpackVersionProvider modpackVersionProvider, IUpdateProvider updateProvider,
+		ModCategoriesViewModel modCategoriesViewModel, IFeedProvider feedProvider,
 		IAppLogsCollector appLogsCollector,
 		IAppVersionProvider appVersionProvider, IGlobalKeyValueStorage globalKeyValueStorage, IUiDispatcher dispatcher)
 	{
@@ -64,8 +63,7 @@ public partial class HomeViewModel : BaseActivatableViewModel, IDisposable
 		_globalKeyValueStorage = globalKeyValueStorage;
 		_updateProvider = updateProvider;
 		_dispatcher = dispatcher;
-		GraphPacksViewModel = graphPacksViewModel;
-		OptionalModsViewModel = optionalModsViewModel;
+		ModCategoriesViewModel = modCategoriesViewModel;
 		InstalledModpackVersion = modpackVersionProvider.InstalledModpackVersion;
 
 		_appTaskQueueSubscription = appTaskQueue.Events.ObserveOnUi(dispatcher).Subscribe(evt =>

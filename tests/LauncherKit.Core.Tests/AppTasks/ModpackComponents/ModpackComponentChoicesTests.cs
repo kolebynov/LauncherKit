@@ -17,7 +17,7 @@ public sealed class ModpackComponentChoicesTests
 		var fullTask = CreateAppTask("Full");
 		var selection = new ModpackComponentsSelection();
 		var sut = new ModpackComponentChoices(
-			CreateOffer([new GraphPackComponent("Lite", "", CreateAppTask("Lite"), []), new GraphPackComponent("Full", "", fullTask, [])], CreateEnglishVoices([new DownloadInfo { S3Path = "voices.7z" }]), selection),
+			CreateOffer([new ModComponentOption("Lite", null, CreateAppTask("Lite"), []), new ModComponentOption("Full", null, fullTask, [])], CreateEnglishVoices([new DownloadInfo { S3Path = "voices.7z" }]), selection),
 			_ => 0);
 
 		// Act
@@ -41,7 +41,7 @@ public sealed class ModpackComponentChoicesTests
 		// Arrange
 		var selection = new ModpackComponentsSelection();
 		var sut = new ModpackComponentChoices(
-			CreateOffer([new GraphPackComponent("Lite", "", CreateAppTask("Lite"), [])], null, selection),
+			CreateOffer([new ModComponentOption("Lite", null, CreateAppTask("Lite"), [])], null, selection),
 			_ => 0);
 
 		// Act
@@ -83,7 +83,7 @@ public sealed class ModpackComponentChoicesTests
 		selection.InstallTasks["GraphPack"] = CreateAppTask("Stale");
 		selection.InstallTasks["EnglishVoices"] = CreateAppTask("StaleVoices");
 		var sut = new ModpackComponentChoices(
-			CreateOffer([new GraphPackComponent("Lite", "", null, [], IsDefault: true), new GraphPackComponent("Full", "", CreateAppTask("Full"), [])], CreateEnglishVoices([new DownloadInfo { S3Path = "voices.7z" }]), selection),
+			CreateOffer([new ModComponentOption("Lite", null, null, [], IsDefault: true), new ModComponentOption("Full", null, CreateAppTask("Full"), [])], CreateEnglishVoices([new DownloadInfo { S3Path = "voices.7z" }]), selection),
 			_ => 0);
 
 		// Act
@@ -102,7 +102,7 @@ public sealed class ModpackComponentChoicesTests
 				Is.EqualTo(new[] { ChoiceSelectionMode.ExactlyOne, ChoiceSelectionMode.ExactlyOne }));
 			Assert.That(sut.Steps[0].Options.Select(x => x.Name.Value), Is.EqualTo(new object[] { new ChoiceText.Content("Lite"), new ChoiceText.Content("Full"), ChoiceText.NoneOption.Instance }));
 			Assert.That(sut.Steps[0].Options.Select(x => x.UnavailableReason?.Value),
-				Is.EqualTo(new object?[] { ChoiceText.UnavailableGraphPackUpdating.Instance, null, null }));
+				Is.EqualTo(new object?[] { ChoiceText.UnavailableModNotUpdated.Instance, null, null }));
 			Assert.That(sut.Steps[1].Options.Select(x => x.IsAvailable), Is.EqualTo(new[] { true, true }));
 			Assert.That(selection.InstallTasks.GetValueOrDefault("GraphPack"), Is.Null);
 			Assert.That((selection.InstallTasks.GetValueOrDefault("EnglishVoices") != null), Is.False);
@@ -116,7 +116,7 @@ public sealed class ModpackComponentChoicesTests
 		var liteTask = CreateAppTask("Lite");
 		var selection = new ModpackComponentsSelection();
 		var sut = new ModpackComponentChoices(
-			CreateOffer([new GraphPackComponent("Lite", "", liteTask, [], IsDefault: true), new GraphPackComponent("Full", "", CreateAppTask("Full"), [])], CreateEnglishVoices([new DownloadInfo { S3Path = "voices.7z" }]), selection),
+			CreateOffer([new ModComponentOption("Lite", null, liteTask, [], IsDefault: true), new ModComponentOption("Full", null, CreateAppTask("Full"), [])], CreateEnglishVoices([new DownloadInfo { S3Path = "voices.7z" }]), selection),
 			_ => 0);
 
 		// Act
@@ -138,9 +138,9 @@ public sealed class ModpackComponentChoicesTests
 		// Arrange
 		var sut = new ModpackComponentChoices(
 			CreateOffer([
-					new GraphPackComponent("Lite", "", null, [], IsDefault: true),
-					new GraphPackComponent("Medium", "", CreateAppTask("Medium"), [], IsDefault: true),
-					new GraphPackComponent("Full", "", CreateAppTask("Full"), [], IsDefault: true),
+					new ModComponentOption("Lite", null, null, [], IsDefault: true),
+					new ModComponentOption("Medium", null, CreateAppTask("Medium"), [], IsDefault: true),
+					new ModComponentOption("Full", null, CreateAppTask("Full"), [], IsDefault: true),
 				], CreateEnglishVoices([new DownloadInfo { S3Path = "voices.7z" }]), new ModpackComponentsSelection()),
 			_ => 0);
 
@@ -167,7 +167,7 @@ public sealed class ModpackComponentChoicesTests
 
 		// Act
 		var sut = new ModpackComponentChoices(
-			CreateOffer([new GraphPackComponent("Lite", "Слабая видеокарта", null, []), new GraphPackComponent("Full", "Мощная видеокарта", CreateAppTask("Full"), [part1, part2])], CreateEnglishVoices([voices, voicesExtra]), new ModpackComponentsSelection()),
+			CreateOffer([new ModComponentOption("Lite", "Слабая видеокарта", null, []), new ModComponentOption("Full", "Мощная видеокарта", CreateAppTask("Full"), [part1, part2])], CreateEnglishVoices([voices, voicesExtra]), new ModpackComponentsSelection()),
 			x => sizes[x]);
 
 		// Assert
@@ -175,13 +175,13 @@ public sealed class ModpackComponentChoicesTests
 		{
 			Assert.That(sut.Steps[0].Options.Select(x => x.Description.Value), Is.EqualTo(new object[]
 			{
-				new ChoiceText.ComponentOptionDescription("Lite", "Слабая видеокарта", null, false),
-				new ChoiceText.ComponentOptionDescription("Full", "Мощная видеокарта", 10 * gigaByte + gigaByte / 2, false),
+				new ChoiceText.ComponentOptionDescription("Lite", "Слабая видеокарта", null),
+				new ChoiceText.ComponentOptionDescription("Full", "Мощная видеокарта", 10 * gigaByte + gigaByte / 2),
 				new ChoiceText.Content(""),
 			}));
 			Assert.That(sut.Steps[1].Options.Select(x => x.Description.Value), Is.EqualTo(new object[]
 			{
-				new ChoiceText.ComponentOptionDescription("Да", "Английская озвучка", 3 * gigaByte / 4, true),
+				new ChoiceText.ComponentOptionDescription("Английская озвучка", null, 3 * gigaByte / 4),
 				new ChoiceText.Content(""),
 			}));
 		});
@@ -203,7 +203,7 @@ public sealed class ModpackComponentChoicesTests
 			SupportedModpackVersion = VersionRange.All,
 		};
 		var sut = new ModpackComponentChoices(new ModpackComponentsOffer(
-			[new ModpackComponentOffer(definition, [new GraphPackComponent("Да", "Textures", task, [])])], selection), _ => 0);
+			[new ModpackComponentOffer(definition, [new ModComponentOption("Textures", null, task, [])])], selection), _ => 0);
 
 		sut.Apply([new ChoiceStepSelection { Step = sut.Steps.Single(), SelectedOptions = [sut.Steps.Single().Options[0]] }]);
 
@@ -218,16 +218,16 @@ public sealed class ModpackComponentChoicesTests
 
 	private static AppTask CreateAppTask(string id) => new(id, new AppTaskDescription.InstallMod(id), _ => [], [], null);
 
-	private static GraphPackComponent CreateEnglishVoices(IReadOnlyList<DownloadInfo> downloads) =>
-		new("Да", "Английская озвучка", CreateAppTask("Install_Voices"), downloads);
+	private static ModComponentOption CreateEnglishVoices(IReadOnlyList<DownloadInfo> downloads) =>
+		new("Английская озвучка", null, CreateAppTask("Install_Voices"), downloads);
 
-	private static ModpackComponentsOffer CreateOffer(IReadOnlyList<GraphPackComponent> graphPacks,
-		GraphPackComponent? voices, ModpackComponentsSelection selection)
+	private static ModpackComponentsOffer CreateOffer(IReadOnlyList<ModComponentOption> graphPacks,
+		ModComponentOption? voices, ModpackComponentsSelection selection)
 	{
 		var components = new List<ModpackComponentOffer>();
 		if (graphPacks.Count > 0)
 		{
-			components.Add(new ModpackComponentOffer(Definition("GraphPack", InstallComponentKind.GraphPack, "Графпак", 1), graphPacks));
+			components.Add(new ModpackComponentOffer(Definition("GraphPack", InstallComponentKind.ModChoice, "Графпак", 1), graphPacks));
 		}
 		if (voices != null)
 		{

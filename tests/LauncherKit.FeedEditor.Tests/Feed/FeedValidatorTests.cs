@@ -26,7 +26,7 @@ public sealed class FeedValidatorTests
 		var feed = FeedJson.Deserialize(FeedFixtures.StoredFeedJson());
 		feed.Launchers[0].Version = "next";
 		feed.SkyrimDownloadInfo.Hash = "ABC";
-		feed.GraphPacks[1].Items[0].SupportedModpackVersion = "3.1 to 3.2";
+		feed.Mods[1].Items[0].SupportedModpackVersion = "3.1 to 3.2";
 		feed.ModpackChangelogs[0].Path["ru"] = " ";
 
 		// Act
@@ -37,7 +37,7 @@ public sealed class FeedValidatorTests
 		{
 			"Лаунчер next › Версия",
 			"Загрузка Skyrim › Хеш",
-			"Графпак MD's Graphics Full 1.17.0 › Поддерживаемые версии сборки",
+			"Мод MD's Graphics Full 1.17.0 › Поддерживаемые версии сборки",
 			"Список изменений сборки 3.1.6 › Путь › ru",
 		}));
 	}
@@ -409,12 +409,30 @@ public sealed class FeedValidatorTests
 	}
 
 	[Test]
-	public void Validate_SeveralDefaultGraphPacksWithSameName_ReportsBoth()
+	public void Validate_ModChoiceWithTwoDefaults_ReportsComponent()
 	{
 		// Arrange
 		var feed = FeedJson.Deserialize(FeedFixtures.StoredFeedJson());
-		feed.GraphPacks[1].IsDefault = true;
-		feed.GraphPacks[2].Name = "md's graphics lite";
+		feed.InstallComponents[0].Options[1].IsDefault = true;
+
+		// Act
+		var result = FeedValidator.Validate(feed);
+
+		// Assert
+		Assert.That(result, Is.EqualTo(new[]
+		{
+			new FeedValidationError("Компонент graph-pack › Варианты", "Выбранным по умолчанию может быть только один мод."),
+		}));
+	}
+
+	[Test]
+	public void Validate_ModChoiceWithRepeatedAndMissingMods_ReportsEach()
+	{
+		// Arrange
+		var feed = FeedJson.Deserialize(FeedFixtures.StoredFeedJson());
+		var options = feed.InstallComponents[0].Options;
+		options.Add(new ModChoiceOptionModel { ModName = options[0].ModName });
+		options.Add(new ModChoiceOptionModel { ModName = "Missing" });
 
 		// Act
 		var result = FeedValidator.Validate(feed);
@@ -422,8 +440,114 @@ public sealed class FeedValidatorTests
 		// Assert
 		Assert.That(result.Select(x => x.Message), Is.EquivalentTo(new[]
 		{
-			"Имя графпака «MD's Graphics Lite» используется больше одного раза.",
-			"Выбранным по умолчанию может быть только один графпак, не снятый с поддержки.",
+			"Мод «MD's Graphics Lite» предложен больше одного раза.",
+			"Указанный мод отсутствует в фиде.",
+		}));
+	}
+
+	[Test]
+	public void Validate_ModChoiceWithoutOptions_ReportsMissingOptions()
+	{
+		// Arrange
+		var feed = FeedJson.Deserialize(FeedFixtures.StoredFeedJson());
+		feed.InstallComponents[0].Options.Clear();
+
+		// Act
+		var result = FeedValidator.Validate(feed);
+
+		// Assert
+		Assert.That(result.Select(x => x.Location), Is.EqualTo(new[] { "Компонент graph-pack › Варианты" }));
+	}
+
+	[Test]
+	public void Validate_SingleModChoiceOfferingExclusiveCategoryMods_ReportsNothing()
+	{
+		// Arrange
+		var feed = FeedJson.Deserialize(FeedFixtures.StoredFeedJson());
+
+		// Act
+		var result = FeedValidator.Validate(feed);
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(feed.InstallComponents[0].Options.Select(x => feed.Mods.Single(m => m.Name == x.ModName).CategoryId),
+				Is.EqualTo(new[] { "graph-packs", "graph-packs", "graph-packs" }));
+			Assert.That(result, Is.Empty);
+		});
+	}
+
+	[TestCase(InstallComponentKind.ModChoice)]
+	[TestCase(InstallComponentKind.Mod)]
+	public void Validate_ExclusiveCategoryModsInTwoComponents_ReportsConflict(InstallComponentKind kind)
+	{
+		// Arrange
+		var feed = FeedJson.Deserialize(FeedFixtures.StoredFeedJson());
+		feed.InstallComponents[0].Options.RemoveAt(1);
+		feed.InstallComponents.Add(new InstallComponentModel
+		{
+			Id = "full-graph-pack",
+			Kind = kind,
+			ModName = kind == InstallComponentKind.Mod ? "MD's Graphics Full" : null,
+			Options = kind == InstallComponentKind.ModChoice ? [new ModChoiceOptionModel { ModName = "MD's Graphics Full" }] : [],
+			Title = new() { ["ru"] = "Полный графпак" },
+			Description = new() { ["ru"] = "Установить полный графпак." },
+			// Version ranges are ignored: the components conflict even when they never apply together.
+			SupportedModpackVersion = "[1.0.0, 2.0.0)",
+			Order = 2,
+		});
+
+		// Act
+		var result = FeedValidator.Validate(feed);
+
+		// Assert
+		Assert.That(result, Is.EqualTo(new[]
+		{
+			new FeedValidationError("Компоненты",
+				"Моды эксклюзивной категории «graph-packs» предлагаются в нескольких компонентах: «graph-pack», «full-graph-pack». "
+				+ "Из категории можно установить только один мод."),
+		}));
+	}
+
+	[Test]
+	public void Validate_ModsOfDifferentCategoriesWithSameName_ReportsDuplicate()
+	{
+		// Arrange
+		var feed = FeedJson.Deserialize(FeedFixtures.StoredFeedJson());
+		var optionalMod = feed.Mods.First(x => x.CategoryId != feed.Mods[0].CategoryId);
+		var renamed = optionalMod.Name;
+		optionalMod.Name = feed.Mods[0].Name.ToLowerInvariant();
+		foreach (var component in feed.InstallComponents.Where(x => x.ModName == renamed))
+		{
+			component.ModName = optionalMod.Name;
+		}
+
+		// Act
+		var result = FeedValidator.Validate(feed);
+
+		// Assert
+		Assert.That(result, Is.EqualTo(new[]
+		{
+			new FeedValidationError("Моды", "Имя мода «MD's Graphics Lite» используется больше одного раза."),
+		}));
+	}
+
+	[Test]
+	public void Validate_ModOfMissingCategoryAndDuplicateCategory_ReportsBoth()
+	{
+		// Arrange
+		var feed = FeedJson.Deserialize(FeedFixtures.StoredFeedJson());
+		feed.Mods[0].CategoryId = "missing";
+		feed.ModCategories.Add(FeedJson.Clone(feed.ModCategories[1]));
+
+		// Act
+		var result = FeedValidator.Validate(feed);
+
+		// Assert
+		Assert.That(result.Select(x => x.Location), Is.EquivalentTo(new[]
+		{
+			"Мод MD's Graphics Lite › Категория",
+			"Категории модов",
 		}));
 	}
 
@@ -432,14 +556,14 @@ public sealed class FeedValidatorTests
 	{
 		// Arrange
 		var feed = FeedJson.Deserialize(FeedFixtures.StoredFeedJson());
-		feed.GraphPacks[2].Items[0].ArchiveDownloadInfo.S3Path = " ";
+		feed.Mods[2].Items[0].ArchiveDownloadInfo.S3Path = " ";
 
 		// Act
 		var result = FeedValidator.Validate(feed);
 
 		// Assert
 		Assert.That(result.Select(x => x.Location),
-			Is.EqualTo(new[] { "Графпак Single Archive Graphics 1.0.0 › Архив мода › Путь S3" }));
+			Is.EqualTo(new[] { "Мод Single Archive Graphics 1.0.0 › Архив мода › Путь S3" }));
 	}
 
 	[TestCase(0, "1.5.0", null)]
@@ -452,7 +576,7 @@ public sealed class FeedValidatorTests
 	{
 		// Arrange
 		var feed = FeedJson.Deserialize(FeedFixtures.StoredFeedJson());
-		var graphPack = feed.GraphPacks[2];
+		var graphPack = feed.Mods[2];
 		graphPack.Items.Add(new ModItemModel
 		{
 			Version = "2.0.0",
@@ -565,7 +689,8 @@ public sealed class FeedValidatorTests
 			DefaultLanguage = "ru",
 			SkyrimDownloadInfo = new DownloadInfoModel { S3Path = "Skyrim.7z" },
 			SevenZipDownloadInfo = new DownloadInfoModel { S3Path = "7z.zip" },
-			Mods = { new ModModel { Name = "M", LogoPath = "l", DescriptionPath = new Dictionary<string, string> { ["ru"] = "d" }, Items = { item } } },
+			ModCategories = { new ModCategoryModel { Id = "mods", Title = { ["ru"] = "Моды" } } },
+			Mods = { new ModModel { Name = "M", CategoryId = "mods", LogoPath = "l", DescriptionPath = new Dictionary<string, string> { ["ru"] = "d" }, Items = { item } } },
 		};
 	}
 

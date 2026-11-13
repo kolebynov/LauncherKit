@@ -54,23 +54,16 @@ public static class FeedValidator
 			errors.Localized(location, "Список изменений", launcher.ChangelogPath, optional: true);
 		}
 
-		foreach (var duplicate in feed.GraphPacks.GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase).Where(x => x.Count() > 1))
+		errors.UniqueIds("Категории модов", feed.ModCategories.Select(x => x.Id));
+		foreach (var (category, index) in feed.ModCategories.Select((x, i) => (x, i)))
 		{
-			errors.Add("Графпаки", $"Имя графпака «{duplicate.Key}» используется больше одного раза.");
+			var location = $"Категория {Label(category.Id, index)}";
+			errors.Check(location, "Идентификатор", FeedRules.Required, category.Id);
+			errors.Localized(location, "Заголовок", category.Title);
+			errors.Localized(location, "Путь к описанию", category.DescriptionPath, optional: true);
 		}
 
-		// A discontinued default only applies to the old сборки versions it supports, where the runtime picks the first
-		// available default in feed order, so it may coexist with the default for current versions.
-		if (feed.GraphPacks.Count(x => x is { IsDefault: true, IsDiscontinued: false }) > 1)
-		{
-			errors.Add("Графпаки", "Выбранным по умолчанию может быть только один графпак, не снятый с поддержки.");
-		}
-
-		foreach (var (graphPack, index) in feed.GraphPacks.Select((x, i) => (x, i)))
-		{
-			errors.GraphPack($"Графпак {Label(graphPack.Name, index)}", graphPack);
-		}
-
+		// Mods are identified by their Mod Organizer name across every category.
 		foreach (var duplicate in feed.Mods.GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase).Where(x => x.Count() > 1))
 		{
 			errors.Add("Моды", $"Имя мода «{duplicate.Key}» используется больше одного раза.");
@@ -78,7 +71,12 @@ public static class FeedValidator
 
 		foreach (var (mod, index) in feed.Mods.Select((x, i) => (x, i)))
 		{
-			errors.Mod($"Мод {Label(mod.Name, index)}", mod);
+			var location = $"Мод {Label(mod.Name, index)}";
+			errors.Mod(location, mod);
+			if (!feed.ModCategories.Any(x => x.Id == mod.CategoryId))
+			{
+				errors.Add($"{location} › Категория", "Указанная категория отсутствует в фиде.");
+			}
 		}
 
 		errors.UniqueIds("Компоненты", feed.InstallComponents.Select(x => x.Id));
@@ -91,17 +89,21 @@ public static class FeedValidator
 			errors.Localized(location, "Описание", component.Description);
 			switch (component.Kind)
 			{
-				case InstallComponentKind.GraphPack:
-					if (component.ModName is not null) errors.Add(location, "Выбор графпака не должен ссылаться на мод.");
+				case InstallComponentKind.ModChoice:
+					if (component.ModName is not null) errors.Add(location, "Выбор мода не должен ссылаться на отдельный мод.");
+					ModChoice(errors, location, component, feed);
 					break;
 				case InstallComponentKind.Mod:
 					if (!feed.Mods.Any(x => x.Name == component.ModName)) errors.Add(location, "Указанный мод отсутствует в фиде.");
+					if (component.Options.Count > 0) errors.Add(location, "Компонент мода не должен содержать вариантов.");
 					break;
 				default:
 					errors.Add(location, "Неизвестный тип компонента.");
 					break;
 			}
 		}
+
+		ExclusiveCategoryComponents(errors, feed);
 
 		errors.UniqueIds("Зависимости", feed.Prerequisites.Select(x => x.Id));
 		foreach (var prerequisite in feed.Prerequisites)
@@ -145,6 +147,66 @@ public static class FeedValidator
 	}
 
 	private static string Label(string name, int index) => string.IsNullOrWhiteSpace(name) ? $"#{index + 1}" : name;
+
+	/// <summary>
+	/// Checks that mods of an exclusive category, of which only one can be installed, are offered by a single install
+	/// component, regardless of the modpack versions the components support.
+	/// </summary>
+	private static void ExclusiveCategoryComponents(Errors errors, FeedModel feed)
+	{
+		var exclusiveCategoryIds = feed.ModCategories.Where(x => x.IsExclusive).Select(x => x.Id).ToHashSet(StringComparer.Ordinal);
+		var modCategoryIds = feed.Mods
+			.Where(x => exclusiveCategoryIds.Contains(x.CategoryId))
+			.GroupBy(x => x.Name, StringComparer.Ordinal)
+			.ToDictionary(x => x.Key, x => x.First().CategoryId, StringComparer.Ordinal);
+		var conflicts = feed.InstallComponents
+			.SelectMany(component => ComponentModNames(component)
+				.Select(name => modCategoryIds.GetValueOrDefault(name))
+				.OfType<string>()
+				.Distinct(StringComparer.Ordinal)
+				.Select(categoryId => (CategoryId: categoryId, ComponentId: component.Id)))
+			.GroupBy(x => x.CategoryId, StringComparer.Ordinal)
+			.Where(x => x.Count() > 1);
+		foreach (var conflict in conflicts)
+		{
+			errors.Add("Компоненты", $"Моды эксклюзивной категории «{conflict.Key}» предлагаются в нескольких компонентах: "
+				+ $"{string.Join(", ", conflict.Select(x => $"«{x.ComponentId}»"))}. Из категории можно установить только один мод.");
+		}
+	}
+
+	private static IEnumerable<string> ComponentModNames(InstallComponentModel component) => component.Kind switch
+	{
+		InstallComponentKind.ModChoice => component.Options.Select(x => x.ModName),
+		InstallComponentKind.Mod when component.ModName is { } modName => [modName],
+		_ => [],
+	};
+
+	/// <summary>Checks that a mod choice offers distinct existing mods, at most one of them by default.</summary>
+	private static void ModChoice(Errors errors, string location, InstallComponentModel component, FeedModel feed)
+	{
+		if (component.Options.Count == 0)
+		{
+			errors.Add($"{location} › Варианты", "Нужен хотя бы один мод.");
+		}
+
+		foreach (var duplicate in component.Options.GroupBy(x => x.ModName, StringComparer.Ordinal).Where(x => x.Count() > 1))
+		{
+			errors.Add($"{location} › Варианты", $"Мод «{duplicate.Key}» предложен больше одного раза.");
+		}
+
+		foreach (var (option, index) in component.Options.Select((x, i) => (x, i)))
+		{
+			if (!feed.Mods.Any(x => x.Name == option.ModName))
+			{
+				errors.Add($"{location} › Вариант {Label(option.ModName, index)}", "Указанный мод отсутствует в фиде.");
+			}
+		}
+
+		if (component.Options.Count(x => x.IsDefault) > 1)
+		{
+			errors.Add($"{location} › Варианты", "Выбранным по умолчанию может быть только один мод.");
+		}
+	}
 
 	private static void CheckRoleIds(Errors errors, List<string> roleIds, string listLocation, string itemLocation)
 	{
@@ -219,18 +281,13 @@ public static class FeedValidator
 			}
 		}
 
-		public void GraphPack(string location, GraphPackModel graphPack)
-		{
-			Mod(location, graphPack);
-			Localized(location, "Рекомендация", graphPack.Recommendation);
-		}
-
 		public void Mod(string location, ModModel mod)
 		{
 			Check(location, "Имя", FeedRules.Required, mod.Name);
 			Check(location, "Путь к логотипу", FeedRules.Required, mod.LogoPath);
 			Localized(location, "Путь к описанию", mod.DescriptionPath);
 			Localized(location, "Отображаемое имя", mod.DisplayName, optional: true);
+			Localized(location, "Описание варианта", mod.OptionDescription, optional: true);
 
 			// The installed version is looked up among versions and patches, so a version may appear only once in the mod:
 			// duplicates among versions and among patches here, a patch with a mod version below.

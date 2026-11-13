@@ -36,9 +36,9 @@ public sealed class SelectModpackComponentsMicroTaskTests
 		mocker.Use(new ModpackComponentsOffer(
 		[
 			new ModpackComponentOffer(Definition("EnglishVoices", InstallComponentKind.Mod, "Английская озвучка", 0),
-				[new GraphPackComponent("Да", "Английская озвучка", voicesTask, [voices])]),
-			new ModpackComponentOffer(Definition("GraphPack", InstallComponentKind.GraphPack, "Графпак", 1),
-				[new GraphPackComponent("Full", "Мощная видеокарта", fullTask, [part1, part2])]),
+				[new ModComponentOption("Английская озвучка", null, voicesTask, [voices])]),
+			new ModpackComponentOffer(Definition("GraphPack", InstallComponentKind.ModChoice, "Графпак", 1),
+				[new ModComponentOption("Full", "Мощная видеокарта", fullTask, [part1, part2])]),
 		], selection));
 		var sut = mocker.CreateInstance<SelectModpackComponentsMicroTask>(enablePrivate: true);
 		using var subject = new Subject<MicroTaskStep>();
@@ -62,9 +62,9 @@ public sealed class SelectModpackComponentsMicroTaskTests
 		{
 			Assert.That(shownSteps!.Select(x => x.Title.Value), Is.EqualTo(new[] { new ChoiceText.Content("Английская озвучка"), new ChoiceText.Content("Графпак") }));
 			Assert.That(shownSteps![0].Options[0].Description.Value,
-				Is.EqualTo(new ChoiceText.ComponentOptionDescription("Да", "Английская озвучка", BytesFormatter.GigaByte / 2, true)));
+				Is.EqualTo(new ChoiceText.ComponentOptionDescription("Английская озвучка", null, BytesFormatter.GigaByte / 2)));
 			Assert.That(shownSteps![1].Options[0].Description.Value,
-				Is.EqualTo(new ChoiceText.ComponentOptionDescription("Full", "Мощная видеокарта", 2L * BytesFormatter.GigaByte, false)));
+				Is.EqualTo(new ChoiceText.ComponentOptionDescription("Full", "Мощная видеокарта", 2L * BytesFormatter.GigaByte)));
 			Assert.That(selection.InstallTasks["GraphPack"], Is.SameAs(fullTask));
 			Assert.That(selection.InstallTasks["EnglishVoices"], Is.SameAs(voicesTask));
 			Assert.That(selection.IsApplied, Is.True);

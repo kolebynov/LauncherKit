@@ -471,6 +471,7 @@ public sealed class InstallAppTaskProviderTests
 		IReadOnlyList<ModPatchFeedItem>? v2Patches = null) => new()
 	{
 		Name = "Mod",
+		CategoryId = "mods",
 		LogoPath = "mod.png",
 		DescriptionPath = new() { ["ru"] = "mod.md" },
 		Items =

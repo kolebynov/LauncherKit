@@ -22,9 +22,9 @@ public sealed class HomeCardFactTextsTests
 			using var provider = new ServiceCollection().AddLauncherKitLocalization().BuildServiceProvider();
 			var texts = provider.GetRequiredService<HomeCardFactTexts>();
 			AssertResolved(texts.Get(ModpackInstallUnavailableReason.NoAvailableVersions));
-			AssertResolved(texts.Get(ModCardViewModel.InstallUnavailableReason.Updating.Instance));
+			AssertResolved(texts.Get(ModCardViewModel.InstallUnavailableReason.NotUpdated.Instance));
 			AssertResolved(texts.Get(ModCardViewModel.InstallUnavailableReason.ModpackTaskQueued.Instance));
-			var conflict = texts.Get(new ModCardViewModel.InstallUnavailableReason.OtherGraphPackInstalled("Example pack"));
+			var conflict = texts.Get(new ModCardViewModel.InstallUnavailableReason.OtherModInstalled("Example pack"));
 			AssertResolved(conflict);
 			Assert.That(conflict.Value, Does.Contain("Example pack"));
 		}

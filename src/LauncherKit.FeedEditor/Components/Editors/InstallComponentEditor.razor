@@ -3,7 +3,7 @@
 <MudStack Spacing="2">
 	<MudTextField @bind-Value="Component.Id" Label="Идентификатор" Required="true" Variant="Variant.Outlined" Margin="Margin.Dense" />
 	<MudSelect T="InstallComponentKind" Value="Component.Kind" ValueChanged="ChangeKind" Label="Тип" Variant="Variant.Outlined" Margin="Margin.Dense">
-		<MudSelectItem Value="InstallComponentKind.GraphPack">Выбор графпака</MudSelectItem>
+		<MudSelectItem Value="InstallComponentKind.ModChoice">Выбор мода</MudSelectItem>
 		<MudSelectItem Value="InstallComponentKind.Mod">Мод</MudSelectItem>
 	</MudSelect>
 	@if (Component.Kind == InstallComponentKind.Mod)
@@ -15,6 +15,25 @@
 			}
 		</MudSelect>
 	}
+	else
+	{
+		<MudText Typo="Typo.body2" Class="mud-text-secondary">
+			Пользователь выбирает один из модов или «Не устанавливать». Недоступный вариант по умолчанию не выбирается.
+		</MudText>
+		<ListEditor TItem="ModChoiceOptionModel" Items="Component.Options" Factories="OptionFactories" Title="OptionTitle" AddToEnd="true">
+			<ItemContent Context="option">
+				<MudStack Spacing="2">
+					<MudSelect T="string" @bind-Value="option.ModName" Label="Мод" Required="true" Variant="Variant.Outlined" Margin="Margin.Dense">
+						@foreach (var mod in Session.Feed!.Mods)
+						{
+							<MudSelectItem Value="@mod.Name">@mod.Name</MudSelectItem>
+						}
+					</MudSelect>
+					<MudSwitch T="bool" Value="option.IsDefault" ValueChanged="@(value => SetDefault(option, value))" Label="Выбран по умолчанию" Color="Color.Primary" />
+				</MudStack>
+			</ItemContent>
+		</ListEditor>
+	}
 	<MudNumericField T="int" @bind-Value="Component.Order" Label="Порядок" Variant="Variant.Outlined" Margin="Margin.Dense" />
 	<MudTextField @bind-Value="Component.SupportedModpackVersion" Label="Поддерживаемые версии сборки" Required="true" Validation="@FeedRules.VersionRange" Variant="Variant.Outlined" Margin="Margin.Dense" />
 	<LocalizedField Value="Component.Title" Label="Заголовок" />
@@ -22,10 +41,28 @@
 </MudStack>
 
 @code {
+	private static readonly IReadOnlyList<ListItemFactory<ModChoiceOptionModel>> OptionFactories = [new("мод", () => new ModChoiceOptionModel())];
+
 	[Parameter, EditorRequired] public required InstallComponentModel Component { get; set; }
+
+	private static string OptionTitle(ModChoiceOptionModel option) =>
+		$"{option.ModName}{(option.IsDefault ? " (по умолчанию)" : string.Empty)}";
+
 	private void ChangeKind(InstallComponentKind kind)
 	{
 		Component.Kind = kind;
-		if (kind == InstallComponentKind.GraphPack) Component.ModName = null;
+		if (kind == InstallComponentKind.ModChoice) Component.ModName = null;
+		else Component.Options.Clear();
+	}
+
+	/// <summary>Selecting a default clears the previous one: a component has at most one.</summary>
+	private void SetDefault(ModChoiceOptionModel option, bool isDefault)
+	{
+		if (isDefault)
+		{
+			foreach (var other in Component.Options) other.IsDefault = false;
+		}
+
+		option.IsDefault = isDefault;
 	}
 }

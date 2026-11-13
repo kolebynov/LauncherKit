@@ -185,8 +185,7 @@ public sealed class HomeViewModelTests
 			Launcher("1.3.0", "new.md"), Launcher("1.2.1", null), Launcher("1.2.0", "current.md"),
 		]);
 		mocker.GetMock<IAppVersionProvider>().SetupGet(x => x.Version).Returns(NuGetVersion.Parse("1.2.1"));
-		mocker.Use(mocker.CreateInstance<GraphPacksViewModel>());
-		mocker.Use(mocker.CreateInstance<OptionalModsViewModel>());
+		mocker.Use(mocker.CreateInstance<ModCategoriesViewModel>());
 		return mocker;
 	}
 

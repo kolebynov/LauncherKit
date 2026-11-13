@@ -1,5 +1,4 @@
 using R3;
-using LauncherKit.Core.Feed.GraphPacks;
 using LauncherKit.Core.Feed.Mods;
 using LauncherKit.Core.Feed.Modpacks;
 
@@ -39,9 +38,11 @@ public interface IFeedProvider
 
 	ValueTask<IReadOnlyList<LauncherFeedItem>> GetLauncherFeedItems(CancellationToken cancellationToken);
 
-	ValueTask<IReadOnlyList<ModFeedData>?> GetModFeedDatas(CancellationToken cancellationToken);
+	/// <summary>Every mod of the feed, including discontinued ones, in display order within each category.</summary>
+	ValueTask<IReadOnlyList<ModFeedData>> GetModFeedDatas(CancellationToken cancellationToken);
 
-	ValueTask<IReadOnlyList<GraphPackFeedData>> GetGraphPacks(CancellationToken cancellationToken);
+	/// <summary>Sections of the mod cards, in display order.</summary>
+	ValueTask<IReadOnlyList<ModCategoryFeedData>> GetModCategories(CancellationToken cancellationToken);
 
 	ValueTask<IReadOnlyList<ModpackChangelogFeedItem>> GetModpackChangelogs(CancellationToken cancellationToken);
 

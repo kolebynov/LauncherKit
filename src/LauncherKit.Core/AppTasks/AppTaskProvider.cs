@@ -9,7 +9,7 @@ using LauncherKit.Core.AppTasks.ModpackComponents;
 using LauncherKit.Core.Backups;
 using LauncherKit.Core.Extensions;
 using LauncherKit.Core.Feed;
-using LauncherKit.Core.Feed.GraphPacks;
+using LauncherKit.Core.Feed.Mods;
 using LauncherKit.Core.Feed.Modpacks;
 using LauncherKit.Core.FileStorage;
 using LauncherKit.Core.Models;
@@ -183,25 +183,24 @@ public sealed class AppTaskProvider : IAppTaskProvider
 		var selection = new ModpackComponentsSelection();
 		var finalModpackVersion = patches.Select(x => x.Version).Append(modpackFeedItem.Version).Max()!;
 		var offered = new List<ModpackComponentOffer>();
+		var mods = await _feedProvider.GetModFeedDatas(cancellationToken);
 		foreach (var definition in (await _feedProvider.GetInstallComponents(cancellationToken))
 			.Where(x => x.SupportedModpackVersion.Satisfies(finalModpackVersion)).OrderBy(x => x.Order))
 		{
-			IReadOnlyList<GraphPackComponent> options;
-			if (definition.Kind == InstallComponentKind.GraphPack)
+			IReadOnlyList<ModComponentOption> options;
+			if (definition.Kind == InstallComponentKind.ModChoice)
 			{
-				options = await CreateGraphPackComponents(finalModpackVersion, cancellationToken);
+				options = await CreateModChoiceOptions(definition.Options ?? [], mods, finalModpackVersion, cancellationToken);
 			}
 			else
 			{
-				var mods = await _feedProvider.GetModFeedDatas(cancellationToken);
-				var mod = mods?.FirstOrDefault(x => x.Name == definition.ModName);
-				var item = mod?.Items.Where(x => x.SupportedModpackVersion.Satisfies(finalModpackVersion)).MaxBy(x => x.Version);
-				if (mod == null || item == null)
+				var mod = mods.FirstOrDefault(x => x.Name == definition.ModName);
+				if (mod?.FindLatestSupportedItem(finalModpackVersion) is not { } item)
 				{
 					continue;
 				}
 				var task = await _installAppTaskProvider.CreateModInstallAppTask(mod, item.Version, cancellationToken);
-				options = [new GraphPackComponent(definition.Title.Resolve(), definition.Title.Resolve(), task, item.GetDownloads().ToArray())];
+				options = [new ModComponentOption(definition.Title.Resolve(), null, task, item.GetDownloads().ToArray())];
 			}
 			if (options.Count > 0)
 			{
@@ -278,35 +277,35 @@ public sealed class AppTaskProvider : IAppTaskProvider
 		}
 		return lastTask;
 	}
-	private async ValueTask<IReadOnlyList<GraphPackComponent>> CreateGraphPackComponents(NuGetVersion modpackVersion,
-		CancellationToken cancellationToken)
+
+	private async ValueTask<IReadOnlyList<ModComponentOption>> CreateModChoiceOptions(IReadOnlyList<ModChoiceOption> choices,
+		IReadOnlyList<ModFeedData> mods, NuGetVersion modpackVersion, CancellationToken cancellationToken)
 	{
-		var graphPacks = await _feedProvider.GetGraphPacks(cancellationToken);
-		var components = new List<GraphPackComponent>(graphPacks.Count);
-		foreach (var graphPack in graphPacks)
+		var options = new List<ModComponentOption>(choices.Count);
+		foreach (var choice in choices)
 		{
-			if (graphPack.IsOfferedFor(modpackVersion))
+			if (mods.FirstOrDefault(x => x.Name == choice.ModName) is { } mod && mod.IsOfferedFor(modpackVersion))
 			{
-				components.Add(await CreateGraphPackComponent(graphPack, modpackVersion, cancellationToken));
+				options.Add(await CreateModChoiceOption(mod, choice.IsDefault, modpackVersion, cancellationToken));
 			}
 		}
 
-		return components;
+		return options;
 	}
 
-	private async ValueTask<GraphPackComponent> CreateGraphPackComponent(GraphPackFeedData feedData,
+	private async ValueTask<ModComponentOption> CreateModChoiceOption(ModFeedData feedData, bool isDefault,
 		NuGetVersion modpackVersion, CancellationToken cancellationToken)
 	{
 		var name = feedData.DisplayName?.Resolve() ?? feedData.Name;
+		var optionDescription = feedData.OptionDescription?.Resolve();
 		if (feedData.FindLatestSupportedItem(modpackVersion) is not { } feedItem)
 		{
-			return new GraphPackComponent(name, feedData.Recommendation.Resolve(), null, [], feedData.IsDefault);
+			return new ModComponentOption(name, optionDescription, null, [], isDefault);
 		}
 
 		var installTask = await _installAppTaskProvider.CreateModInstallAppTask(feedData, feedItem.Version,
 			cancellationToken);
-		return new GraphPackComponent(name, feedData.Recommendation.Resolve(), installTask, feedItem.GetDownloads().ToArray(),
-			feedData.IsDefault);
+		return new ModComponentOption(name, optionDescription, installTask, feedItem.GetDownloads().ToArray(), isDefault);
 	}
 
 	private async ValueTask<AppTask> CreateInstallSkyrimTask(CancellationToken cancellationToken)

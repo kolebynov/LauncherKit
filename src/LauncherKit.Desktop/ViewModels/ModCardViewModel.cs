@@ -11,8 +11,10 @@ public partial class ModCardViewModel : ViewModelBase
 {
 	public closed record InstallUnavailableReason
 	{
-		public sealed record Updating : InstallUnavailableReason;
-		public sealed record OtherGraphPackInstalled(string Name) : InstallUnavailableReason;
+		/// <summary>The mod has no version supporting the installed modpack version yet.</summary>
+		public sealed record NotUpdated : InstallUnavailableReason;
+		/// <summary>Another mod of the same exclusive category is installed or being installed.</summary>
+		public sealed record OtherModInstalled(string Name) : InstallUnavailableReason;
 		public sealed record ModpackTaskQueued : InstallUnavailableReason;
 	}
 
@@ -49,6 +51,7 @@ public partial class ModCardViewModel : ViewModelBase
 	public bool UpdateRequiresNewGame { get; }
 	public bool UninstallRequiresNewGame { get; }
 	private readonly bool _installRequiresNewGame;
+	private readonly Func<ModInstallState> _installStateFunc;
 
 	public ModCardViewModel(string name, Uri logoUri, Uri descriptionUri, Func<ModInstallState> installStateFunc,
 		AsyncRelayCommand installCommand, AsyncRelayCommand uninstallCommand,
@@ -61,6 +64,7 @@ public partial class ModCardViewModel : ViewModelBase
 		_installRequiresNewGame = installRequiresNewGame;
 		UpdateRequiresNewGame = updateRequiresNewGame;
 		UninstallRequiresNewGame = uninstallRequiresNewGame;
+		_installStateFunc = installStateFunc;
 		SetInstallState(installStateFunc());
 		InstallCommand = new AsyncRelayCommand(async () =>
 		{
@@ -75,7 +79,7 @@ public partial class ModCardViewModel : ViewModelBase
 		installCommand.ObserveCanExecuteChange()
 			.Subscribe(canExecute =>
 			{
-				UnavailableReason = canExecute ? null : unavailableReasonFunc?.Invoke() ?? InstallUnavailableReason.Updating.Instance;
+				UnavailableReason = canExecute ? null : unavailableReasonFunc?.Invoke() ?? InstallUnavailableReason.NotUpdated.Instance;
 				IsAvailable = canExecute;
 			});
 		uninstallCommand.ObserveCanExecuteChange()
@@ -88,6 +92,9 @@ public partial class ModCardViewModel : ViewModelBase
 		installCommand.ObservePropertyChanged(x => x.IsRunning).Subscribe(_ => UninstallCommand.NotifyCanExecuteChanged());
 		uninstallCommand.ObservePropertyChanged(x => x.IsRunning).Subscribe(_ => InstallCommand.NotifyCanExecuteChanged());
 	}
+
+	/// <summary>Re-reads the install state, e.g. after an install started from a since-replaced card completed.</summary>
+	public void RefreshInstallState() => SetInstallState(_installStateFunc());
 
 	private void SetInstallState(ModInstallState state)
 	{

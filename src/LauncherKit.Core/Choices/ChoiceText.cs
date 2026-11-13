@@ -5,12 +5,11 @@ public union ChoiceText(
 	ChoiceText.Content,
 	ChoiceText.NoneOption,
 	ChoiceText.YesOption,
-	ChoiceText.GraphPackStepTitle,
 	ChoiceText.ExtraDownloadSize,
 	ChoiceText.SelectRequiredModTitle,
 	ChoiceText.RequiredModsStepTitle,
 	ChoiceText.SelectOneModSubtitle,
-	ChoiceText.UnavailableGraphPackUpdating,
+	ChoiceText.UnavailableModNotUpdated,
 	ChoiceText.UnavailableFomodOption,
 	ChoiceText.ModpackComponentsTitle,
 	ChoiceText.ComponentOptionDescription)
@@ -18,13 +17,14 @@ public union ChoiceText(
 	public sealed record Content(string Value);
 	public sealed record NoneOption;
 	public sealed record YesOption;
-	public sealed record GraphPackStepTitle;
 	public sealed record ExtraDownloadSize(long Bytes);
 	public sealed record SelectRequiredModTitle(IReadOnlyList<string> Mods);
 	public sealed record RequiredModsStepTitle;
 	public sealed record SelectOneModSubtitle;
-	public sealed record UnavailableGraphPackUpdating;
+	/// <summary>The mod has no version supporting the modpack version yet.</summary>
+	public sealed record UnavailableModNotUpdated;
 	public sealed record UnavailableFomodOption;
 	public sealed record ModpackComponentsTitle;
-	public sealed record ComponentOptionDescription(string Name, string Recommendation, long? DownloadBytes, bool IsMod);
+	/// <summary>Installing <paramref name="Name"/>, with its feed <paramref name="OptionDescription"/> and download size.</summary>
+	public sealed record ComponentOptionDescription(string Name, string? OptionDescription, long? DownloadBytes);
 }

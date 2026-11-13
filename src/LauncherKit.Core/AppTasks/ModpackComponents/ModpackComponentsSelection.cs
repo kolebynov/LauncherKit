@@ -2,11 +2,15 @@ using LauncherKit.Core.Feed;
 
 namespace LauncherKit.Core.AppTasks.ModpackComponents;
 
-public sealed record GraphPackComponent(
-	string Name, string Recommendation, AppTask? InstallTask, IReadOnlyList<DownloadInfo> Downloads, bool IsDefault = false);
+/// <summary>
+/// A mod offered by a component; without <paramref name="InstallTask"/> the mod is not updated for the modpack version
+/// and the option is unavailable.
+/// </summary>
+public sealed record ModComponentOption(
+	string Name, string? OptionDescription, AppTask? InstallTask, IReadOnlyList<DownloadInfo> Downloads, bool IsDefault = false);
 
 /// <summary>A declared component and its available installation options.</summary>
-public sealed record ModpackComponentOffer(InstallComponent Definition, IReadOnlyList<GraphPackComponent> Options);
+public sealed record ModpackComponentOffer(InstallComponent Definition, IReadOnlyList<ModComponentOption> Options);
 
 public sealed record ModpackComponentsOffer(
 	IReadOnlyList<ModpackComponentOffer> Components, ModpackComponentsSelection Selection);

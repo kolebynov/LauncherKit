@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 using NuGet.Versioning;
-using LauncherKit.Core.Feed.GraphPacks;
 using LauncherKit.Core.Feed.Mods;
 using LauncherKit.Core.Feed.Modpacks;
 
@@ -24,9 +23,11 @@ public sealed class FeedData
 
 	public required IReadOnlyList<LauncherFeedItem> Launchers { get; init; } = [];
 
-	public IReadOnlyList<GraphPackFeedData>? GraphPacks { get; init; }
+	/// <summary>Sections of the mod cards, in display order.</summary>
+	public IReadOnlyList<ModCategoryFeedData> ModCategories { get; init; } = [];
 
-	public IReadOnlyList<ModFeedData>? Mods { get; init; }
+	/// <summary>Every mod, in display order within its category.</summary>
+	public IReadOnlyList<ModFeedData> Mods { get; init; } = [];
 
 	public IReadOnlyDictionary<string, VersionRange>? BetaVersions { get; init; }
 

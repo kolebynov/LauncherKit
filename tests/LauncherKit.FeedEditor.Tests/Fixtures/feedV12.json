@@ -127,175 +127,25 @@
       ]
     }
   ],
-  "GraphPacks": [
+  "ModCategories": [
     {
-      "Name": "MD's Graphics Lite",
-      "LogoPath": "MDGraphicsLite/MDGraphicsLiteLogo.jpg",
+      "Id": "graph-packs",
+      "Title": {
+        "ru": "Графпаки",
+        "en": "Graphics packs"
+      },
       "DescriptionPath": {
-        "ru": "MDGraphicsLite/MDGraphicsLiteDescription2.md"
+        "ru": "GraphPacks/Description.md"
       },
-      "Items": [
-        {
-          "Version": "1.17.0",
-          "ArchiveDownloadInfo": {
-            "S3Path": "MDGraphicsLite/1.17.0/MD's Graphics Lite - Part 1 [1.17.0].7z",
-            "Hash": "84B7CB6C0097940B0B7C71B6FB11825CF2C4C42465EA6BD8660033179D510409"
-          },
-          "InstallSteps": [
-            {
-              "Actions": [
-                {
-                  "$type": "ActivateMods",
-                  "Activate": false,
-                  "Mods": [
-                    "MD's Graphics Lite"
-                  ]
-                },
-                {
-                  "$type": "RemoveFileSystemItem",
-                  "Paths": [
-                    "[Modpack] Mod Organizer\\overwrite\\ShaderCache",
-                    "[Modpack] Mod Organizer\\profiles\\Modpack - MD's Graphics Lite"
-                  ]
-                },
-                {
-                  "$type": "ExtractArchive",
-                  "DownloadInfo": {
-                    "S3Path": "MDGraphicsLite/1.17.0/MD's Graphics Lite - Part 2 [1.17.0].7z"
-                  },
-                  "DestinationPath": ""
-                }
-              ],
-              "CanRollback": false
-            },
-            {
-              "Actions": [
-                {
-                  "$type": "ChangeProfile",
-                  "ProfileName": "Modpack - MD's Graphics Lite"
-                },
-                {
-                  "$type": "ActivateMods",
-                  "Activate": true,
-                  "Mods": [
-                    "MD's Graphics Lite"
-                  ]
-                }
-              ],
-              "CanRollback": true
-            }
-          ],
-          "SupportedModpackVersion": "[3.1.0, 3.2.0)",
-          "SupportsUninstall": true
-        }
-      ],
-      "Recommendation": {
-        "ru": "Рекомендуемый вариант. Видеокарта: 4+ ГБ видеопамяти"
-      },
-      "IsDefault": true,
-      "IsDiscontinued": false
+      "IsExclusive": true
     },
     {
-      "Name": "MD's Graphics Full",
-      "LogoPath": "MDGraphicsFull/MDGraphicsFullLogo.jpg",
-      "DescriptionPath": {
-        "ru": "MDGraphicsFull/MDGraphicsFullDescription.md"
+      "Id": "optional-mods",
+      "Title": {
+        "ru": "Опциональные моды",
+        "en": "Optional mods"
       },
-      "Items": [
-        {
-          "Version": "1.17.0",
-          "ArchiveDownloadInfo": {
-            "S3Path": "MDGraphicsFull/1.17.0/MD's Graphics Full - Part 1 [1.17.0].7z",
-            "Hash": "ad3e481b84fc26d18ebe97b433a94585b077ddbfcefd48f2bfc0f377e7b10307"
-          },
-          "InstallSteps": [
-            {
-              "Actions": [
-                {
-                  "$type": "ActivateMods",
-                  "Activate": false,
-                  "Mods": [
-                    "MD's Graphics Full"
-                  ]
-                },
-                {
-                  "$type": "RemoveFileSystemItem",
-                  "Paths": [
-                    "[Modpack] Mod Organizer\\overwrite\\ShaderCache",
-                    "[Modpack] Mod Organizer\\profiles\\Modpack - MD's Graphics Full"
-                  ]
-                },
-                {
-                  "$type": "ExtractArchive",
-                  "DownloadInfo": {
-                    "S3Path": "MDGraphicsFull/1.17.0/MD's Graphics Full - Part 2 [1.17.0].7z"
-                  },
-                  "DestinationPath": ""
-                }
-              ],
-              "CanRollback": false
-            },
-            {
-              "Actions": [
-                {
-                  "$type": "ChangeProfile",
-                  "ProfileName": "Modpack - MD's Graphics Full"
-                },
-                {
-                  "$type": "ActivateMods",
-                  "Activate": true,
-                  "Mods": [
-                    "MD's Graphics Full"
-                  ]
-                }
-              ],
-              "CanRollback": true
-            }
-          ],
-          "SupportedModpackVersion": "[3.1.0, 3.2.0)",
-          "SupportsUninstall": true
-        }
-      ],
-      "Recommendation": {
-        "ru": "Видеокарта: 8+ ГБ видеопамяти"
-      },
-      "IsDefault": false,
-      "IsDiscontinued": false
-    },
-    {
-      "Name": "Single Archive Graphics",
-      "LogoPath": "SingleArchive/Logo.jpg",
-      "DescriptionPath": {
-        "ru": "SingleArchive/Description.md"
-      },
-      "Items": [
-        {
-          "Version": "1.0.0",
-          "ArchiveDownloadInfo": {
-            "S3Path": "SingleArchive/1.0.0/Single Archive Graphics [1.0.0].7z"
-          },
-          "InstallSteps": [
-            {
-              "Actions": [
-                {
-                  "$type": "RemoveFileSystemItem",
-                  "Paths": [
-                    "[Modpack] Mod Organizer\\overwrite\\ShaderCache"
-                  ]
-                }
-              ],
-              "CanRollback": false
-            }
-          ],
-          "SupportedModpackVersion": "[3.1.0, 3.2.0)",
-          "SupportsUninstall": true
-        }
-      ],
-      "Recommendation": {
-        "ru": "Видеокарта: 6+ ГБ видеопамяти"
-      },
-      "IsDefault": true,
-      "IsDiscontinued": true
+      "IsExclusive": false
     }
   ],
   "SkyrimDownloadInfo": {
@@ -495,6 +345,178 @@
   ],
   "Mods": [
     {
+      "Name": "MD's Graphics Lite",
+      "CategoryId": "graph-packs",
+      "LogoPath": "MDGraphicsLite/MDGraphicsLiteLogo.jpg",
+      "DescriptionPath": {
+        "ru": "MDGraphicsLite/MDGraphicsLiteDescription2.md"
+      },
+      "OptionDescription": {
+        "ru": "Рекомендуемый вариант. Видеокарта: 4+ ГБ видеопамяти"
+      },
+      "IsDiscontinued": false,
+      "RequiresNewGame": true,
+      "Items": [
+        {
+          "Version": "1.17.0",
+          "ArchiveDownloadInfo": {
+            "S3Path": "MDGraphicsLite/1.17.0/MD's Graphics Lite - Part 1 [1.17.0].7z",
+            "Hash": "84B7CB6C0097940B0B7C71B6FB11825CF2C4C42465EA6BD8660033179D510409"
+          },
+          "InstallSteps": [
+            {
+              "Actions": [
+                {
+                  "$type": "ActivateMods",
+                  "Activate": false,
+                  "Mods": [
+                    "MD's Graphics Lite"
+                  ]
+                },
+                {
+                  "$type": "RemoveFileSystemItem",
+                  "Paths": [
+                    "[Modpack] Mod Organizer\\overwrite\\ShaderCache",
+                    "[Modpack] Mod Organizer\\profiles\\Modpack - MD's Graphics Lite"
+                  ]
+                },
+                {
+                  "$type": "ExtractArchive",
+                  "DownloadInfo": {
+                    "S3Path": "MDGraphicsLite/1.17.0/MD's Graphics Lite - Part 2 [1.17.0].7z"
+                  },
+                  "DestinationPath": ""
+                }
+              ],
+              "CanRollback": false
+            },
+            {
+              "Actions": [
+                {
+                  "$type": "ChangeProfile",
+                  "ProfileName": "Modpack - MD's Graphics Lite"
+                },
+                {
+                  "$type": "ActivateMods",
+                  "Activate": true,
+                  "Mods": [
+                    "MD's Graphics Lite"
+                  ]
+                }
+              ],
+              "CanRollback": true
+            }
+          ],
+          "SupportedModpackVersion": "[3.1.0, 3.2.0)",
+          "SupportsUninstall": true
+        }
+      ]
+    },
+    {
+      "Name": "MD's Graphics Full",
+      "CategoryId": "graph-packs",
+      "LogoPath": "MDGraphicsFull/MDGraphicsFullLogo.jpg",
+      "DescriptionPath": {
+        "ru": "MDGraphicsFull/MDGraphicsFullDescription.md"
+      },
+      "OptionDescription": {
+        "ru": "Видеокарта: 8+ ГБ видеопамяти"
+      },
+      "IsDiscontinued": false,
+      "RequiresNewGame": true,
+      "Items": [
+        {
+          "Version": "1.17.0",
+          "ArchiveDownloadInfo": {
+            "S3Path": "MDGraphicsFull/1.17.0/MD's Graphics Full - Part 1 [1.17.0].7z",
+            "Hash": "ad3e481b84fc26d18ebe97b433a94585b077ddbfcefd48f2bfc0f377e7b10307"
+          },
+          "InstallSteps": [
+            {
+              "Actions": [
+                {
+                  "$type": "ActivateMods",
+                  "Activate": false,
+                  "Mods": [
+                    "MD's Graphics Full"
+                  ]
+                },
+                {
+                  "$type": "RemoveFileSystemItem",
+                  "Paths": [
+                    "[Modpack] Mod Organizer\\overwrite\\ShaderCache",
+                    "[Modpack] Mod Organizer\\profiles\\Modpack - MD's Graphics Full"
+                  ]
+                },
+                {
+                  "$type": "ExtractArchive",
+                  "DownloadInfo": {
+                    "S3Path": "MDGraphicsFull/1.17.0/MD's Graphics Full - Part 2 [1.17.0].7z"
+                  },
+                  "DestinationPath": ""
+                }
+              ],
+              "CanRollback": false
+            },
+            {
+              "Actions": [
+                {
+                  "$type": "ChangeProfile",
+                  "ProfileName": "Modpack - MD's Graphics Full"
+                },
+                {
+                  "$type": "ActivateMods",
+                  "Activate": true,
+                  "Mods": [
+                    "MD's Graphics Full"
+                  ]
+                }
+              ],
+              "CanRollback": true
+            }
+          ],
+          "SupportedModpackVersion": "[3.1.0, 3.2.0)",
+          "SupportsUninstall": true
+        }
+      ]
+    },
+    {
+      "Name": "Single Archive Graphics",
+      "CategoryId": "graph-packs",
+      "LogoPath": "SingleArchive/Logo.jpg",
+      "DescriptionPath": {
+        "ru": "SingleArchive/Description.md"
+      },
+      "OptionDescription": {
+        "ru": "Видеокарта: 6+ ГБ видеопамяти"
+      },
+      "IsDiscontinued": true,
+      "RequiresNewGame": true,
+      "Items": [
+        {
+          "Version": "1.0.0",
+          "ArchiveDownloadInfo": {
+            "S3Path": "SingleArchive/1.0.0/Single Archive Graphics [1.0.0].7z"
+          },
+          "InstallSteps": [
+            {
+              "Actions": [
+                {
+                  "$type": "RemoveFileSystemItem",
+                  "Paths": [
+                    "[Modpack] Mod Organizer\\overwrite\\ShaderCache"
+                  ]
+                }
+              ],
+              "CanRollback": false
+            }
+          ],
+          "SupportedModpackVersion": "[3.1.0, 3.2.0)",
+          "SupportsUninstall": true
+        }
+      ]
+    },
+    {
       "DescriptionPath": {
         "ru": "Mods/WispShelter/Description.md"
       },
@@ -547,7 +569,8 @@
         }
       ],
       "LogoPath": "Mods/WispShelter/Logo.jpg",
-      "Name": "WispShelter"
+      "Name": "WispShelter",
+      "CategoryId": "optional-mods"
     },
     {
       "DescriptionPath": {
@@ -751,7 +774,8 @@
         }
       ],
       "LogoPath": "Mods/WispRoguelike/Logo.jpg",
-      "Name": "WispRoguelike"
+      "Name": "WispRoguelike",
+      "CategoryId": "optional-mods"
     },
     {
       "DescriptionPath": {
@@ -762,6 +786,7 @@
       },
       "LogoPath": "Mods/MKO/Logo3.jpg",
       "Name": "MKO",
+      "CategoryId": "optional-mods",
       "Items": [
         {
           "SupportedModpackVersion": "[3.1.0, 3.2.0)",
@@ -811,7 +836,21 @@
   "InstallComponents": [
     {
       "Id": "graph-pack",
-      "Kind": "GraphPack",
+      "Kind": "ModChoice",
+      "Options": [
+        {
+          "ModName": "MD's Graphics Lite",
+          "IsDefault": true
+        },
+        {
+          "ModName": "MD's Graphics Full",
+          "IsDefault": false
+        },
+        {
+          "ModName": "Single Archive Graphics",
+          "IsDefault": false
+        }
+      ],
       "Title": {
         "ru": "Графпак",
         "en": "Graphics pack"

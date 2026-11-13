@@ -3,16 +3,45 @@ using LauncherKit.FeedEditor.Feed.Json;
 
 namespace LauncherKit.FeedEditor.Feed;
 
-/// <summary>An optional mod, and the base of <see cref="GraphPackModel"/>.</summary>
-public class ModModel : FeedEntity
+/// <summary>A feed-defined section of mods, as the launcher's <c>ModCategoryFeedData</c>.</summary>
+public sealed class ModCategoryModel : FeedEntity
+{
+	/// <summary>Stable identifier that <see cref="ModModel.CategoryId"/> references.</summary>
+	public string Id { get; set; } = string.Empty;
+
+	public Dictionary<string, string> Title { get; init => field = value ?? []; } = [];
+
+	/// <summary>Markdown shown at the top of the section; null means no description.</summary>
+	public IReadOnlyDictionary<string, string>? DescriptionPath { get; set; }
+
+	/// <summary>Only one mod of the category can be installed at a time.</summary>
+	public bool IsExclusive { get; set; }
+}
+
+/// <summary>A mod, shown in its category and offered by installation components.</summary>
+public sealed class ModModel : FeedEntity
 {
 	public string Name { get; set; } = string.Empty;
+
+	public string CategoryId { get; set; } = string.Empty;
 
 	public IReadOnlyDictionary<string, string>? DisplayName { get; set; }
 
 	public string LogoPath { get; set; } = string.Empty;
 
 	public Dictionary<string, string> DescriptionPath { get; init => field = value ?? []; } = [];
+
+	/// <summary>Shown in the mod's option when installing modpack; null means none.</summary>
+	public IReadOnlyDictionary<string, string>? OptionDescription { get; set; }
+
+	/// <summary>
+	/// No new versions will be released: the launcher hides the mod for modpack versions none of its versions supports
+	/// instead of showing it as not yet updated.
+	/// </summary>
+	public bool IsDiscontinued { get; set; }
+
+	/// <summary>Installing the mod for the first time or uninstalling it requires a new game.</summary>
+	public bool RequiresNewGame { get; set; }
 
 	public List<ModItemModel> Items { get; init; } = [];
 }

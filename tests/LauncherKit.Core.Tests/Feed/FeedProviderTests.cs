@@ -79,7 +79,7 @@ public sealed class FeedProviderTests
 		var modpacks = await sut.GetModpackFeedItems(CancellationToken.None);
 		var changelogs = await sut.GetModpackChangelogs(CancellationToken.None);
 		var mods = await sut.GetModFeedDatas(CancellationToken.None);
-		var graphPacks = await sut.GetGraphPacks(CancellationToken.None);
+		var categories = await sut.GetModCategories(CancellationToken.None);
 		var skyrim = await sut.GetSkyrimDownloadInfo(CancellationToken.None);
 		var sevenZip = await sut.GetSevenZipDownloadInfo(CancellationToken.None);
 
@@ -89,8 +89,8 @@ public sealed class FeedProviderTests
 			Assert.That(launchers, Is.Empty);
 			Assert.That(modpacks, Is.Empty);
 			Assert.That(changelogs, Is.Empty);
-			Assert.That(mods, Is.Null);
-			Assert.That(graphPacks, Is.Empty);
+			Assert.That(mods, Is.Empty);
+			Assert.That(categories, Is.Empty);
 			Assert.That(skyrim, Is.SameAs(DownloadInfo.Empty));
 			Assert.That(sevenZip, Is.SameAs(DownloadInfo.Empty));
 		});
@@ -492,8 +492,9 @@ public sealed class FeedProviderTests
 			"Launchers": [
 				{ "Version": "1.2.3", "DownloadInfo": { "S3Path": "launcher/1.2.3.7z" } }
 			],
+			"ModCategories": [{ "Id": "mods", "Title": {"ru": "Моды"} }],
 			"Mods": [{
-				"Name": "Mod", "LogoPath": "l", "DescriptionPath": {"ru": "d"},
+				"Name": "Mod", "CategoryId": "mods", "LogoPath": "l", "DescriptionPath": {"ru": "d"},
 				"Items": [{
 					"Version": "1.0.0", "SupportedModpackVersion": "[1.0.0, 2.0.0)", "ArchiveDownloadInfo": { "S3Path": "mod.7z" },
 					"InstallSteps": [{ "Actions": [{{action}}] }]

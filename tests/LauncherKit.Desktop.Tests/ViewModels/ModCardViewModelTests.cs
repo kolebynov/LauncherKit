@@ -4,6 +4,7 @@ using LauncherKit.Desktop.ViewModels;
 using LauncherKit.Infrastructure;
 using Microsoft.Extensions.Localization;
 using LauncherKit.Core.Models;
+using LauncherKit.Core.Choices;
 
 namespace LauncherKit.Desktop.Tests.ViewModels;
 
@@ -62,25 +63,25 @@ public sealed class ModCardViewModelTests
 	[Test]
 	public void UnavailableReason_InstallCommandBecomesUnavailableAndAvailable_FollowsCommandState()
 	{
-		var otherGraphPack = (string?)null;
-		var innerCommand = new AsyncRelayCommand(() => Task.CompletedTask, () => otherGraphPack == null);
+		var otherMod = (string?)null;
+		var innerCommand = new AsyncRelayCommand(() => Task.CompletedTask, () => otherMod == null);
 		var sut = new ModCardViewModel(
 			"Example", new Uri("https://assets.example.test/logo.png"), new Uri("https://assets.example.test/readme.md"),
 			() => ModInstallState.NotInstalled, innerCommand, new AsyncRelayCommand(() => Task.CompletedTask),
-			() => new ModCardViewModel.InstallUnavailableReason.OtherGraphPackInstalled(otherGraphPack!));
+			() => new ModCardViewModel.InstallUnavailableReason.OtherModInstalled(otherMod!));
 		var initialReason = sut.UnavailableReason;
 
-		otherGraphPack = "Other";
+		otherMod = "Other";
 		innerCommand.NotifyCanExecuteChanged();
 		var blockedReason = sut.UnavailableReason;
 		var blockedCanInstall = sut.InstallCommand.CanExecute(null);
-		otherGraphPack = null;
+		otherMod = null;
 		innerCommand.NotifyCanExecuteChanged();
 
 		Assert.Multiple(() =>
 		{
 			Assert.That(initialReason, Is.Null);
-			Assert.That(blockedReason, Is.EqualTo(new ModCardViewModel.InstallUnavailableReason.OtherGraphPackInstalled("Other")));
+			Assert.That(blockedReason, Is.EqualTo(new ModCardViewModel.InstallUnavailableReason.OtherModInstalled("Other")));
 			Assert.That(blockedCanInstall, Is.False);
 			Assert.That(sut.UnavailableReason, Is.Null);
 			Assert.That(sut.InstallCommand.CanExecute(null), Is.True);
@@ -88,14 +89,14 @@ public sealed class ModCardViewModelTests
 	}
 
 	[Test]
-	public void UnavailableReason_UnavailableWithoutReasonFunc_IsUpdatingReason()
+	public void UnavailableReason_UnavailableWithoutReasonFunc_IsNotUpdatedReason()
 	{
 		var sut = new ModCardViewModel(
 			"Example", new Uri("https://assets.example.test/logo.png"), new Uri("https://assets.example.test/readme.md"),
 			() => ModInstallState.NotInstalled, new AsyncRelayCommand(() => Task.CompletedTask, () => false),
 			new AsyncRelayCommand(() => Task.CompletedTask));
 
-		Assert.That(sut.UnavailableReason, Is.TypeOf<ModCardViewModel.InstallUnavailableReason.Updating>());
+		Assert.That(sut.UnavailableReason, Is.TypeOf<ModCardViewModel.InstallUnavailableReason.NotUpdated>());
 	}
 
 	[Test]
@@ -206,16 +207,17 @@ public sealed class ModCardViewModelTests
 	{
 		var strings = new Mock<IStringLocalizer<DesktopStrings>>(MockBehavior.Strict);
 		strings.Setup(x => x[It.IsAny<string>()]).Returns<string>(key => new LocalizedString(key, key));
-		strings.Setup(x => x[DesktopStrings.OtherGraphPackInstalled, It.Is<object[]>(args => args.Length == 1 && Equals(args[0], "Other"))])
-			.Returns(new LocalizedString(DesktopStrings.OtherGraphPackInstalled, DesktopStrings.OtherGraphPackInstalled));
+		strings.Setup(x => x[DesktopStrings.OtherModInstalled, It.Is<object[]>(args => args.Length == 1 && Equals(args[0], "Other"))])
+			.Returns(new LocalizedString(DesktopStrings.OtherModInstalled, DesktopStrings.OtherModInstalled));
 		var texts = new HomeCardFactTexts(strings.Object);
 		Assert.Multiple(() =>
 		{
 			Assert.That(texts.Get(ModpackInstallUnavailableReason.NoAvailableVersions).Name, Is.EqualTo(DesktopStrings.ModpackInstallUnavailable));
-			Assert.That(texts.Get(ModCardViewModel.InstallUnavailableReason.Updating.Instance).Name, Is.EqualTo(DesktopStrings.ModUpdating));
+			Assert.That(texts.Get(ModCardViewModel.InstallUnavailableReason.NotUpdated.Instance).Name, Is.EqualTo(DesktopStrings.ModNotUpdated));
+			Assert.That(new ChoiceTexts(strings.Object).Get(ChoiceText.UnavailableModNotUpdated.Instance).Name, Is.EqualTo(DesktopStrings.ModNotUpdated));
 			Assert.That(texts.Get(ModCardViewModel.InstallUnavailableReason.ModpackTaskQueued.Instance).Name, Is.EqualTo(DesktopStrings.ModpackTaskQueued));
-			Assert.That(texts.Get(new ModCardViewModel.InstallUnavailableReason.OtherGraphPackInstalled("Other")).Name, Is.EqualTo(DesktopStrings.OtherGraphPackInstalled));
+			Assert.That(texts.Get(new ModCardViewModel.InstallUnavailableReason.OtherModInstalled("Other")).Name, Is.EqualTo(DesktopStrings.OtherModInstalled));
 		});
-		strings.Verify(x => x[DesktopStrings.OtherGraphPackInstalled, It.IsAny<object[]>()], Times.Once);
+		strings.Verify(x => x[DesktopStrings.OtherModInstalled, It.IsAny<object[]>()], Times.Once);
 	}
 }
