@@ -4,6 +4,8 @@ This repository is LauncherKit, the reusable core of Skyrim SE / Mod Organizer m
 
 Paths below are relative to this repository; commands run from its root unless stated otherwise. Commands that need a launcher executable (NUKE targets, sandbox, AOT publish) run from a consumer repository root, where this repository is `kit/`. The kit must build and test without consumer props, generated identity, projects or fixture state.
 
+Documentation lives in the `docs/` directory (e.g. [dev automation](docs/dev-automation.md)). Place new documentation files there and link them from these guidelines or [README.md](README.md) where relevant, rather than adding documents elsewhere in the repository.
+
 ## Architecture and ownership
 
 - `src/LauncherKit.Infrastructure` owns shared filesystem/logging primitives; `Core` owns Skyrim SE/Mod Organizer domain behavior, feed/update selection, tasks, storage, persistence, FOMOD and account integrations.
