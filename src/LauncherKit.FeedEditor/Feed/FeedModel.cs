@@ -26,7 +26,7 @@ public sealed class FeedModel : FeedEntity
 	public List<LauncherModel> Launchers { get; init => field = value ?? []; } = [];
 
 	[OmitWhenEmpty]
-	public List<GraphPackModel> GraphPacks { get; init => field = value ?? []; } = [];
+	public List<ModCategoryModel> ModCategories { get; init => field = value ?? []; } = [];
 
 	[OmitWhenEmpty]
 	public List<ModModel> Mods { get; init => field = value ?? []; } = [];

@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using R3;
 using LauncherKit.Core.Discord;
-using LauncherKit.Core.Feed.GraphPacks;
 using LauncherKit.Core.Feed.Mods;
 using LauncherKit.Core.Feed.Modpacks;
 using LauncherKit.Core.Services.Abstractions;
@@ -151,16 +150,16 @@ public sealed class FeedProvider : IFeedProvider, IDisposable
 		return feedData.Launchers;
 	}
 
-	public async ValueTask<IReadOnlyList<ModFeedData>?> GetModFeedDatas(CancellationToken cancellationToken)
+	public async ValueTask<IReadOnlyList<ModFeedData>> GetModFeedDatas(CancellationToken cancellationToken)
 	{
 		var feedData = await GetFeed(cancellationToken);
 		return feedData.Mods;
 	}
 
-	public async ValueTask<IReadOnlyList<GraphPackFeedData>> GetGraphPacks(CancellationToken cancellationToken)
+	public async ValueTask<IReadOnlyList<ModCategoryFeedData>> GetModCategories(CancellationToken cancellationToken)
 	{
 		var feedData = await GetFeed(cancellationToken);
-		return feedData.GraphPacks ?? [];
+		return feedData.ModCategories;
 	}
 
 	public async ValueTask<IReadOnlyList<ModpackChangelogFeedItem>> GetModpackChangelogs(CancellationToken cancellationToken)

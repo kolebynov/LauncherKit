@@ -7,7 +7,6 @@ using LauncherKit.Core.AppTasks.ModpackComponents;
 using LauncherKit.Core.Backups;
 using LauncherKit.Core.Choices;
 using LauncherKit.Core.Feed;
-using LauncherKit.Core.Feed.GraphPacks;
 using LauncherKit.Core.Feed.Install;
 using LauncherKit.Core.Feed.Mods;
 using LauncherKit.Core.Feed.Modpacks;
@@ -227,13 +226,10 @@ public sealed class AppTaskProviderTests
 			ArchiveDownloadInfo = new DownloadInfo { S3Path = "old.7z" },
 			SupportedModpackVersion = VersionRange.Parse("[2.0.0, 3.0.0)"),
 		};
-		feedProvider.Setup(x => x.GetGraphPacks(CancellationToken.None))
-			.ReturnsAsync(
-			[
-				CreateGraphPack("Lite", "4 GB", isDefault: true, liteItem),
-				CreateGraphPack("Solo", "6 GB", isDefault: false, soloItem),
-				CreateGraphPack("Full", "8 GB", isDefault: false, oldItem),
-			]);
+		AddMods(mocker,
+			CreateGraphPack("Lite", "4 GB", liteItem),
+			CreateGraphPack("Solo", "6 GB", soloItem),
+			CreateGraphPack("Full", "8 GB", oldItem));
 		var installAppTaskProvider = mocker.GetMock<IInstallAppTaskProvider>();
 		installAppTaskProvider
 			.Setup(x => x.CreateModInstallAppTask(It.Is<ModFeedData>(mod => mod.Name == "Lite"), liteItem.Version, CancellationToken.None))
@@ -263,10 +259,10 @@ public sealed class AppTaskProviderTests
 		var voicesMod = CreateEnglishVoicesMod(oldVoicesItem, voicesItem);
 		var otherMod = new ModFeedData
 		{
-			Name = "Other", LogoPath = "", DescriptionPath = new LocalizedText { ["ru"] = "" },
+			Name = "Other", CategoryId = "mods", LogoPath = "", DescriptionPath = new LocalizedText { ["ru"] = "" },
 			Items = [voicesItem],
 		};
-		feedProvider.Setup(x => x.GetModFeedDatas(CancellationToken.None)).ReturnsAsync([otherMod, voicesMod]);
+		AddMods(mocker, otherMod, voicesMod);
 		var voicesInstallTask = new AppTask("Install_Voices", new AppTaskDescription.Custom("Voices"), _ => [], [], null);
 		installAppTaskProvider.Setup(x => x.CreateModInstallAppTask(voicesMod, voicesItem.Version, CancellationToken.None))
 			.ReturnsAsync(voicesInstallTask);
@@ -306,7 +302,7 @@ public sealed class AppTaskProviderTests
 				Is.All.True);
 			Assert.That(offer!.Components.Select(x => x.Definition.Id), Is.EqualTo(new[] { "EnglishVoices", "GraphPack" }));
 			Assert.That(GraphPackOptions(offer!).Select(x => x.Name), Is.EqualTo(new[] { "Lite", "Solo", "Full" }));
-			Assert.That(GraphPackOptions(offer!).Select(x => x.Recommendation), Is.EqualTo(new[] { "4 GB", "6 GB", "8 GB" }));
+			Assert.That(GraphPackOptions(offer!).Select(x => x.OptionDescription), Is.EqualTo(new[] { "4 GB", "6 GB", "8 GB" }));
 			Assert.That(GraphPackOptions(offer!).Select(x => x.InstallTask?.Id), Is.EqualTo(new[] { "Install_Lite", "Install_Solo", null }));
 			Assert.That(GraphPackOptions(offer!).Select(x => x.IsDefault), Is.EqualTo(new[] { true, false, false }));
 			Assert.That(GraphPackOptions(offer!).Select(x => x.Downloads), Is.EqualTo(new[]
@@ -334,7 +330,7 @@ public sealed class AppTaskProviderTests
 		var feedProvider = mocker.GetMock<IFeedProvider>();
 		feedProvider.Setup(x => x.GetSkyrimDownloadInfo(CancellationToken.None))
 			.ReturnsAsync(new DownloadInfo { S3Path = "skyrim.7z" });
-		feedProvider.Setup(x => x.GetGraphPacks(CancellationToken.None)).ReturnsAsync([CreateUnavailableGraphPack()]);
+		AddMods(mocker, CreateUnavailableGraphPack());
 		ModpackComponentsOffer? offer = null;
 		mocker.GetMock<IMicroTasksFactory>()
 			.Setup(x => x.CreateSelectModpackComponentsMicroTask(It.IsAny<ModpackComponentsOffer>()))
@@ -385,13 +381,12 @@ public sealed class AppTaskProviderTests
 		var feedProvider = mocker.GetMock<IFeedProvider>();
 		feedProvider.Setup(x => x.GetSkyrimDownloadInfo(CancellationToken.None))
 			.ReturnsAsync(new DownloadInfo { S3Path = "skyrim.7z" });
-		feedProvider.Setup(x => x.GetGraphPacks(CancellationToken.None)).ReturnsAsync([CreateUnavailableGraphPack()]);
+		AddMods(mocker, CreateUnavailableGraphPack());
 		ModpackComponentsOffer? offer = null;
 		mocker.GetMock<IMicroTasksFactory>()
 			.Setup(x => x.CreateSelectModpackComponentsMicroTask(It.IsAny<ModpackComponentsOffer>()))
 			.Callback<ModpackComponentsOffer>(x => offer = x)
 			.Returns(mocker.GetMock<IAppMicroTask>().Object);
-		mocker.GetMock<IFeedProvider>().Setup(x => x.GetModFeedDatas(CancellationToken.None)).ReturnsAsync((IReadOnlyList<ModFeedData>?)null);
 		var sut = mocker.CreateInstance<AppTaskProvider>();
 		var modpackItem = new ModpackFeedItem
 		{
@@ -428,7 +423,7 @@ public sealed class AppTaskProviderTests
 		var feedProvider = mocker.GetMock<IFeedProvider>();
 		feedProvider.Setup(x => x.GetSkyrimDownloadInfo(CancellationToken.None))
 			.ReturnsAsync(new DownloadInfo { S3Path = "skyrim.7z" });
-		feedProvider.Setup(x => x.GetGraphPacks(CancellationToken.None)).ReturnsAsync([CreateUnavailableGraphPack()]);
+		AddMods(mocker, CreateUnavailableGraphPack());
 		ModpackComponentsOffer? offer = null;
 		mocker.GetMock<IMicroTasksFactory>()
 			.Setup(x => x.CreateSelectModpackComponentsMicroTask(It.IsAny<ModpackComponentsOffer>()))
@@ -457,7 +452,7 @@ public sealed class AppTaskProviderTests
 	}
 
 	[Test]
-	public async Task CreateInstallModpackTask_Modpack319AndVoicesOnlyForNewerModpack_InstallsModpackWithoutAskingOrReadingGraphPacks()
+	public async Task CreateInstallModpackTask_Modpack319AndVoicesOnlyForNewerModpack_InstallsModpackWithoutAsking()
 	{
 		// Arrange
 		var mocker = LauncherKit.TestSupport.ProductTestSupport.CreateMocker(MockBehavior.Strict);
@@ -503,7 +498,6 @@ public sealed class AppTaskProviderTests
 		var feedProvider = mocker.GetMock<IFeedProvider>();
 		feedProvider.Setup(x => x.GetSkyrimDownloadInfo(CancellationToken.None))
 			.ReturnsAsync(new DownloadInfo { S3Path = "skyrim.7z" });
-		feedProvider.Setup(x => x.GetGraphPacks(CancellationToken.None)).ReturnsAsync([]);
 		ModpackComponentsOffer? offer = null;
 		mocker.GetMock<IMicroTasksFactory>()
 			.Setup(x => x.CreateSelectModpackComponentsMicroTask(It.IsAny<ModpackComponentsOffer>()))
@@ -546,8 +540,6 @@ public sealed class AppTaskProviderTests
 		var feedProvider = mocker.GetMock<IFeedProvider>();
 		feedProvider.Setup(x => x.GetSkyrimDownloadInfo(CancellationToken.None))
 			.ReturnsAsync(new DownloadInfo { S3Path = "skyrim.7z" });
-		feedProvider.Setup(x => x.GetGraphPacks(CancellationToken.None)).ReturnsAsync([]);
-		mocker.GetMock<IFeedProvider>().Setup(x => x.GetModFeedDatas(CancellationToken.None)).ReturnsAsync((IReadOnlyList<ModFeedData>?)null);
 		var sut = mocker.CreateInstance<AppTaskProvider>();
 		var modpackItem = new ModpackFeedItem
 		{
@@ -581,14 +573,12 @@ public sealed class AppTaskProviderTests
 		var feedProvider = mocker.GetMock<IFeedProvider>();
 		feedProvider.Setup(x => x.GetSkyrimDownloadInfo(CancellationToken.None))
 			.ReturnsAsync(new DownloadInfo { S3Path = "skyrim.7z" });
-		feedProvider.Setup(x => x.GetGraphPacks(CancellationToken.None))
-			.ReturnsAsync([CreateUnavailableGraphPack("Discontinued", isDiscontinued: true), CreateUnavailableGraphPack("Updating", isDiscontinued: false)]);
+		AddMods(mocker, CreateUnavailableGraphPack("Discontinued", isDiscontinued: true), CreateUnavailableGraphPack("Updating", isDiscontinued: false));
 		ModpackComponentsOffer? offer = null;
 		mocker.GetMock<IMicroTasksFactory>()
 			.Setup(x => x.CreateSelectModpackComponentsMicroTask(It.IsAny<ModpackComponentsOffer>()))
 			.Callback<ModpackComponentsOffer>(x => offer = x)
 			.Returns(mocker.GetMock<IAppMicroTask>().Object);
-		mocker.GetMock<IFeedProvider>().Setup(x => x.GetModFeedDatas(CancellationToken.None)).ReturnsAsync((IReadOnlyList<ModFeedData>?)null);
 		var sut = mocker.CreateInstance<AppTaskProvider>();
 		var modpackItem = new ModpackFeedItem
 		{
@@ -623,9 +613,7 @@ public sealed class AppTaskProviderTests
 		var feedProvider = mocker.GetMock<IFeedProvider>();
 		feedProvider.Setup(x => x.GetSkyrimDownloadInfo(CancellationToken.None))
 			.ReturnsAsync(new DownloadInfo { S3Path = "skyrim.7z" });
-		feedProvider.Setup(x => x.GetGraphPacks(CancellationToken.None))
-			.ReturnsAsync([CreateUnavailableGraphPack("Discontinued", isDiscontinued: true)]);
-		mocker.GetMock<IFeedProvider>().Setup(x => x.GetModFeedDatas(CancellationToken.None)).ReturnsAsync((IReadOnlyList<ModFeedData>?)null);
+		AddMods(mocker, CreateUnavailableGraphPack("Discontinued", isDiscontinued: true));
 		var sut = mocker.CreateInstance<AppTaskProvider>();
 		var modpackItem = new ModpackFeedItem
 		{
@@ -717,10 +705,10 @@ public sealed class AppTaskProviderTests
 		});
 	}
 
-	private static IReadOnlyList<GraphPackComponent> GraphPackOptions(ModpackComponentsOffer offer) =>
-		offer.Components.SingleOrDefault(x => x.Definition.Kind == InstallComponentKind.GraphPack)?.Options ?? [];
+	private static IReadOnlyList<ModComponentOption> GraphPackOptions(ModpackComponentsOffer offer) =>
+		offer.Components.SingleOrDefault(x => x.Definition.Kind == InstallComponentKind.ModChoice)?.Options ?? [];
 
-	private static GraphPackComponent VoicesOption(ModpackComponentsOffer offer) =>
+	private static ModComponentOption VoicesOption(ModpackComponentsOffer offer) =>
 		offer.Components.Single(x => x.Definition.Id == "EnglishVoices").Options.Single();
 
 	private static void SetupComponentFeed(AutoMocker mocker)
@@ -728,8 +716,15 @@ public sealed class AppTaskProviderTests
 		SetupDeclarations(mocker, "0.0.0");
 		var feed = mocker.GetMock<IFeedProvider>();
 		feed.Setup(x => x.GetPrerequisites(CancellationToken.None)).ReturnsAsync([]);
-		feed.Setup(x => x.GetModFeedDatas(CancellationToken.None)).ReturnsAsync((IReadOnlyList<ModFeedData>?)null);
-		feed.Setup(x => x.GetGraphPacks(CancellationToken.None)).ReturnsAsync([]);
+		feed.Setup(x => x.GetModFeedDatas(CancellationToken.None)).ReturnsAsync([]);
+	}
+
+	/// <summary>Appends <paramref name="mods"/> to the mods the feed lists.</summary>
+	private static void AddMods(AutoMocker mocker, params ModFeedData[] mods)
+	{
+		var feed = mocker.GetMock<IFeedProvider>();
+		var current = feed.Object.GetModFeedDatas(CancellationToken.None).AsTask().GetAwaiter().GetResult();
+		feed.Setup(x => x.GetModFeedDatas(CancellationToken.None)).ReturnsAsync([.. current, .. mods]);
 	}
 
 	private static void SetupDeclarations(AutoMocker mocker, string voicesRange)
@@ -739,7 +734,14 @@ public sealed class AppTaskProviderTests
 		[
 			new InstallComponent
 			{
-				Id = "GraphPack", Kind = InstallComponentKind.GraphPack,
+				Id = "GraphPack", Kind = InstallComponentKind.ModChoice,
+				// Offered in this order whatever the feed's mod order; names missing from the feed are skipped.
+				Options =
+				[
+					new ModChoiceOption { ModName = "Lite", IsDefault = true }, new ModChoiceOption { ModName = "Solo" },
+					new ModChoiceOption { ModName = "Full" }, new ModChoiceOption { ModName = "Old" },
+					new ModChoiceOption { ModName = "Discontinued" }, new ModChoiceOption { ModName = "Updating" },
+				],
 				Title = new LocalizedText { ["ru"] = "Графпак" },
 				Description = new LocalizedText { ["ru"] = "Установить графпак вместе со сборкой?" },
 				SupportedModpackVersion = VersionRange.Parse("(3.1.9,)"), Order = 1,
@@ -754,20 +756,20 @@ public sealed class AppTaskProviderTests
 		]);
 	}
 
-	private static GraphPackFeedData CreateGraphPack(string name, string recommendation, bool isDefault, ModFeedItem item,
+	private static ModFeedData CreateGraphPack(string name, string optionDescription, ModFeedItem item,
 		bool isDiscontinued = false) => new()
 	{
 		Name = name,
+		CategoryId = "graph-packs",
 		LogoPath = $"{name}.jpg",
 		DescriptionPath = new LocalizedText { ["ru"] = $"{name}.md" },
-		Recommendation = new LocalizedText { ["ru"] = recommendation },
-		IsDefault = isDefault,
+		OptionDescription = new LocalizedText { ["ru"] = optionDescription },
 		IsDiscontinued = isDiscontinued,
 		Items = [item],
 	};
 
-	private static GraphPackFeedData CreateUnavailableGraphPack(string name = "Old", bool isDiscontinued = false) =>
-		CreateGraphPack(name, "", isDefault: true, new ModFeedItem
+	private static ModFeedData CreateUnavailableGraphPack(string name = "Old", bool isDiscontinued = false) =>
+		CreateGraphPack(name, "", new ModFeedItem
 		{
 			Version = NuGetVersion.Parse("1.0.0"),
 			ArchiveDownloadInfo = new DownloadInfo { S3Path = "old.7z" },
@@ -785,7 +787,7 @@ public sealed class AppTaskProviderTests
 	{
 		SetupDeclarations(mocker, supportedModpackVersion);
 		var voicesMod = CreateEnglishVoicesMod(CreateEnglishVoicesItem("1.0.0", supportedModpackVersion));
-		mocker.GetMock<IFeedProvider>().Setup(x => x.GetModFeedDatas(CancellationToken.None)).ReturnsAsync([voicesMod]);
+		AddMods(mocker, voicesMod);
 		mocker.GetMock<IInstallAppTaskProvider>()
 			.Setup(x => x.CreateModInstallAppTask(voicesMod, voicesMod.Items[0].Version, CancellationToken.None))
 			.ReturnsAsync(new AppTask("Install_Voices", new AppTaskDescription.Custom("Voices"), _ => [], [], null));
@@ -794,6 +796,7 @@ public sealed class AppTaskProviderTests
 	private static ModFeedData CreateEnglishVoicesMod(params ModFeedItem[] items) => new()
 	{
 		Name = "Voices",
+		CategoryId = "mods",
 		LogoPath = "voices.jpg",
 		DescriptionPath = new LocalizedText { ["ru"] = "voices.md" },
 		Items = items,

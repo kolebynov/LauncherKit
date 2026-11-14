@@ -106,17 +106,32 @@ public sealed class FeedJsonTests
 					},
 				},
 			},
-			GraphPacks =
+			ModCategories =
 			{
-				new GraphPackModel
+				new ModCategoryModel { Id = "graph-packs", Title = Text("Графпаки"), Description = Text("[![Boosty](gp/boosty.png)](https://boosty.test)"), IsExclusive = true },
+				new ModCategoryModel { Id = "mods", Title = Text("Моды") },
+			},
+			InstallComponents =
+			{
+				new InstallComponentModel
+				{
+					Id = "graph-pack", Kind = InstallComponentKind.ModChoice, Title = Text("Графпак"), Description = Text("Выбор"),
+					SupportedModpackVersion = "[3.1.0, )", Order = 1,
+					Options = { new ModChoiceOptionModel { ModName = "Graph pack", IsDefault = true }, new ModChoiceOptionModel { ModName = "Mod" } },
+				},
+			},
+			Mods =
+			{
+				new ModModel
 				{
 					Name = "Graph pack",
+					CategoryId = "graph-packs",
 					DisplayName = Text("Графпак"),
 					LogoPath = "gp.jpg",
 					DescriptionPath = Text("gp.md"),
-					Recommendation = Text("8 GB"),
-					IsDefault = true,
+					OptionDescription = Text("8 GB"),
 					IsDiscontinued = true,
+					RequiresNewGame = true,
 					Items =
 					{
 						new ModItemModel
@@ -135,12 +150,10 @@ public sealed class FeedJsonTests
 						},
 					},
 				},
-			},
-			Mods =
-			{
 				new ModModel
 				{
 					Name = "Mod",
+					CategoryId = "mods",
 					DisplayName = Text("Мод"),
 					LogoPath = "logo.jpg",
 					DescriptionPath = Text("description.md"),
@@ -342,7 +355,7 @@ public sealed class FeedJsonTests
 				"InstallComponents": null,
 				"Prerequisites": null,
 				"ModpackChangelogs": null,
-				"GraphPacks": null,
+				"ModCategories": null,
 				"Mods": null,
 				"BetaVersions": null
 			}
@@ -356,7 +369,7 @@ public sealed class FeedJsonTests
 		{
 			Assert.That(result.Modpacks[0].Patches[0].InstallSteps, Is.Empty);
 			Assert.That(result.Modpacks[1].Patches, Is.Empty);
-			Assert.That(result.GraphPacks, Is.Empty);
+			Assert.That(result.ModCategories, Is.Empty);
 			Assert.That(result.Mods, Is.Empty);
 			Assert.That(result.BetaVersions, Is.Empty);
 			Assert.That(result.InstallComponents, Is.Empty);
@@ -426,7 +439,6 @@ public sealed class FeedJsonTests
 			SkyrimDownloadInfo = new DownloadInfoModel { S3Path = "Skyrim.7z", Hash = "  " },
 			Launchers = { new LauncherModel { Version = "1.0.0", DownloadInfo = new DownloadInfoModel { S3Path = "l.exe" }, ChangelogPath = null } },
 			Mods = { new ModModel { Name = "M", DisplayName = null } },
-			GraphPacks = { new GraphPackModel { Name = "G", DisplayName = null } },
 		};
 
 		// Act
@@ -438,7 +450,7 @@ public sealed class FeedJsonTests
 			Assert.That(result["SkyrimDownloadInfo"]!.AsObject().ContainsKey("Hash"), Is.False);
 			Assert.That(result["Launchers"]![0]!.AsObject().ContainsKey("ChangelogPath"), Is.False);
 			Assert.That(result["Mods"]![0]!.AsObject().ContainsKey("DisplayName"), Is.False);
-			Assert.That(result["GraphPacks"]![0]!.AsObject().ContainsKey("DisplayName"), Is.False);
+			Assert.That(result["Mods"]![0]!.AsObject().ContainsKey("OptionDescription"), Is.False);
 		});
 	}
 

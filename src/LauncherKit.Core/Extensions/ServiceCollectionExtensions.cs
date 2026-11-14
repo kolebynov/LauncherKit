@@ -133,6 +133,7 @@ public static class ServiceCollectionExtensions
 		services.TryAddScoped<IInstallStepsMicroTasksFactory, InstallStepsMicroTasksFactory>();
 		services.TryAddScoped<IInstallBackupService, InstallBackupService>();
 		services.TryAddScoped<IInstallAppTaskProvider, InstallAppTaskProvider>();
+		services.TryAddScoped<IInstallationService, InstallationService>();
 		services.TryAddScoped<IPrerequisitesAppTaskProvider, PrerequisitesAppTaskProvider>();
 		services.TryAddScoped<IModOrganizerService, ModOrganizerService>();
 		services.TryAddScoped<ISettingsService, SettingsService>();

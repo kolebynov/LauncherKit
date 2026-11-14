@@ -49,7 +49,10 @@ public sealed class SourceGeneratedJsonContextTests
 
 	private static string TypeOf(JsonNode? node) => node!["$type"]!.GetValue<string>();
 
-	/// <summary>Drops what only the launcher writes: the computed <c>DownloadInfo.FileName</c> and a null hash.</summary>
+	/// <summary>
+	/// Drops what only the launcher writes: the computed <c>DownloadInfo.FileName</c>, a null hash and the default
+	/// <c>FailOnFailedDelete</c>, which the feed omits.
+	/// </summary>
 	private static JsonNode WithoutWriteOnlyValues(JsonNode action)
 	{
 		if (action["DownloadInfo"] is JsonObject downloadInfo)
@@ -59,6 +62,11 @@ public sealed class SourceGeneratedJsonContextTests
 			{
 				downloadInfo.Remove("Hash");
 			}
+		}
+
+		if (action["FailOnFailedDelete"]?.GetValue<bool>() == true)
+		{
+			action.AsObject().Remove("FailOnFailedDelete");
 		}
 
 		return action;

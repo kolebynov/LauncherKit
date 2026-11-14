@@ -13,8 +13,8 @@ public sealed class HomeCardFactTexts(IStringLocalizer<DesktopStrings> strings)
 
 	public LocalizedString Get(ModCardViewModel.InstallUnavailableReason reason) => reason switch
 	{
-		ModCardViewModel.InstallUnavailableReason.Updating => strings[DesktopStrings.ModUpdating],
-		ModCardViewModel.InstallUnavailableReason.OtherGraphPackInstalled(var name) => strings[DesktopStrings.OtherGraphPackInstalled, name],
+		ModCardViewModel.InstallUnavailableReason.NotUpdated => strings[DesktopStrings.ModNotUpdated],
+		ModCardViewModel.InstallUnavailableReason.OtherModInstalled(var name) => strings[DesktopStrings.OtherModInstalled, name],
 		ModCardViewModel.InstallUnavailableReason.ModpackTaskQueued => strings[DesktopStrings.ModpackTaskQueued],
 	};
 }

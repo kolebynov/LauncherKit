@@ -22,6 +22,29 @@ public static class FeedValidator
 			text.DefaultLanguage = feed.DefaultLanguage;
 		}
 
+		var categoryIds = new HashSet<string>(StringComparer.Ordinal);
+		foreach (var category in feed.ModCategories)
+		{
+			if (string.IsNullOrWhiteSpace(category.Id) || !categoryIds.Add(category.Id))
+			{
+				throw new InvalidDataException("Mod category IDs must be nonempty and unique.");
+			}
+		}
+
+		var modNames = new HashSet<string>(StringComparer.Ordinal);
+		foreach (var mod in feed.Mods)
+		{
+			if (string.IsNullOrWhiteSpace(mod.Name) || !modNames.Add(mod.Name))
+			{
+				throw new InvalidDataException("Mod names must be nonempty and unique.");
+			}
+
+			if (!categoryIds.Contains(mod.CategoryId))
+			{
+				throw new InvalidDataException($"Mod '{mod.Name}' must reference an existing category.");
+			}
+		}
+
 		var ids = new HashSet<string>(StringComparer.Ordinal);
 		foreach (var component in feed.InstallComponents)
 		{
@@ -30,10 +53,13 @@ public static class FeedValidator
 				throw new InvalidDataException("Component IDs must be nonempty and unique.");
 			}
 
-			if (component.Kind == InstallComponentKind.Mod &&
-				!((feed.Mods ?? []).Any(mod => mod.Name == component.ModName)))
+			switch (component.Kind)
 			{
-				throw new InvalidDataException($"Component '{component.Id}' must reference an existing mod.");
+				case InstallComponentKind.Mod when component.ModName == null || !modNames.Contains(component.ModName):
+					throw new InvalidDataException($"Component '{component.Id}' must reference an existing mod.");
+				case InstallComponentKind.ModChoice:
+					ValidateModChoice(component, modNames);
+					break;
 			}
 		}
 
@@ -43,6 +69,22 @@ public static class FeedValidator
 			{
 				ValidateChoiceKeys(step);
 			}
+		}
+	}
+
+	/// <summary>Checks that the options reference distinct existing mods and that at most one is the default.</summary>
+	private static void ValidateModChoice(InstallComponent component, HashSet<string> modNames)
+	{
+		var options = component.Options ?? [];
+		var optionNames = new HashSet<string>(StringComparer.Ordinal);
+		if (options.Count == 0 || options.Any(x => !modNames.Contains(x.ModName) || !optionNames.Add(x.ModName)))
+		{
+			throw new InvalidDataException($"Component '{component.Id}' must offer distinct existing mods.");
+		}
+
+		if (options.Count(x => x.IsDefault) > 1)
+		{
+			throw new InvalidDataException($"Component '{component.Id}' must have at most one default option.");
 		}
 	}
 
@@ -77,7 +119,7 @@ public static class FeedValidator
 			yield return patch.InstallSteps ?? [];
 		}
 
-		foreach (var item in (feed.Mods ?? []).Concat(feed.GraphPacks ?? []).SelectMany(x => x.Items))
+		foreach (var item in feed.Mods.SelectMany(x => x.Items))
 		{
 			yield return item.InstallSteps ?? [];
 			foreach (var patch in item.Patches ?? [])
@@ -95,7 +137,16 @@ public static class FeedValidator
 			yield return component.Description;
 		}
 
-		foreach (var mod in (feed.Mods ?? []).Concat(feed.GraphPacks ?? []))
+		foreach (var category in feed.ModCategories)
+		{
+			yield return category.Title;
+			if (category.Description is { } description)
+			{
+				yield return description;
+			}
+		}
+
+		foreach (var mod in feed.Mods)
 		{
 			if (mod.DisplayName is { } displayName)
 			{
@@ -103,11 +154,10 @@ public static class FeedValidator
 			}
 
 			yield return mod.DescriptionPath;
-		}
-
-		foreach (var graphPack in feed.GraphPacks ?? [])
-		{
-			yield return graphPack.Recommendation;
+			if (mod.OptionDescription is { } optionDescription)
+			{
+				yield return optionDescription;
+			}
 		}
 
 		foreach (var changelog in feed.ModpackChangelogs)

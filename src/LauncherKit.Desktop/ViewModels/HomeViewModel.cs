@@ -20,6 +20,7 @@ public partial class HomeViewModel : BaseActivatableViewModel, IDisposable
 {
 	private readonly IAppTaskProvider _appTaskProvider;
 	private readonly IAppTaskQueue _appTaskQueue;
+	private readonly IInstallationService _installations;
 	private readonly IModpackVersionProvider _modpackVersionProvider;
 	private readonly IFeedProvider _feedProvider;
 	private readonly IAppVersionProvider _appVersionProvider;
@@ -47,16 +48,16 @@ public partial class HomeViewModel : BaseActivatableViewModel, IDisposable
 	public partial AppTaskViewModel? AppTaskViewModel { get; private set; }
 
 	public Observable<DeletedSavesInfo> OldSavesDeleted => _oldSavesDeleted;
-	public GraphPacksViewModel GraphPacksViewModel { get; }
-	public OptionalModsViewModel OptionalModsViewModel { get; }
+	public ModCategoriesViewModel ModCategoriesViewModel { get; }
 
-	public HomeViewModel(IAppTaskProvider appTaskProvider, IAppTaskQueue appTaskQueue,
-		IModpackVersionProvider modpackVersionProvider, IUpdateProvider updateProvider, GraphPacksViewModel graphPacksViewModel,
-		OptionalModsViewModel optionalModsViewModel, IFeedProvider feedProvider,
+	public HomeViewModel(IAppTaskProvider appTaskProvider, IAppTaskQueue appTaskQueue, IInstallationService installations,
+		IModpackVersionProvider modpackVersionProvider, IUpdateProvider updateProvider,
+		ModCategoriesViewModel modCategoriesViewModel, IFeedProvider feedProvider,
 		IAppLogsCollector appLogsCollector,
 		IAppVersionProvider appVersionProvider, IGlobalKeyValueStorage globalKeyValueStorage, IUiDispatcher dispatcher)
 	{
 		_appTaskProvider = appTaskProvider;
+		_installations = installations;
 		_appTaskQueue = appTaskQueue;
 		_modpackVersionProvider = modpackVersionProvider;
 		_feedProvider = feedProvider;
@@ -64,8 +65,7 @@ public partial class HomeViewModel : BaseActivatableViewModel, IDisposable
 		_globalKeyValueStorage = globalKeyValueStorage;
 		_updateProvider = updateProvider;
 		_dispatcher = dispatcher;
-		GraphPacksViewModel = graphPacksViewModel;
-		OptionalModsViewModel = optionalModsViewModel;
+		ModCategoriesViewModel = modCategoriesViewModel;
 		InstalledModpackVersion = modpackVersionProvider.InstalledModpackVersion;
 
 		_appTaskQueueSubscription = appTaskQueue.Events.ObserveOnUi(dispatcher).Subscribe(evt =>
@@ -136,8 +136,8 @@ public partial class HomeViewModel : BaseActivatableViewModel, IDisposable
 		await UpdateModpack(await _updateProvider.GetModpackInstallInfo(version.FeedItem, cancellationToken), cancellationToken);
 
 	[RelayCommand]
-	private async Task StartGame(GameLaunch launch, CancellationToken cancellationToken) =>
-		await _appTaskQueue.EnqueueAndWaitForCompletion(await _appTaskProvider.CreateRunGameTask(launch, cancellationToken), cancellationToken);
+	private Task StartGame(GameLaunch launch, CancellationToken cancellationToken) =>
+		_installations.RunGame(launch, cancellationToken);
 
 	[RelayCommand]
 	private async Task UpdateLauncher(CancellationToken cancellationToken)
@@ -157,11 +157,10 @@ public partial class HomeViewModel : BaseActivatableViewModel, IDisposable
 	{
 		try
 		{
-			await _appTaskQueue.EnqueueAndWaitForCompletion(_appTaskProvider.CreateUninstallModpackTask(), cancellationToken);
+			await _installations.UninstallModpack(cancellationToken);
 		}
 		finally
 		{
-			_modpackVersionProvider.RefreshInstalledModpackVersion();
 			InstalledModpackVersion = _modpackVersionProvider.InstalledModpackVersion;
 		}
 	}
@@ -199,9 +198,6 @@ public partial class HomeViewModel : BaseActivatableViewModel, IDisposable
 		PendingModpackChangelog = changelogs.Where(x => range.Satisfies(x.Version)).OrderByDescending(x => x.Version).ToArray();
 	}
 
-	private async Task UpdateModpack(ModpackUpdateInfo info, CancellationToken cancellationToken)
-	{
-		await _appTaskQueue.EnqueueAndWaitForCompletion(info.UpdateAppTask, cancellationToken);
-		_modpackVersionProvider.RefreshInstalledModpackVersion();
-	}
+	private Task UpdateModpack(ModpackUpdateInfo info, CancellationToken cancellationToken) =>
+		_installations.InstallModpack(info, cancellationToken);
 }

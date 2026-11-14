@@ -47,7 +47,6 @@
 	<data name="FeedLoadFailed" xml:space="preserve"><value>Не удалось загрузить данные с сервера</value></data>
 	<data name="FeedLoading" xml:space="preserve"><value>Загрузка данных с сервера…</value></data>
 	<data name="FeedUnavailableFeatures" xml:space="preserve"><value>Пока данные не загружены, установка и обновление сборки, графпаков, модов и лаунчера недоступны.</value></data>
-	<data name="GraphPackStepTitle" xml:space="preserve"><value>Выберите граф-пак</value></data>
 	<data name="MarkdownLoadFailed" xml:space="preserve"><value>Не удалось загрузить текст. Проверьте подключение к интернету и попробуйте ещё раз.</value></data>
 	<data name="MicroBackupArchiveFiles" xml:space="preserve"><value>Резервное копирование файлов из {0}</value></data>
 	<data name="MicroChangeProfile" xml:space="preserve"><value>Смена профиля на {0}</value></data>
@@ -91,14 +90,14 @@
 	<data name="MicroUninstallMod" xml:space="preserve"><value>Удаление мода {0}</value></data>
 	<data name="MicroUpdateModMetadata" xml:space="preserve"><value>Обновление метаданных мода</value></data>
 	<data name="MicroUpdateModpackVersion" xml:space="preserve"><value>Обновление версии сборки</value></data>
-	<data name="ModUpdating" xml:space="preserve"><value>Проходит обновление</value></data>
+	<data name="ModNotUpdated" xml:space="preserve"><value>Мод пока не обновлен под текущую версию модпака</value></data>
 	<data name="ModpackComponentsTitle" xml:space="preserve"><value>Компоненты установки</value></data>
 	<data name="ModpackInstallUnavailable" xml:space="preserve"><value>Нет версий сборки, доступных для установки</value></data>
 	<data name="ModpackTaskQueued" xml:space="preserve"><value>Операция со сборкой находится в очереди</value></data>
 	<data name="NoneOption" xml:space="preserve"><value>Не устанавливать</value></data>
 	<data name="OAuthMessage" xml:space="preserve"><value>Вы можете закрыть эту вкладку и вернуться в лаунчер.</value></data>
 	<data name="OAuthTitle" xml:space="preserve"><value>Авторизация завершена</value></data>
-	<data name="OtherGraphPackInstalled" xml:space="preserve"><value>Установлен граф-пак {0}</value></data>
+	<data name="OtherModInstalled" xml:space="preserve"><value>Установлен {0}</value></data>
 	<data name="PendingTasksCloseMessage" xml:space="preserve"><value>Лаунчер ожидает завершения задачи. При выходе все незавершённые задачи будут отменены. Продолжить?</value></data>
 	<data name="PendingTasksCloseTitle" xml:space="preserve"><value>Остались незавершённые задачи</value></data>
 	<data name="RequiredModsStepTitle" xml:space="preserve"><value>Обязательные моды</value></data>
@@ -128,7 +127,6 @@
 	<data name="TaskUninstallModpack" xml:space="preserve"><value>Удаление сборки</value></data>
 	<data name="TaskUpdateLauncher" xml:space="preserve"><value>Обновление лаунчера до {0}</value></data>
 	<data name="UnavailableFomodOption" xml:space="preserve"><value>Этот вариант недоступен для данной установки</value></data>
-	<data name="UnavailableGraphPackUpdating" xml:space="preserve"><value>Проходит обновление граф-пака</value></data>
 	<data name="YesOption" xml:space="preserve"><value>Установить</value></data>
 	<data name="DirectoryInvalidPath" xml:space="preserve"><value>Невалидный путь</value></data>
 	<data name="DirectoryConflict" xml:space="preserve"><value>Папка не должна совпадать с другой выбранной папкой или пересекаться с ней</value></data>

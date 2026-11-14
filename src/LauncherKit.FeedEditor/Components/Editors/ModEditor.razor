@@ -1,3 +1,5 @@
+@inject FeedSession Session
+
 <MudStack Spacing="3">
 	<MudGrid Spacing="2">
 		<MudItem xs="12" md="6">
@@ -13,7 +15,25 @@
 		<MudItem xs="12" md="6">
 			<LocalizedField Value="Mod.DescriptionPath" Label="Путь к описанию" IsPath="true" />
 		</MudItem>
-		@ChildContent
+		<MudItem xs="12" md="6">
+			<MudSelect T="string" @bind-Value="Mod.CategoryId" Label="Категория" Required="true" Variant="Variant.Outlined" Margin="Margin.Dense">
+				@foreach (var category in Session.Feed!.ModCategories)
+				{
+					<MudSelectItem Value="@category.Id">@category.Id</MudSelectItem>
+				}
+			</MudSelect>
+		</MudItem>
+		<MudItem xs="12" md="6">
+			<LocalizedField @bind-Value="Mod.OptionDescription" Label="Описание варианта при установке сборки" Optional="true" />
+		</MudItem>
+		<MudItem xs="12" md="6">
+			<MudSwitch @bind-Value="Mod.IsDiscontinued" Label="Снят с поддержки" Color="Color.Primary" />
+			<MudText Typo="Typo.caption">Скрывается для версий сборки, которые не поддерживает ни одна его версия, вместо пометки «не обновлен»</MudText>
+		</MudItem>
+		<MudItem xs="12" md="6">
+			<MudSwitch @bind-Value="Mod.RequiresNewGame" Label="Требует новой игры" Color="Color.Primary" />
+			<MudText Typo="Typo.caption">Лаунчер предупреждает об этом при первой установке и при удалении</MudText>
+		</MudItem>
 	</MudGrid>
 
 	<MudText Typo="Typo.subtitle1">Версии</MudText>
@@ -30,8 +50,4 @@
 
 	[Parameter, EditorRequired]
 	public required ModModel Mod { get; set; }
-
-	/// <summary>Further fields of a mod subtype, rendered as grid items after the mod's own fields.</summary>
-	[Parameter]
-	public RenderFragment? ChildContent { get; set; }
 }

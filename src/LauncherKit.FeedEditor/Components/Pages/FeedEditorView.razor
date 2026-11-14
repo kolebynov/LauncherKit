@@ -122,11 +122,27 @@
 					</ListEditor>
 				</MudTabPanel>
 
-				<MudTabPanel Text="@($"Графпаки ({Feed.GraphPacks.Count})")">
-					<MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">Лаунчер предлагает графпаки в этом порядке.</MudText>
-					<ListEditor TItem="GraphPackModel" Items="Feed.GraphPacks" Factories="GraphPackFactories" Title="GraphPackTitle" AddToEnd="true">
-						<ItemContent Context="graphPack">
-							<GraphPackEditor Pack="graphPack" />
+				<MudTabPanel Text="@($"Категории модов ({Feed.ModCategories.Count})")">
+					<MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">Лаунчер показывает категории в этом порядке, моды каждой — в порядке вкладки «Моды».</MudText>
+					<ListEditor TItem="ModCategoryModel" Items="Feed.ModCategories" Factories="CategoryFactories" Title="CategoryTitle" AddToEnd="true">
+						<ItemContent Context="category">
+							<MudGrid Spacing="2">
+								<MudItem xs="12" md="6">
+									<MudTextField @bind-Value="category.Id" Label="Идентификатор" Required="true" Validation="@FeedRules.Required"
+												  HelperText="На него ссылаются моды" Variant="Variant.Outlined" Margin="Margin.Dense" />
+								</MudItem>
+								<MudItem xs="12" md="6">
+									<LocalizedField Value="category.Title" Label="Заголовок" />
+								</MudItem>
+								<MudItem xs="12" md="6">
+									<LocalizedField @bind-Value="category.Description" Label="Описание в заголовке (Markdown)" Optional="true" />
+									<MudText Typo="Typo.caption">Например, ссылка с иконкой: [![Boosty](Icons/boosty.png)](https://boosty.to/...). Относительные пути — от корня фида</MudText>
+								</MudItem>
+								<MudItem xs="12" md="6">
+									<MudSwitch @bind-Value="category.IsExclusive" Label="Только один мод" Color="Color.Primary" />
+									<MudText Typo="Typo.caption">Пока установлен или устанавливается один мод категории, другие установить нельзя</MudText>
+								</MudItem>
+							</MudGrid>
 						</ItemContent>
 					</ListEditor>
 				</MudTabPanel>
@@ -159,7 +175,7 @@
 	private static readonly IReadOnlyList<ListItemFactory<ModpackModel>> ModpackFactories = [new("релиз сборки", () => new ModpackModel())];
 	private static readonly IReadOnlyList<ListItemFactory<ModpackChangelogModel>> ChangelogFactories = [new("список изменений", () => new ModpackChangelogModel())];
 	private static readonly IReadOnlyList<ListItemFactory<LauncherModel>> LauncherFactories = [new("лаунчер", () => new LauncherModel())];
-	private static readonly IReadOnlyList<ListItemFactory<GraphPackModel>> GraphPackFactories = [new("графпак", () => new GraphPackModel())];
+	private static readonly IReadOnlyList<ListItemFactory<ModCategoryModel>> CategoryFactories = [new("категорию", () => new ModCategoryModel())];
 	private static readonly IReadOnlyList<ListItemFactory<ModModel>> ModFactories = [new("мод", () => new ModModel())];
 	private static readonly IReadOnlyList<ListItemFactory<InstallComponentModel>> ComponentFactories = [new("компонент", () => new InstallComponentModel())];
 	private static readonly IReadOnlyList<ListItemFactory<PrerequisiteModel>> PrerequisiteFactories = [new("зависимость", () => new PrerequisiteModel())];
@@ -182,17 +198,14 @@
 
 	protected override void OnInitialized() => _feedChanged = EventCallback.Factory.Create(this, () => { });
 
-	private static string GraphPackTitle(GraphPackModel graphPack)
-	{
-		var latest = graphPack.Items.Count > 0 ? $" — последняя {graphPack.Items[0].Version}" : string.Empty;
-		return $"{graphPack.Name}{(graphPack.IsDefault ? " (по умолчанию)" : string.Empty)}{latest}";
-	}
-
 	private static string ModTitle(ModModel mod)
 	{
 		var latest = mod.Items.Count > 0 ? $" — последняя {mod.Items[0].Version}" : string.Empty;
-		return $"{mod.Name}{latest}";
+		return $"{mod.Name} [{mod.CategoryId}]{(mod.IsDiscontinued ? " (снят с поддержки)" : string.Empty)}{latest}";
 	}
+
+	private string CategoryTitle(ModCategoryModel category) =>
+		$"{category.Id} — {DefaultLanguageValue(category.Title)}{(category.IsExclusive ? " (только один мод)" : string.Empty)}";
 
 	/// <summary>The value in the feed's default language, or the first one when it is missing.</summary>
 	private string DefaultLanguageValue(IReadOnlyDictionary<string, string> values) =>

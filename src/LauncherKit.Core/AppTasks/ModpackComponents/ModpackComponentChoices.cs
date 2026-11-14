@@ -9,7 +9,7 @@ public sealed class ModpackComponentChoices
 	public static readonly ChoiceText Title = ChoiceText.ModpackComponentsTitle.Instance;
 
 	private readonly ModpackComponentsSelection _selection;
-	private readonly List<(string Id, ChoiceStep Step, IReadOnlyList<GraphPackComponent> Offers)> _steps = [];
+	private readonly List<(string Id, ChoiceStep Step, IReadOnlyList<ModComponentOption> Offers)> _steps = [];
 
 	public IReadOnlyList<ChoiceStep> Steps { get; }
 
@@ -18,19 +18,16 @@ public sealed class ModpackComponentChoices
 		_selection = offer.Selection;
 		foreach (var component in offer.Components)
 		{
-			var defaultOption = component.Definition.Kind == InstallComponentKind.GraphPack
-				? component.Options.FirstOrDefault(x => x is { IsDefault: true, InstallTask: not null })
-				: null;
+			var defaultOption = component.Options.FirstOrDefault(x => x is { IsDefault: true, InstallTask: not null });
 			var options = component.Options.Select(option => new ChoiceOption
 			{
 				Name = component.Definition.Kind == InstallComponentKind.Mod
 					? ChoiceText.YesOption.Instance
 					: new ChoiceText.Content(option.Name),
-				Description = new ChoiceText.ComponentOptionDescription(option.Name, option.Recommendation,
-					option.InstallTask == null ? null : option.Downloads.Sum(getDownloadSize),
-					component.Definition.Kind == InstallComponentKind.Mod),
+				Description = new ChoiceText.ComponentOptionDescription(option.Name, option.OptionDescription,
+					option.InstallTask == null ? null : option.Downloads.Sum(getDownloadSize)),
 				IsSelectedByDefault = ReferenceEquals(option, defaultOption),
-				UnavailableReason = option.InstallTask == null ? ChoiceText.UnavailableGraphPackUpdating.Instance : (ChoiceText?)null,
+				UnavailableReason = option.InstallTask == null ? ChoiceText.UnavailableModNotUpdated.Instance : (ChoiceText?)null,
 			}).ToList();
 			options.Add(new ChoiceOption { Name = ChoiceText.NoneOption.Instance, Description = new ChoiceText.Content(""), IsSelectedByDefault = defaultOption == null });
 			var step = new ChoiceStep

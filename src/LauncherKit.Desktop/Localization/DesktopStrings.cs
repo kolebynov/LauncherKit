@@ -45,7 +45,6 @@ public sealed class DesktopStrings
 	public const string FeedLoadFailed = nameof(FeedLoadFailed);
 	public const string FeedLoading = nameof(FeedLoading);
 	public const string FeedUnavailableFeatures = nameof(FeedUnavailableFeatures);
-	public const string GraphPackStepTitle = nameof(GraphPackStepTitle);
 	public const string MarkdownLoadFailed = nameof(MarkdownLoadFailed);
 	public const string MicroBackupArchiveFiles = nameof(MicroBackupArchiveFiles);
 	public const string MicroChangeProfile = nameof(MicroChangeProfile);
@@ -89,14 +88,14 @@ public sealed class DesktopStrings
 	public const string MicroUninstallMod = nameof(MicroUninstallMod);
 	public const string MicroUpdateModMetadata = nameof(MicroUpdateModMetadata);
 	public const string MicroUpdateModpackVersion = nameof(MicroUpdateModpackVersion);
-	public const string ModUpdating = nameof(ModUpdating);
+	public const string ModNotUpdated = nameof(ModNotUpdated);
 	public const string ModpackComponentsTitle = nameof(ModpackComponentsTitle);
 	public const string ModpackInstallUnavailable = nameof(ModpackInstallUnavailable);
 	public const string ModpackTaskQueued = nameof(ModpackTaskQueued);
 	public const string NoneOption = nameof(NoneOption);
 	public const string OAuthMessage = nameof(OAuthMessage);
 	public const string OAuthTitle = nameof(OAuthTitle);
-	public const string OtherGraphPackInstalled = nameof(OtherGraphPackInstalled);
+	public const string OtherModInstalled = nameof(OtherModInstalled);
 	public const string PendingTasksCloseMessage = nameof(PendingTasksCloseMessage);
 	public const string PendingTasksCloseTitle = nameof(PendingTasksCloseTitle);
 	public const string RequiredModsStepTitle = nameof(RequiredModsStepTitle);
@@ -126,7 +125,6 @@ public sealed class DesktopStrings
 	public const string TaskUninstallModpack = nameof(TaskUninstallModpack);
 	public const string TaskUpdateLauncher = nameof(TaskUpdateLauncher);
 	public const string UnavailableFomodOption = nameof(UnavailableFomodOption);
-	public const string UnavailableGraphPackUpdating = nameof(UnavailableGraphPackUpdating);
 	public const string YesOption = nameof(YesOption);
 	public const string DirectoryInvalidPath = nameof(DirectoryInvalidPath);
 	public const string DirectoryConflict = nameof(DirectoryConflict);

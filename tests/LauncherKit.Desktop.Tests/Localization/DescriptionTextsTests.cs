@@ -104,12 +104,12 @@ public sealed class DescriptionTextsTests
 			foreach (var operation in operations) AssertResolved(tasks.Get(operation));
 			ChoiceText[] choiceDescriptions =
 			[
-				ChoiceText.NoneOption.Instance, ChoiceText.YesOption.Instance, ChoiceText.GraphPackStepTitle.Instance,
+				ChoiceText.NoneOption.Instance, ChoiceText.YesOption.Instance,
 				new ChoiceText.ExtraDownloadSize(1536), new ChoiceText.SelectRequiredModTitle(["mod-marker"]),
 				ChoiceText.RequiredModsStepTitle.Instance, ChoiceText.SelectOneModSubtitle.Instance,
-				ChoiceText.UnavailableGraphPackUpdating.Instance, ChoiceText.UnavailableFomodOption.Instance,
+				ChoiceText.UnavailableModNotUpdated.Instance, ChoiceText.UnavailableFomodOption.Instance,
 				ChoiceText.ModpackComponentsTitle.Instance,
-				new ChoiceText.ComponentOptionDescription("name-marker", "recommendation-marker", 1536, true),
+				new ChoiceText.ComponentOptionDescription("name-marker", "option-marker", 1536),
 			];
 			foreach (var choice in choiceDescriptions) AssertResolved(choices.Get(choice));
 			Assert.Multiple(() =>
@@ -185,18 +185,19 @@ public sealed class DescriptionTextsTests
 		}
 	}
 
-	[TestCase(false, null, true)]
-	[TestCase(false, 1536L, true)]
-	[TestCase(true, null, true)]
-	[TestCase(true, 1536L, false)]
-	public void ComponentDescriptions_PreserveNameRecommendationAndDownloadArguments(bool isMod, long? bytes, bool includesName)
+	[TestCase(false, null)]
+	[TestCase(false, 1536L)]
+	[TestCase(true, null)]
+	[TestCase(true, 1536L)]
+	public void ComponentDescriptions_PreserveNameOptionDescriptionAndDownloadArguments(bool hasOptionDescription, long? bytes)
 	{
 		using var provider = new ServiceCollection().AddLogging().AddLauncherKitLocalization().BuildServiceProvider();
 		var mapper = provider.GetRequiredService<ChoiceTexts>();
-		var description = mapper.Get(new ChoiceText.ComponentOptionDescription("name-marker", "recommendation-marker", bytes, isMod));
+		var description = mapper.Get(new ChoiceText.ComponentOptionDescription(
+			"name-marker", hasOptionDescription ? "option-marker" : null, bytes));
 		AssertResolved(description);
-		Assert.That(description.Value, Does.Contain("recommendation-marker"));
-		Assert.That(description.Value.Contains("name-marker", StringComparison.Ordinal), Is.EqualTo(includesName));
+		Assert.That(description.Value, Does.Contain("name-marker"));
+		Assert.That(description.Value.Contains("option-marker", StringComparison.Ordinal), Is.EqualTo(hasOptionDescription));
 		if (bytes is { } count)
 			Assert.That(description.Value, Does.Contain(BytesFormatter.Format(count, BytesFormatter.Measurement.Size.Instance)));
 	}

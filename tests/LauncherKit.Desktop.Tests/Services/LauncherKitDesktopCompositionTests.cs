@@ -20,7 +20,7 @@ public sealed class LauncherKitDesktopCompositionTests
 			foreach (var model in new[]
 			{
 				typeof(FirstSetupViewModel), typeof(AppTaskQueueViewModel), typeof(HomeViewModel),
-				typeof(DownloadsViewModel), typeof(GraphPacksViewModel), typeof(OptionalModsViewModel),
+				typeof(DownloadsViewModel), typeof(ModCategoriesViewModel),
 				typeof(SettingsViewModel), typeof(ModpackChangelogViewModel),
 			})
 				Assert.That(services.Single(x => x.ServiceType == model).Lifetime, Is.EqualTo(ServiceLifetime.Scoped));

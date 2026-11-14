@@ -51,13 +51,12 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 		services.TryAddScoped<AppTaskQueueViewModel>();
 		services.TryAddScoped<HomeViewModel>();
 		services.TryAddScoped<DownloadsViewModel>();
-		services.TryAddScoped<GraphPacksViewModel>();
+		services.TryAddScoped<ModCategoriesViewModel>();
 		services.TryAddScoped<SettingsViewModel>(sp => new SettingsViewModel(
 			sp.GetRequiredService<ISettingsService>(), sp.GetRequiredService<IUiDispatcher>(),
 			string.IsNullOrWhiteSpace(sp.GetRequiredService<IConfiguration>()["Discord:ClientId"])
 				? null : sp.GetRequiredService<DiscordIntegrationViewModel>()));
 		services.TryAddScoped<ModpackChangelogViewModel>();
-		services.TryAddScoped<OptionalModsViewModel>();
 		services.TryAddTransient<ActivateBetaCodeViewModel>();
 		services.TryAddScoped<DiscordIntegrationViewModel>();
 		services.AddSingleton<IAppCloseHandler, NavigationGuardCloseHandler>();
