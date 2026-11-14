@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using IniParser;
@@ -19,6 +20,8 @@ public sealed partial class ModOrganizerService : IModOrganizerService
 {
 	private const string ModOrganizerAppName = "ModOrganizer";
 	private const string SeparatorSuffix = "_separator";
+	private static readonly string CmdPath =
+		Path.Combine(Environment.ExpandEnvironmentVariables("%windir%"), "System32", "cmd.exe");
 
 	private readonly string _userModsSeparator;
 
@@ -375,18 +378,15 @@ public sealed partial class ModOrganizerService : IModOrganizerService
 		await File.WriteAllTextAsync(metaIniPath, metaIniData.ToString(), cancellationToken);
 	}
 
-	public Task StartModOrganizer(SkyrimRelativePath? programPath, string? programArguments, bool assertSuccess,
-		CancellationToken cancellationToken)
+	public Task StartModOrganizer(SkyrimRelativePath? programPath, string? programArguments,
+		IReadOnlyDictionary<string, string>? environment, bool assertSuccess, CancellationToken cancellationToken)
 	{
 		var absoluteProgramPath = programPath?.ToAbsolute(_skyrimDirectory);
-		return StartModOrganizerInternal(absoluteProgramPath, programArguments, assertSuccess, cancellationToken);
+		return StartModOrganizerInternal(absoluteProgramPath, programArguments, environment, assertSuccess, cancellationToken);
 	}
 
-	public Task OneShotStartModOrganizer(CancellationToken cancellationToken)
-	{
-		var cmdPath = Path.Combine(Environment.ExpandEnvironmentVariables("%windir%"), "System32", "cmd.exe");
-		return StartModOrganizerInternal(cmdPath, "/c \"echo Hello\"", true, cancellationToken);
-	}
+	public Task OneShotStartModOrganizer(CancellationToken cancellationToken) =>
+		StartModOrganizerInternal(CmdPath, "/c \"echo Hello\"", null, true, cancellationToken);
 
 	public async Task<DeletedSavesInfo> DeleteOldSaves(int savesToKeep, CancellationToken cancellationToken)
 	{
@@ -515,8 +515,8 @@ public sealed partial class ModOrganizerService : IModOrganizerService
 		}
 	}
 
-	private Task StartModOrganizerInternal(string? programPath, string? programArguments, bool assertSuccess,
-		CancellationToken cancellationToken)
+	private Task StartModOrganizerInternal(string? programPath, string? programArguments,
+		IReadOnlyDictionary<string, string>? environment, bool assertSuccess, CancellationToken cancellationToken)
 	{
 		var isAlreadyRunning = Process.GetProcessesByName(ModOrganizerAppName).Length > 0;
 		if (isAlreadyRunning)
@@ -531,14 +531,51 @@ public sealed partial class ModOrganizerService : IModOrganizerService
 			_ => string.Empty,
 		};
 
-		var startInfo = new ProcessStartInfo(_moExePath, arguments)
-		{
-			UseShellExecute = true,
-			Verb = "runas",
-			WorkingDirectory = _modOrganizerDirectory,
-		};
+		// An elevated process gets a fresh environment rather than the launcher's, so the variables are set by an
+		// elevated cmd.exe, which runs Mod Organizer, waits for it and exits with its exit code.
+		var startInfo = environment is { Count: > 0 }
+			? new ProcessStartInfo(CmdPath, CreateCommandWithEnvironment(environment, arguments))
+			{
+				WindowStyle = ProcessWindowStyle.Hidden,
+			}
+			: new ProcessStartInfo(_moExePath, arguments);
+		startInfo.UseShellExecute = true;
+		startInfo.Verb = "runas";
+		startInfo.WorkingDirectory = _modOrganizerDirectory;
 		return _processRunner.StartProcessAndAssertSuccess(startInfo, assertSuccess, cancellationToken);
 	}
+
+	/// <summary>
+	/// The cmd.exe arguments that set <paramref name="environment"/> and run Mod Organizer with
+	/// <paramref name="arguments"/> in its directory (an elevated cmd.exe starts in System32 whatever the working
+	/// directory): <c>/D</c> skips AutoRun commands and <c>/V:OFF</c> keeps <c>!</c> literal. The command starts with
+	/// <c>cd</c>, not a quote, so <c>/C</c> keeps every quote of it.
+	/// </summary>
+	private string CreateCommandWithEnvironment(IReadOnlyDictionary<string, string> environment, string arguments)
+	{
+		var command = new StringBuilder("/D /V:OFF /C ");
+		command.Append(CultureInfo.InvariantCulture, $"cd /D \"{_modOrganizerDirectory}\"&& ");
+		foreach (var (name, value) in environment)
+		{
+			if (name.Length == 0 || name.Contains('=', StringComparison.Ordinal) || !IsCmdQuotable(name) || !IsCmdQuotable(value))
+			{
+				throw new ArgumentException($"Environment variable {name} cannot be passed to Mod Organizer", nameof(environment));
+			}
+
+			command.Append(CultureInfo.InvariantCulture, $"set \"{name}={value}\"&& ");
+		}
+
+		command.Append(CultureInfo.InvariantCulture, $"\"{_moExePath}\"");
+		if (arguments.Length > 0)
+		{
+			command.Append(' ').Append(arguments);
+		}
+
+		return command.ToString();
+	}
+
+	/// <summary>Whether cmd.exe reads <paramref name="text"/> in quotes literally.</summary>
+	private static bool IsCmdQuotable(string text) => text.AsSpan().IndexOfAny("\"%\r\n\0") < 0;
 
 	/// <summary>
 	/// Mod Organizer shows <c>modlist.txt</c> bottom-up, so the mods shown under a separator are the lines above its line

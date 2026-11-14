@@ -38,12 +38,14 @@ public sealed class AppTaskProvider : IAppTaskProvider
 	private readonly IProcessRunner _processRunner;
 	private readonly ISkyrimInstallationChecker _skyrimInstallationChecker;
 	private readonly IModpackVersionProvider _modpackVersionProvider;
+	private readonly IEnumerable<IGameEnvironmentProvider> _gameEnvironmentProviders;
 
 	public AppTaskProvider(IOptionsSnapshot<AppSettings> appSettings, IApplicationLifetime applicationLifetime,
 		IFeedProvider feedProvider, IFileStorageService fileStorageService, IInstallAppTaskProvider installAppTaskProvider,
 		IModOrganizerService modOrganizerService, IPrerequisitesAppTaskProvider prerequisitesAppTaskProvider,
 		IProcessRunner processRunner, ISkyrimInstallationChecker skyrimInstallationChecker,
-		IModpackVersionProvider modpackVersionProvider, IOptions<LauncherProductOptions> product)
+		IModpackVersionProvider modpackVersionProvider, IOptions<LauncherProductOptions> product,
+		IEnumerable<IGameEnvironmentProvider> gameEnvironmentProviders)
 	{
 		_appSettings = appSettings.Value;
 		_product = product.Value;
@@ -56,6 +58,7 @@ public sealed class AppTaskProvider : IAppTaskProvider
 		_processRunner = processRunner;
 		_skyrimInstallationChecker = skyrimInstallationChecker;
 		_modpackVersionProvider = modpackVersionProvider;
+		_gameEnvironmentProviders = gameEnvironmentProviders;
 	}
 
 	/// <summary>
@@ -81,13 +84,27 @@ public sealed class AppTaskProvider : IAppTaskProvider
 			context =>
 			[
 				context.MicroTasksFactory.CreateDelegateMicroTask(
-					(_, ct) => _modOrganizerService.StartModOrganizer(launch.ProgramPath, null, false, ct).AsValueTask(),
+					(_, ct) => StartGame(launch, ct),
 					microTaskDescription)
 			],
 			newestModpackFeedItem != null
 				? [await CreateInstallModpackTaskInternal(newestModpackFeedItem, [], false, cancellationToken)]
 				: [],
 			null);
+	}
+
+	private async ValueTask StartGame(GameLaunch launch, CancellationToken cancellationToken)
+	{
+		var environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+		foreach (var provider in _gameEnvironmentProviders)
+		{
+			foreach (var (name, value) in await provider.GetEnvironment(launch, cancellationToken))
+			{
+				environment.Add(name, value);
+			}
+		}
+
+		await _modOrganizerService.StartModOrganizer(launch.ProgramPath, null, environment, false, cancellationToken);
 	}
 
 	public AppTask CreateUpdateLauncherTask(DownloadInfo downloadInfo, NuGetVersion version) =>

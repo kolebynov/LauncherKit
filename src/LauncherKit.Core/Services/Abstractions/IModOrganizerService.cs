@@ -62,8 +62,17 @@ public interface IModOrganizerService
 	Task CreateOrUpdateMetaIniFile(string modName, string? installationFile, NuGetVersion version, string? comments,
 		CancellationToken cancellationToken);
 
-	Task StartModOrganizer(SkyrimRelativePath? programPath, string? programArguments, bool assertSuccess,
-		CancellationToken cancellationToken);
+	/// <summary>
+	/// Starts Mod Organizer elevated, running <paramref name="programPath"/> through it when it is not
+	/// <see langword="null"/>, and waits until Mod Organizer exits.
+	/// </summary>
+	/// <param name="environment">
+	/// Variables Mod Organizer and the programs it starts get. An elevated process does not inherit the launcher's
+	/// environment, so they are set by an elevated hidden <c>cmd.exe</c> that runs Mod Organizer: names and values must
+	/// not contain quotes, percent signs or line breaks, and names must not contain <c>=</c>.
+	/// </param>
+	Task StartModOrganizer(SkyrimRelativePath? programPath, string? programArguments,
+		IReadOnlyDictionary<string, string>? environment, bool assertSuccess, CancellationToken cancellationToken);
 
 	Task OneShotStartModOrganizer(CancellationToken cancellationToken);
 

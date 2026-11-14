@@ -287,6 +287,14 @@ The kit attaches its `Closing` handler to the main window. Application/OS shutdo
 
 The kit registers `INotificationService` (`LauncherKit.Desktop.Services`, singleton, UI thread only). `Show(AppNotification)` keeps a toast until the user clicks it or `Close` removes it. It shows toasts only when the consumer registers an `INotificationManagerProvider`, usually its main window: its `WindowNotificationManager` is resolved on the first notification, so the service never creates the window, and must be created with the window, because a manager whose template is not applied yet drops the first toast. Without a provider, `Show` and `Close` do nothing. The kit ships no toast template: add an application-wide `DataTemplate` for `AppNotification` (`Title`, optional `Message`, `IsInProgress`), because the manager lives in the window's adorner layer. View models never use the service; views and initializers do. The kit's `FeedLoadNotificationsInitializer` uses it to show feed loading progress and load errors in every launcher (texts `FeedLoading`, `FeedLoadFailed` and `FeedUnavailableFeatures` in `DesktopStrings`, overridable like other kit texts).
 
+#### Game environment
+
+Programs started through `CreateRunGameTask` get the environment variables of every registered `IGameEnvironmentProvider` (`LauncherKit.Core`, `GetEnvironment(GameLaunch, CancellationToken)`, read right before the start; the kit registers none), e.g. the player's identity for the game's plugins. Mod Organizer runs elevated and an elevated process does not inherit the launcher's environment, so the variables are set by an elevated hidden `cmd.exe` that runs Mod Organizer, which passes them on: names must be unique across providers, and names and values must not contain quotes, percent signs or line breaks.
+
+```csharp
+services.TryAddEnumerable(ServiceDescriptor.Singleton<IGameEnvironmentProvider, PlayerTokenProvider>());
+```
+
 #### First setup steps
 
 `FirstSetupViewModel` routes through the steps of every registered `ISetupStepProvider`, in ascending `Order`. The kit registers providers for the language, the Skyrim directory, the data directory and the download server check. The language step (`en`/`ru`, no operating-system option) appears until `App:Language` holds one of them, so set `App:Language` in `GetInMemoryConfiguration()` to fix the language and skip it. To add a step, derive from `SetupStepViewModel`: validate and apply your input to `FirstSetupContext.Settings`, then call `GoNext()`. Map the step to a view in your `IViewRegistry`, and register a provider:
