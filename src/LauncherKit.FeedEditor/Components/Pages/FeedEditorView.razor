@@ -148,11 +148,7 @@
 				</MudTabPanel>
 
 				<MudTabPanel Text="@($"Моды ({Feed.Mods.Count})")">
-					<ListEditor TItem="ModModel" Items="Feed.Mods" Factories="ModFactories" Title="ModTitle" AddToEnd="true">
-						<ItemContent Context="mod">
-							<ModEditor Mod="mod" />
-						</ItemContent>
-					</ListEditor>
+					<ModsEditor Mods="Feed.Mods" ModCategories="Feed.ModCategories" CategoryTitle="CategoryTitle" />
 				</MudTabPanel>
 
 				<MudTabPanel Text="@($"Бета-доступ ({Feed.BetaVersions.Count + Feed.SponsorRoleIds.Count + Feed.DeveloperRoleIds.Count})")">
@@ -176,7 +172,6 @@
 	private static readonly IReadOnlyList<ListItemFactory<ModpackChangelogModel>> ChangelogFactories = [new("список изменений", () => new ModpackChangelogModel())];
 	private static readonly IReadOnlyList<ListItemFactory<LauncherModel>> LauncherFactories = [new("лаунчер", () => new LauncherModel())];
 	private static readonly IReadOnlyList<ListItemFactory<ModCategoryModel>> CategoryFactories = [new("категорию", () => new ModCategoryModel())];
-	private static readonly IReadOnlyList<ListItemFactory<ModModel>> ModFactories = [new("мод", () => new ModModel())];
 	private static readonly IReadOnlyList<ListItemFactory<InstallComponentModel>> ComponentFactories = [new("компонент", () => new InstallComponentModel())];
 	private static readonly IReadOnlyList<ListItemFactory<PrerequisiteModel>> PrerequisiteFactories = [new("зависимость", () => new PrerequisiteModel())];
 
@@ -197,12 +192,6 @@
 	}
 
 	protected override void OnInitialized() => _feedChanged = EventCallback.Factory.Create(this, () => { });
-
-	private static string ModTitle(ModModel mod)
-	{
-		var latest = mod.Items.Count > 0 ? $" — последняя {mod.Items[0].Version}" : string.Empty;
-		return $"{mod.Name} [{mod.CategoryId}]{(mod.IsDiscontinued ? " (снят с поддержки)" : string.Empty)}{latest}";
-	}
 
 	private string CategoryTitle(ModCategoryModel category) =>
 		$"{category.Id} — {DefaultLanguageValue(category.Title)}{(category.IsExclusive ? " (только один мод)" : string.Empty)}";

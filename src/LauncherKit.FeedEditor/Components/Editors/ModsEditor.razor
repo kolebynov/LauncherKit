@@ -1,0 +1,81 @@
+@* Mods grouped by category in category order. Feed.Mods stays the only stored order: each group shows its part of the list,
+   new mods go after the last mod of their category, and moving swaps a mod with its neighbor in the same category. *@
+<MudStack Spacing="2">
+	<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+		<MudMenu Label="Добавить мод" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="@(Categories.Count == 0)"
+				 StartIcon="@Icons.Material.Filled.Add" EndIcon="@Icons.Material.Filled.KeyboardArrowDown">
+			@foreach (var category in Categories)
+			{
+				<MudMenuItem OnClick="@(() => AddAsync(category.Id))">@CategoryTitle(category)</MudMenuItem>
+			}
+		</MudMenu>
+		<MudText Typo="Typo.caption" Class="mud-text-secondary">
+			@(Categories.Count == 0 ? "Сначала добавьте категорию модов" : $"Записей: {Mods.Count}")
+		</MudText>
+	</MudStack>
+
+	@foreach (var category in Categories)
+	{
+		var id = category.Id;
+		<ExpanderSection @key="category" Title="@CategoryTitle(category)" Count="@Mods.Count(mod => mod.CategoryId == id)"
+						 Expanded="@_expandedCategories.Contains(id)" ExpandedChanged="@(expanded => SetCategoryExpanded(id, expanded))">
+			<ListEditor TItem="ModModel" Items="Mods" Factories="[]" Filter="@(mod => mod.CategoryId == id)" Expanded="_expandedMods"
+						Title="ModTitle" AddToEnd="true">
+				<ItemContent Context="mod">
+					<ModEditor Mod="mod" />
+				</ItemContent>
+			</ListEditor>
+		</ExpanderSection>
+	}
+</MudStack>
+
+@code {
+	private readonly HashSet<ModModel> _expandedMods = new(ReferenceEqualityComparer.Instance);
+	private readonly HashSet<string> _expandedCategories = new(StringComparer.Ordinal);
+
+	/// <summary>The edited mods; the editor mutates the list in place.</summary>
+	[Parameter, EditorRequired]
+	public required List<ModModel> Mods { get; set; }
+
+	[Parameter, EditorRequired]
+	public required IReadOnlyList<ModCategoryModel> ModCategories { get; set; }
+
+	[Parameter, EditorRequired]
+	public required Func<ModCategoryModel, string> CategoryTitle { get; set; }
+
+	[CascadingParameter(Name = FeedChangedCascade.Name)]
+	public EventCallback Changed { get; set; }
+
+	// While category IDs are being edited they may repeat; one group per ID keeps every mod shown once.
+	private IReadOnlyList<ModCategoryModel> Categories { get; set; } = [];
+
+	protected override void OnParametersSet() =>
+		Categories = ModCategories.DistinctBy(category => category.Id, StringComparer.Ordinal).ToList();
+
+	private static string ModTitle(ModModel mod)
+	{
+		var latest = mod.Items.Count > 0 ? $" — последняя {mod.Items[0].Version}" : string.Empty;
+		return $"{mod.Name} [{mod.CategoryId}]{(mod.IsDiscontinued ? " (снят с поддержки)" : string.Empty)}{latest}";
+	}
+
+	private Task AddAsync(string categoryId)
+	{
+		var mod = new ModModel { CategoryId = categoryId };
+		Mods.Insert(ListOrdering.InsertAfterLastIndex(Mods, existing => existing.CategoryId == categoryId), mod);
+		_expandedMods.Add(mod);
+		_expandedCategories.Add(categoryId);
+		return Changed.InvokeAsync();
+	}
+
+	private void SetCategoryExpanded(string categoryId, bool expanded)
+	{
+		if (expanded)
+		{
+			_expandedCategories.Add(categoryId);
+		}
+		else
+		{
+			_expandedCategories.Remove(categoryId);
+		}
+	}
+}

@@ -4,35 +4,45 @@
 @* A plain element, so the scoped styles in ListEditor.razor.css can reach the MudBlazor panels through ::deep. *@
 <div class="list-editor">
 	<MudStack Spacing="2">
-		<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-			@if (Factories.Count == 1)
-			{
-				<MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
-						   StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => Add(Factories[0]))">
-					Добавить @Factories[0].Label
-				</MudButton>
-			}
-			else
-			{
-				<MudMenu Label="Добавить" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
-						 StartIcon="@Icons.Material.Filled.Add" EndIcon="@Icons.Material.Filled.KeyboardArrowDown">
-					@foreach (var factory in Factories)
-					{
-						<MudMenuItem OnClick="@(() => Add(factory))">@factory.Label</MudMenuItem>
-					}
-				</MudMenu>
-			}
-			<MudText Typo="Typo.caption" Class="mud-text-secondary">Записей: @Items.Count</MudText>
-		</MudStack>
+		@if (Factories.Count > 0)
+		{
+			<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+				@if (Factories.Count == 1)
+				{
+					<MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+							   StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => Add(Factories[0]))">
+						Добавить @Factories[0].Label
+					</MudButton>
+				}
+				else
+				{
+					<MudMenu Label="Добавить" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+							 StartIcon="@Icons.Material.Filled.Add" EndIcon="@Icons.Material.Filled.KeyboardArrowDown">
+						@foreach (var factory in Factories)
+						{
+							<MudMenuItem OnClick="@(() => Add(factory))">@factory.Label</MudMenuItem>
+						}
+					</MudMenu>
+				}
+				<MudText Typo="Typo.caption" Class="mud-text-secondary">Записей: @Items.Count</MudText>
+			</MudStack>
+		}
 
-		@if (Items.Count > 0)
+		@if (Items.Any(IsShown))
 		{
 			<MudExpansionPanels MultiExpansion="true" Elevation="0" Outlined="true">
 				@for (var i = 0; i < Items.Count; i++)
 				{
 					var index = i;
 					var item = Items[i];
-					<MudExpansionPanel @key="item" Expanded="@_expanded.Contains(item)" ExpandedChanged="@(expanded => SetExpanded(item, expanded))"
+					if (!IsShown(item))
+					{
+						continue;
+					}
+
+					var previous = ListOrdering.NeighborIndex(Items, index, -1, IsShown);
+					var next = ListOrdering.NeighborIndex(Items, index, 1, IsShown);
+					<MudExpansionPanel @key="item" Expanded="@ExpandedItems.Contains(item)" ExpandedChanged="@(expanded => SetExpanded(item, expanded))"
 									   Dense="true" Gutters="true">
 						<TitleContent>
 							<div class="d-flex align-center gap-1">
@@ -40,11 +50,11 @@
 								<div @onclick:stopPropagation="true" class="d-flex">
 									<MudTooltip Text="Переместить выше">
 										<MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" aria-label="Переместить выше"
-													   Disabled="@(index == 0)" OnClick="@(() => Move(index, -1))" />
+													   Disabled="@(previous < 0)" OnClick="@(() => Move(index, previous))" />
 									</MudTooltip>
 									<MudTooltip Text="Переместить ниже">
 										<MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" aria-label="Переместить ниже"
-													   Disabled="@(index == Items.Count - 1)" OnClick="@(() => Move(index, 1))" />
+													   Disabled="@(next < 0)" OnClick="@(() => Move(index, next))" />
 									</MudTooltip>
 									<MudTooltip Text="Дублировать">
 										<MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" aria-label="Дублировать"
@@ -59,7 +69,7 @@
 						</TitleContent>
 						<ChildContent>
 							@* Collapsed entries are not rendered, which keeps large feeds responsive. *@
-							@if (_expanded.Contains(item))
+							@if (ExpandedItems.Contains(item))
 							{
 								@ItemContent(item)
 							}
@@ -72,15 +82,26 @@
 </div>
 
 @code {
-	private readonly HashSet<TItem> _expanded = new(ReferenceEqualityComparer.Instance);
+	private readonly HashSet<TItem> _ownExpanded = new(ReferenceEqualityComparer.Instance);
 
 	/// <summary>The edited list; the editor mutates it in place.</summary>
 	[Parameter, EditorRequired]
 	public required List<TItem> Items { get; set; }
 
-	/// <summary>One factory renders an "Add" button; several render an "Add" menu.</summary>
+	/// <summary>One factory renders an "Add" button; several render an "Add" menu; none hide the toolbar with the count.</summary>
 	[Parameter, EditorRequired]
 	public required IReadOnlyList<ListItemFactory<TItem>> Factories { get; set; }
+
+	/// <summary>
+	/// Shows only matching entries of <see cref="Items"/>, for a list shown as several groups. Moving swaps an entry with its
+	/// neighbor within the group, so the order of other entries does not change.
+	/// </summary>
+	[Parameter]
+	public Func<TItem, bool>? Filter { get; set; }
+
+	/// <summary>Expanded entries (by reference), when the owner shares them between editors or expands entries it adds itself.</summary>
+	[Parameter]
+	public ISet<TItem>? Expanded { get; set; }
 
 	[Parameter, EditorRequired]
 	public required Func<TItem, string> Title { get; set; }
@@ -98,6 +119,10 @@
 	[CascadingParameter(Name = FeedChangedCascade.Name)]
 	public EventCallback Changed { get; set; }
 
+	private ISet<TItem> ExpandedItems => Expanded ?? _ownExpanded;
+
+	private bool IsShown(TItem item) => Filter?.Invoke(item) ?? true;
+
 	// By default new entries go first: most feed lists are kept newest-first.
 	private Task Add(ListItemFactory<TItem> factory) => Insert(AddToEnd ? Items.Count : 0, factory.Create());
 
@@ -107,13 +132,13 @@
 	private Task Insert(int index, TItem item)
 	{
 		Items.Insert(index, item);
-		_expanded.Add(item);
+		ExpandedItems.Add(item);
 		return Changed.InvokeAsync();
 	}
 
-	private Task Move(int index, int offset)
+	private Task Move(int index, int target)
 	{
-		(Items[index], Items[index + offset]) = (Items[index + offset], Items[index]);
+		(Items[index], Items[target]) = (Items[target], Items[index]);
 		return Changed.InvokeAsync();
 	}
 
@@ -128,7 +153,7 @@
 		}
 
 		Items.Remove(item);
-		_expanded.Remove(item);
+		ExpandedItems.Remove(item);
 		await Changed.InvokeAsync();
 	}
 
@@ -136,11 +161,11 @@
 	{
 		if (expanded)
 		{
-			_expanded.Add(item);
+			ExpandedItems.Add(item);
 		}
 		else
 		{
-			_expanded.Remove(item);
+			ExpandedItems.Remove(item);
 		}
 	}
 }

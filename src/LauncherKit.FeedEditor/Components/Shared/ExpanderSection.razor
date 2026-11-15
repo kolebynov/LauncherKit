@@ -2,13 +2,12 @@
    so a collapsed section still tells whether it is used. A compact outlined box rather than an expansion panel, so
    collapsed sections stay small and separated. *@
 <div class="expander-section">
-	<button type="button" class="expander-section-header" aria-expanded="@(_expanded ? "true" : "false")"
-			@onclick="@(() => _expanded = !_expanded)">
-		<MudIcon Icon="@(_expanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" />
+	<button type="button" class="expander-section-header" aria-expanded="@(Expanded ? "true" : "false")" @onclick="ToggleAsync">
+		<MudIcon Icon="@(Expanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" />
 		<MudText Typo="@TitleTypo">@Title (@Count)</MudText>
 	</button>
 	@* Collapsed content is not rendered, which keeps large feeds responsive. *@
-	@if (_expanded)
+	@if (Expanded)
 	{
 		<div class="expander-section-content">
 			<MudStack Spacing="2">
@@ -23,7 +22,12 @@
 </div>
 
 @code {
-	private bool _expanded;
+	/// <summary>Whether the content is shown; bind it when the owner expands the section itself.</summary>
+	[Parameter]
+	public bool Expanded { get; set; }
+
+	[Parameter]
+	public EventCallback<bool> ExpandedChanged { get; set; }
 
 	[Parameter, EditorRequired]
 	public required string Title { get; set; }
@@ -40,4 +44,10 @@
 
 	[Parameter, EditorRequired]
 	public required RenderFragment ChildContent { get; set; }
+
+	private Task ToggleAsync()
+	{
+		Expanded = !Expanded;
+		return ExpandedChanged.InvokeAsync(Expanded);
+	}
 }
