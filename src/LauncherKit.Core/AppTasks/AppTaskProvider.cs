@@ -296,7 +296,7 @@ public sealed class AppTaskProvider : IAppTaskProvider
 	private async ValueTask<ModComponentOption> CreateModChoiceOption(ModFeedData feedData, bool isDefault,
 		NuGetVersion modpackVersion, CancellationToken cancellationToken)
 	{
-		var name = feedData.DisplayName?.Resolve() ?? feedData.Name;
+		var name = feedData.ResolveDisplayName();
 		var optionDescription = feedData.OptionDescription?.Resolve();
 		if (feedData.FindLatestSupportedItem(modpackVersion) is not { } feedItem)
 		{
