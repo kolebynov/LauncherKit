@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using R3;
 using Serilog;
 using Serilog.Events;
@@ -73,6 +74,7 @@ public abstract class LauncherKitApp : Application
 			mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModelBase>();
 			desktop.MainWindow = mainWindow;
 			Services.GetRequiredService<MainWindowCloseHandler>().Attach(mainWindow);
+			StartModUpdateNotifications(mainWindow);
 			var desktopServices = StartDesktopServices(desktop);
 			desktop.Exit += (_, _) =>
 			{
@@ -140,6 +142,22 @@ public abstract class LauncherKitApp : Application
 	// The locator uses the consumer's registry and current scope to build view models' views.
 	private void InstallViewLocator() =>
 		DataTemplates.Insert(0, Services.GetRequiredService<ViewLocator>());
+
+	// Once per process, only for the installation configured at startup: later scopes (first setup, Skyrim directory
+	// changes) are not checked. The notifier is resolved now, so a scope replaced before the window opens disposes it and
+	// the late start does nothing. Waiting for Opened lets the window's notification manager apply its template first.
+	private void StartModUpdateNotifications(Window mainWindow)
+	{
+		if (string.IsNullOrEmpty(Services.GetRequiredService<IOptionsSnapshot<AppSettings>>().Value.SkyrimDirectory)) return;
+		var notifications = Services.GetRequiredService<ModUpdateNotifications>();
+		mainWindow.Opened += OnOpened;
+
+		void OnOpened(object? sender, EventArgs e)
+		{
+			mainWindow.Opened -= OnOpened;
+			_ = notifications.Start();
+		}
+	}
 
 	private void ConfigureAppServices(AppBuilder appBuilder)
 	{

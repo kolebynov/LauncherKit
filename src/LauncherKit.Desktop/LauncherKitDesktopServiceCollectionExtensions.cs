@@ -59,6 +59,7 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 		services.TryAddScoped<ModpackChangelogViewModel>();
 		services.TryAddTransient<ActivateBetaCodeViewModel>();
 		services.TryAddScoped<DiscordIntegrationViewModel>();
+		services.TryAddScoped<ModUpdateNotifications>();
 		services.AddSingleton<IAppCloseHandler, NavigationGuardCloseHandler>();
 		services.AddScoped<IAppCloseHandler, PendingTasksCloseHandler>();
 		services.TryAddSingleton<MainWindowStateHandler>();

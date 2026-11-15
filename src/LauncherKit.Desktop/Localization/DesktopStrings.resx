@@ -93,6 +93,7 @@
 	<data name="ModpackComponentsTitle" xml:space="preserve"><value>Installation components</value></data>
 	<data name="ModpackInstallUnavailable" xml:space="preserve"><value>No modpack versions are available to install</value></data>
 	<data name="ModpackTaskQueued" xml:space="preserve"><value>A modpack operation is queued</value></data>
+	<data name="ModUpdatesAvailable" xml:space="preserve"><value>Mod updates are available</value></data>
 	<data name="NoneOption" xml:space="preserve"><value>None</value></data>
 	<data name="OAuthMessage" xml:space="preserve"><value>You can close this browser tab and return to the launcher.</value></data>
 	<data name="OAuthTitle" xml:space="preserve"><value>Authorization complete</value></data>
