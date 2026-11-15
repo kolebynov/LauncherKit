@@ -94,6 +94,7 @@
 	<data name="ModpackComponentsTitle" xml:space="preserve"><value>Компоненты установки</value></data>
 	<data name="ModpackInstallUnavailable" xml:space="preserve"><value>Нет версий сборки, доступных для установки</value></data>
 	<data name="ModpackTaskQueued" xml:space="preserve"><value>Операция со сборкой находится в очереди</value></data>
+	<data name="ModUpdatesAvailable" xml:space="preserve"><value>Доступны обновления модов</value></data>
 	<data name="NoneOption" xml:space="preserve"><value>Не устанавливать</value></data>
 	<data name="OAuthMessage" xml:space="preserve"><value>Вы можете закрыть эту вкладку и вернуться в лаунчер.</value></data>
 	<data name="OAuthTitle" xml:space="preserve"><value>Авторизация завершена</value></data>

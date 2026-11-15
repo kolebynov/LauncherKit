@@ -65,7 +65,7 @@ public sealed class InstallAppTaskProvider : IInstallAppTaskProvider
 					              throw new ModNotSupportedModpackVersionException(modName, modpackVersion);
 				}
 
-				var displayName = modFeed.DisplayName?.Resolve() ?? modFeed.Name;
+				var displayName = modFeed.ResolveDisplayName();
 				var archiveName = modFeedItem.ArchiveDownloadInfo.FileName;
 				var microTasks = new List<IAppMicroTask>();
 				IEnumerable<ModPatchFeedItem> patches;

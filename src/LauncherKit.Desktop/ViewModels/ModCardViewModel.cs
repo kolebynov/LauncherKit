@@ -3,6 +3,7 @@ using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Services;
 using CommunityToolkit.Mvvm.Input;
 using R3;
+using LauncherKit.Core.Extensions;
 using LauncherKit.Core.Feed.Mods;
 using LauncherKit.Core.Services.Abstractions;
 using LauncherKit.Core.Utils;
@@ -81,7 +82,7 @@ public sealed partial class ModCardViewModel : BaseActivatableViewModel
 		_categoryMods = categoryMods;
 		_installations = installations;
 		_modpackVersionProvider = modpackVersionProvider;
-		Name = mod.DisplayName?.Resolve() ?? mod.Name;
+		Name = mod.ResolveDisplayName();
 		LogoUri = feedUtils.GetUri(mod.LogoPath);
 		DescriptionUri = feedUtils.GetUri(mod.DescriptionPath.Resolve());
 		InstallCommand = new AsyncRelayCommand(Install,

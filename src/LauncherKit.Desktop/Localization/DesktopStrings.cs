@@ -89,6 +89,7 @@ public sealed class DesktopStrings
 	public const string MicroUpdateModMetadata = nameof(MicroUpdateModMetadata);
 	public const string MicroUpdateModpackVersion = nameof(MicroUpdateModpackVersion);
 	public const string ModNotUpdated = nameof(ModNotUpdated);
+	public const string ModUpdatesAvailable = nameof(ModUpdatesAvailable);
 	public const string ModpackComponentsTitle = nameof(ModpackComponentsTitle);
 	public const string ModpackInstallUnavailable = nameof(ModpackInstallUnavailable);
 	public const string ModpackTaskQueued = nameof(ModpackTaskQueued);
