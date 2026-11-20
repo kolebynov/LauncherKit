@@ -1,0 +1,12 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="using:SampleLauncher.App.ViewModels"
+             x:Class="SampleLauncher.App.Views.HomeView"
+             x:DataType="app:HomePageViewModel">
+	<StackPanel Spacing="12">
+		<TextBlock Text="Feed categories" FontSize="20" FontWeight="SemiBold" />
+		<ContentControl Content="{Binding ModCategories}" />
+		<Button Name="DownloadSampleButton" Content="Download sample file" Command="{Binding DownloadSampleCommand}" />
+		<TextBlock Name="SampleDownloadedText" Text="Sample file downloaded" IsVisible="{Binding IsSampleDownloaded}" />
+	</StackPanel>
+</UserControl>

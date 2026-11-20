@@ -29,6 +29,7 @@ Contributor rules and detailed contracts are in [AGENTS.md](AGENTS.md).
 | `fomod-installer/` | FOMOD script engine. |
 | `workers/analytics/` | Cloudflare Analytics Worker code and tests. |
 | `scripts/` | Python sandbox, automation client and feed editor development tools. |
+| `samples/SampleLauncher` | Sample launcher outside `LauncherKit.sln` for local smoke runs of the setup, feed and downloads ([docs/sample-launcher.md](docs/sample-launcher.md)). |
 | `tests/` | NUnit tests, one project per production project. |
 
 ## Requirements
@@ -461,4 +462,4 @@ dotnet build LauncherKit.sln -c Debug   # static analysis: warnings are errors
 dotnet test LauncherKit.sln -c Debug
 ```
 
-The kit builds and tests without a consumer. Changes that need a running launcher (UI, installs, AOT publish, installer) are exercised in a consumer whose `kit/` submodule points at the change, with the [dev automation](docs/dev-automation.md) sandbox. Contributor rules, contracts and test conventions are in [AGENTS.md](AGENTS.md).
+The kit builds and tests without a consumer. Changes that need a running launcher (UI, installs, AOT publish, installer) are exercised in a consumer whose `kit/` submodule points at the change, with the [dev automation](docs/dev-automation.md) sandbox. The first setup, feed loading and downloads can be checked earlier with the in-repository [sample launcher](docs/sample-launcher.md). Contributor rules, contracts and test conventions are in [AGENTS.md](AGENTS.md).

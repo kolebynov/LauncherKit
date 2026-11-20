@@ -15,3 +15,6 @@ Tools/
 cache/
 Downloads/
 __pycache__/
+# Sample launcher fixtures and sandbox (samples/SampleLauncher/scripts)
+/samples/SampleLauncher/scripts/Mock/
+/samples/SampleLauncher/scripts/Sandbox/

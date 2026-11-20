@@ -104,8 +104,12 @@ def copy_build(output: Path, exe_name: str, state_names: tuple[str, ...]) -> Non
 
 
 def ensure_mock_server(port: int, state: dict, mock_dir: Path, feed: str) -> str:
+    """Reuses a server answering the feed on port or starts one serving mock_dir; state['activeMock'] records the
+    selected server, with pid None when it is not the sandbox's own server."""
     url = f'http://127.0.0.1:{port}/'
     if url_responds(url + feed):
+        own = state.get('mockPort') == port and is_running(state.get('mockPid'))
+        state['activeMock'] = {'port': port, 'pid': state['mockPid'] if own else None}
         return url
     if not (mock_dir / feed).is_file():
         raise SandboxError(f'{mock_dir / feed} not found; generate the consumer mocks first')
@@ -116,6 +120,7 @@ def ensure_mock_server(port: int, state: dict, mock_dir: Path, feed: str) -> str
         creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)
     state['mockPid'] = process.pid
     state['mockPort'] = port
+    state['activeMock'] = {'port': port, 'pid': process.pid}
     deadline = time.monotonic() + 10
     while not url_responds(url + feed):
         if time.monotonic() > deadline:
@@ -166,12 +171,18 @@ def cmd_start(args) -> int:
     if args.mock_dir is not None and not args.real_feed:
         feed = args.feed or 'feedV12.json'
         mock_url = ensure_mock_server(args.mock_port, state, args.mock_dir.resolve(), feed)
+        save_state(state)
+        # Optional consumer hook checking the selected server before the launcher uses it.
+        if (verify_mock := getattr(args, 'verify_mock', None)) is not None:
+            verify_mock(args, mock_url)
         for key in ('Feed', 'Analytics'):
             env[f'{prefix}Urls__{key}__MainUrl'] = mock_url
             env[f'{prefix}Urls__{key}__ProxyUrl'] = mock_url
         env[f'{prefix}Feed__FeedPath'] = feed
-    elif args.feed:
-        raise SandboxError('--feed requires --mock-dir and cannot be combined with --real-feed')
+    else:
+        state.pop('activeMock', None)
+        if args.feed:
+            raise SandboxError('--feed requires --mock-dir and cannot be combined with --real-feed')
 
     process = subprocess.Popen(
         [str(LAUNCHER_DIR / args.exe_name)], cwd=LAUNCHER_DIR, env=env,
@@ -184,15 +195,24 @@ def cmd_start(args) -> int:
     while True:
         try:
             status = LauncherClient(args.port, timeout=2).status()
-            break
         except (AutomationError, urllib.error.URLError, OSError):
-            if process.poll() is not None:
-                raise SandboxError(f'launcher exited with code {process.returncode}; see {LAUNCHER_DIR / "console.log"} '
-                                   f'and {LAUNCHER_DIR / "logs"}') from None
-            if time.monotonic() > deadline:
-                raise SandboxError(f'automation API did not answer within {args.timeout} s; with --no-build, the last '
-                                   'build may lack -p:EnableDevAutomation=true (a plain solution build replaces it)') from None
-            time.sleep(0.3)
+            status = None
+        if status is not None:
+            if status.process_id == process.pid:
+                break
+            # Another process answers on the port: never report it as the started launcher.
+            kill(process.pid)
+            state.pop('pid', None)
+            save_state(state)
+            raise SandboxError(f'port {args.port} is served by process {status.process_id}, not the started launcher '
+                               f'(pid {process.pid}); stop that process or pass --port')
+        if process.poll() is not None:
+            raise SandboxError(f'launcher exited with code {process.returncode}; see {LAUNCHER_DIR / "console.log"} '
+                               f'and {LAUNCHER_DIR / "logs"}')
+        if time.monotonic() > deadline:
+            raise SandboxError(f'automation API did not answer within {args.timeout} s; with --no-build, the last '
+                               'build may lack -p:EnableDevAutomation=true (a plain solution build replaces it)')
+        time.sleep(0.3)
     print(f'Launcher pid {process.pid}, API http://localhost:{args.port}/, sandbox {CURRENT_DIR}')
     print_json(dataclasses.asdict(status))
     return 0
@@ -204,6 +224,7 @@ def cmd_stop(args) -> int:
     if args.mock:
         kill(state.pop('mockPid', None))
         state.pop('mockPort', None)
+        state.pop('activeMock', None)
     save_state(state)
     return 0
 
@@ -412,7 +433,8 @@ def parse_args(configure=None):
     start.add_argument('--width', type=int, default=DEFAULT_WIDTH)
     start.add_argument('--height', type=int, default=DEFAULT_HEIGHT)
     start.add_argument('--timeout', type=float, default=120, help='seconds to wait for the API')
-    start.set_defaults(handler=cmd_start)
+    # Validation below keys on this marker, so a consumer may replace the handler without losing it.
+    start.set_defaults(handler=cmd_start, start_command=True)
 
     stop = commands.add_parser('stop', help='kill the sandbox launcher')
     stop.add_argument('--mock', action='store_true', help='also stop the mock feed server')
@@ -521,7 +543,7 @@ def parse_args(configure=None):
     SNAPSHOTS_DIR = SANDBOX_DIR / 'snapshots'
     SCREENSHOTS_DIR = SANDBOX_DIR / 'screenshots'
     STATE_FILE = SANDBOX_DIR / 'state.json'
-    if getattr(args, 'handler', None) is cmd_start:
+    if getattr(args, 'start_command', False):
         if not args.exe_name.strip() or Path(args.exe_name).name != args.exe_name:
             parser.error('--exe-name must be a nonempty executable filename')
         if not args.environment_prefix.strip():

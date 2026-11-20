@@ -1,0 +1,13 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:LauncherKit.Desktop.ViewModels"
+             x:Class="SampleLauncher.App.Views.ModCategoriesView"
+             x:DataType="vm:ModCategoriesViewModel">
+	<ItemsControl Name="CategoryList" ItemsSource="{Binding Categories}">
+		<ItemsControl.ItemTemplate>
+			<DataTemplate x:DataType="vm:ModCategoryViewModel">
+				<TextBlock Text="{Binding Title}" />
+			</DataTemplate>
+		</ItemsControl.ItemTemplate>
+	</ItemsControl>
+</UserControl>

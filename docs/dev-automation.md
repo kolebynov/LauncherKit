@@ -4,7 +4,8 @@ A local HTTP API inside an automation-enabled launcher reads and drives its UI. 
 `kit/scripts/launcher_dev.py` (sandbox/CLI) and `kit/scripts/launcher_client.py` (Python API client).
 Consumer-specific user flows, their configured CLI, mock generation and serving are consumer-owned. Prefer these
 tools over OS-level mouse scripts or screen captures. All commands below run from the consumer repository root. See
-[kit contracts](../AGENTS.md).
+[kit contracts](../AGENTS.md). The in-repository [sample launcher](sample-launcher.md) is a small working example of a
+consumer flow script built on these tools.
 
 ## Build gating
 
@@ -40,6 +41,9 @@ defaults to `Sandbox` under the current working directory. `start` builds/publis
 defaulting to `<sandbox>/build/Debug`, or `Release` with `--aot`; `--no-build` consumes that same output. There is no
 inferred target-framework output directory. Build output is copied to `<sandbox>/current/Launcher`, used as the
 working directory. Repeat `--state-name GLOB` to exclude consumer runtime-state files from copied build output.
+`start` is ready only when `/status` reports the started process's ID; another process answering on `--port` stops the
+new launcher and fails `start`. The `--exe-name` / `--environment-prefix` checks and the `--output` default apply to the
+`start` subcommand even when a consumer replaces its handler.
 
 `--mock-dir PATH` opts into serving a consumer's mock files on port 8090 and overriding feed/analytics endpoints;
 without it the configured real endpoints are used. `--real-feed` disables configured mocks. `--feed FILE` selects

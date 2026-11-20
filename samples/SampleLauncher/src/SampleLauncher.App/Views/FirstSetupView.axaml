@@ -1,0 +1,11 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:setup="using:LauncherKit.Desktop.ViewModels.Setup"
+             x:Class="SampleLauncher.App.Views.FirstSetupView"
+             x:DataType="setup:FirstSetupViewModel">
+	<StackPanel Spacing="12" MaxWidth="560" HorizontalAlignment="Left">
+		<TextBlock Text="First setup" FontSize="20" FontWeight="SemiBold" />
+		<ContentControl Content="{Binding CurrentStep}" />
+		<ProgressBar Name="SavingProgress" IsIndeterminate="True" IsVisible="{Binding IsFinished}" />
+	</StackPanel>
+</UserControl>

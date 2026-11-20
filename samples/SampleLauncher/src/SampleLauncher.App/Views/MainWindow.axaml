@@ -1,0 +1,19 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="using:SampleLauncher.App.ViewModels"
+        x:Class="SampleLauncher.App.Views.MainWindow"
+        x:DataType="app:MainWindowViewModel"
+        Width="900" Height="600">
+	<DockPanel>
+		<StackPanel DockPanel.Dock="Left" Width="150" Margin="8" Spacing="4">
+			<Button Name="HomeNavButton" Content="Home" HorizontalAlignment="Stretch" Click="HomeNavButtonOnClick" />
+			<Button Name="TasksNavButton" HorizontalAlignment="Stretch" Click="TasksNavButtonOnClick"
+			        Content="{Binding Tasks.AppTasks.Count, StringFormat='Tasks ({0})'}" />
+			<Button Name="DownloadsNavButton" Content="Downloads" HorizontalAlignment="Stretch" Click="DownloadsNavButtonOnClick"
+			        IsVisible="{Binding Downloads, Converter={x:Static ObjectConverters.IsNotNull}}" />
+		</StackPanel>
+		<ScrollViewer>
+			<ContentControl Name="PageHost" Margin="16" />
+		</ScrollViewer>
+	</DockPanel>
+</Window>

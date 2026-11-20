@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:LauncherKit.Desktop.ViewModels"
+             xmlns:conv="using:LauncherKit.Desktop.Converters"
+             x:Class="SampleLauncher.App.Views.DownloadsView"
+             x:DataType="vm:DownloadsViewModel">
+	<StackPanel Spacing="12">
+		<TextBlock Text="Downloads" FontSize="20" FontWeight="SemiBold" />
+		<ItemsControl Name="FileList" ItemsSource="{Binding Files}">
+			<ItemsControl.ItemTemplate>
+				<DataTemplate x:DataType="vm:DownloadsViewModel+FileInfoViewModel">
+					<StackPanel Orientation="Horizontal" Spacing="16">
+						<TextBlock Text="{Binding FileName}" />
+						<TextBlock Text="{Binding Size, Converter={x:Static conv:BytesToStringConverter.Instance}}" />
+						<TextBlock Text="{Binding Status}" />
+					</StackPanel>
+				</DataTemplate>
+			</ItemsControl.ItemTemplate>
+		</ItemsControl>
+	</StackPanel>
+</UserControl>

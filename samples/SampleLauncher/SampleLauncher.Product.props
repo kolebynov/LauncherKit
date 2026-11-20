@@ -1,0 +1,24 @@
+<Project>
+	<!--
+	The sample launcher's product identity, used only by this sample (never by the kit or a real consumer). LauncherKit
+	generates SampleLauncher.ProductIdentity from it. The registry key is the sample's own, under HKEY_CURRENT_USER.
+	-->
+	<PropertyGroup>
+		<VersionPrefix>0.1.0</VersionPrefix>
+		<LauncherProductNamespace>SampleLauncher</LauncherProductNamespace>
+		<LauncherSkyrimDataDirectoryName>.SampleLauncher</LauncherSkyrimDataDirectoryName>
+		<LauncherLocalDatabaseFileName>sample.db</LauncherLocalDatabaseFileName>
+		<LauncherOAuthTokenEntropy>SampleLauncher.OAuthToken</LauncherOAuthTokenEntropy>
+		<LauncherEnvironmentVariablePrefix>SAMPLE_LAUNCHER_</LauncherEnvironmentVariablePrefix>
+		<LauncherAppExecutableName>SampleLauncher.App.exe</LauncherAppExecutableName>
+		<LauncherDisplayName>LauncherKit Sample</LauncherDisplayName>
+		<LauncherUserAgentProduct>LauncherKitSample</LauncherUserAgentProduct>
+		<LauncherModOrganizerDirectoryName>Sample Mod Organizer</LauncherModOrganizerDirectoryName>
+		<LauncherModpackProfileName>Sample</LauncherModpackProfileName>
+		<LauncherModpackVersionFile>Sample Mod Organizer/version.txt</LauncherModpackVersionFile>
+		<LauncherUserModsSeparator>USER MODS</LauncherUserModsSeparator>
+		<LauncherRequiredSkyrimVersion>1.5.97.0</LauncherRequiredSkyrimVersion>
+		<LauncherRegistryKey>HKEY_CURRENT_USER\Software\LauncherKit Sample\Sample Launcher</LauncherRegistryKey>
+	</PropertyGroup>
+	<Import Project="..\..\msbuild\LauncherKit.Product.props"/>
+</Project>

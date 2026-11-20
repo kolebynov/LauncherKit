@@ -1,0 +1,11 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:setup="using:LauncherKit.Desktop.ViewModels.Setup"
+             x:Class="SampleLauncher.App.Views.AvailabilitySetupStepView"
+             x:DataType="setup:AvailabilitySetupStepViewModel">
+	<StackPanel Spacing="8">
+		<TextBlock Text="Download server check" FontWeight="SemiBold" />
+		<ContentControl Content="{Binding Availability}" />
+		<Button Name="BackButton" Content="Back" Command="{Binding BackCommand}" IsVisible="{Binding CanGoBack}" />
+	</StackPanel>
+</UserControl>

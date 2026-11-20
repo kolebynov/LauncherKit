@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\SampleLauncher.Product.props"/>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<PublishAot>true</PublishAot>
+		<!-- Required: SDK 11's optimized AOT publish drops Avalonia resources and compiled XAML. -->
+		<UseOptimizedPublish>false</UseOptimizedPublish>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+		<!-- Trimming and AOT report each warning; only the checked assemblies below are collapsed. -->
+		<TrimmerSingleWarn>false</TrimmerSingleWarn>
+		<NoWarn>$(NoWarn);IL2104;IL3053</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest"/>
+		<!-- Serilog cannot capture objects as structures after trimming. -->
+		<RuntimeHostConfigurationOption Include="Serilog.Capturing.IsStructureValueSupported" Value="false" Trim="true"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia"/>
+		<PackageReference Include="Avalonia.Desktop"/>
+		<PackageReference Include="Avalonia.Themes.Fluent"/>
+		<PackageReference Include="CommunityToolkit.Mvvm"/>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection"/>
+		<PackageReference Include="R3Extensions.Avalonia"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\..\src\LauncherKit.Desktop\LauncherKit.Desktop.csproj"/>
+	</ItemGroup>
+
+	<!-- Development automation (docs/dev-automation.md), compiled in only with -p:EnableDevAutomation=true. -->
+	<PropertyGroup Condition="'$(EnableDevAutomation)' == 'true'">
+		<DefineConstants>$(DefineConstants);DEV_AUTOMATION</DefineConstants>
+	</PropertyGroup>
+	<ItemGroup Condition="'$(EnableDevAutomation)' == 'true'">
+		<ProjectReference Include="..\..\..\..\src\LauncherKit.DevAutomation\LauncherKit.DevAutomation.csproj"/>
+	</ItemGroup>
+
+	<!--
+		Third-party assemblies of the kit whose remaining trim/AOT warnings were checked; each reports a single
+		IL2104/IL3053 (in NoWarn). Recheck them on package updates.
+		- IniParser: IniParserConfiguration.Equals/GetHashCode are kept as object overrides; nothing calls them.
+	-->
+	<Target Name="CollapseCheckedThirdPartyTrimWarnings" AfterTargets="_PrepareTrimConfiguration">
+		<ItemGroup>
+			<ResolvedFileToPublish Condition="'%(ResolvedFileToPublish.Extension)' == '.dll' and '%(ResolvedFileToPublish.Filename)' == 'IniParser'">
+				<TrimmerSingleWarn>true</TrimmerSingleWarn>
+			</ResolvedFileToPublish>
+		</ItemGroup>
+	</Target>
+</Project>

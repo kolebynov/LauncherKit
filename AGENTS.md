@@ -38,6 +38,7 @@ Documentation lives in the `docs/` directory (e.g. [dev automation](docs/dev-aut
 - `src/LauncherKit.Build` provides reusable NUKE components targeting `net10.0`; consumers supply project/executable names and their product props, and own release policy.
 - `fomod-installer/` has its own build configuration and fixture corpus. `workers/analytics/` owns reusable Worker code and independent test configuration, not consumer routes/datasets.
 - `scripts/launcher_dev.py`, `launcher_client.py` and `feed_editor_dev.py` are standard-library Python development tools; consumer flow scripts and mock archives stay outside the kit.
+- `samples/SampleLauncher` is the one in-repository exception to consumer ownership: a minimal launcher with its own identity, views, mock generator and flow script ([sample launcher](docs/sample-launcher.md)). It stays outside `LauncherKit.sln`; kit code, tests and the solution build never reference it or its generated `scripts/Mock`/`scripts/Sandbox` files. Its scope is the first setup, the feed on Home and one download. Install, update, game launch and release flows remain consumer-tested.
 
 ## Required consumer identity
 
