@@ -6,8 +6,8 @@ namespace LauncherKit.Desktop.SingleInstance;
 
 /// <summary>
 /// Drains the <see cref="LaunchRequestQueue"/> on the UI thread once started (when the main window is shown): each
-/// message, including the kit's <see cref="BringToFrontMessage"/>, goes to the <see cref="LauncherMessageProcessor"/> of the
-/// scope current at that moment, so scope replacements (made in one UI turn) never see a disposed scope. Stops when disposed.
+/// message goes to the <see cref="LauncherMessageProcessor"/> of the scope current at that moment, so scope replacements
+/// (made in one UI turn) never see a disposed scope. Stops when disposed.
 /// </summary>
 internal sealed class LaunchRequestPump(LaunchRequestQueue queue, IUiDispatcher dispatcher, LauncherKitDesktopOptions options)
 	: IDisposable

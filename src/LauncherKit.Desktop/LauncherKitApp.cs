@@ -38,7 +38,7 @@ public abstract class LauncherKitApp : Application
 
 	/// <summary>
 	/// The owner's launch requests, created before the services so requests admitted during startup wait; the services
-	/// register it as their singleton; without it (designer) AddLauncherKitDesktop registers an empty one.
+	/// register it as their singleton; without it (designer) they register an empty one.
 	/// </summary>
 	internal LaunchRequestQueue? OwnerLaunchRequests { get; init; }
 
@@ -169,7 +169,7 @@ public abstract class LauncherKitApp : Application
 		}
 	}
 
-	// Requests admitted before the window opens wait, so the first one activates a shown window and handlers can rely on it.
+	// Requests admitted before the window opens wait until it is shown, so handlers can rely on the window.
 	// Disposing the services stops the pump.
 	private void StartLaunchRequests(Window mainWindow)
 	{
@@ -192,8 +192,11 @@ public abstract class LauncherKitApp : Application
 		appBuilder.Configuration.AddInMemoryCollection(GetInMemoryConfiguration());
 		appBuilder.Configuration.AddLauncherKitConfiguration(Directory.GetCurrentDirectory(), appBuilder.Product);
 		services.AddLauncherKitLocalization(GetType().Assembly);
-		// The owner's queue outlives the services: the program disposes it only after its listener has stopped.
+		// The owner's queue outlives the services: the program disposes it only after its listener has stopped. Without an
+		// owner (designer) the services create and dispose an empty one.
 		if (OwnerLaunchRequests is { } ownerLaunchRequests) services.AddSingleton(ownerLaunchRequests);
+		else services.AddSingleton<LaunchRequestQueue>();
+		services.AddSingleton<LaunchRequestPump>();
 		services.AddSingleton(new LauncherKitDesktopOptions
 		{
 			GetMainWindow = () => (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow,

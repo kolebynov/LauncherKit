@@ -17,9 +17,9 @@ public sealed class LauncherMessageProcessorTests
 
 		// Act
 		sut.Process("unknown", Payload("a"));
-		sut.Process(OpenFileHandler.Kind, LaunchRequest.Message("x", 1, TestMessagesJsonContext.Default.Int32).Payload);
-		sut.Process(OpenFileHandler.Kind, Payload("fail"));
-		sut.Process(OpenFileHandler.Kind, Payload("b"));
+		sut.Process(OpenFileMessage.Kind, LaunchRequest.Message("x", 1, TestMessagesJsonContext.Default.Int32).Payload);
+		sut.Process(OpenFileMessage.Kind, Payload("fail"));
+		sut.Process(OpenFileMessage.Kind, Payload("b"));
 
 		// Assert
 		Assert.That(provider.GetRequiredService<HandledMessages>().Items.Select(i => i.Path), Is.EqualTo(new[] { "b" }));
@@ -34,7 +34,7 @@ public sealed class LauncherMessageProcessorTests
 		var sut = scope.ServiceProvider.GetRequiredService<LauncherMessageProcessor>();
 
 		// Act
-		sut.Process(OpenFileHandler.Kind, Payload("a"));
+		sut.Process(OpenFileMessage.Kind, Payload("a"));
 
 		// Assert
 		Assert.That(provider.GetRequiredService<HandledMessages>().Items.Single().Scope,
@@ -46,24 +46,22 @@ public sealed class LauncherMessageProcessorTests
 	{
 		// Arrange
 		var services = new ServiceCollection();
-		services.AddLauncherMessageHandler<OpenFileMessage, OpenFileHandler>(OpenFileHandler.Kind,
-			TestMessagesJsonContext.Default.OpenFileMessage);
+		services.AddLauncherMessageHandler<OpenFileMessage, OpenFileHandler>(TestMessagesJsonContext.Default.OpenFileMessage);
 
 		// Act & Assert
-		Assert.That(() => services.AddLauncherMessageHandler<OpenFileMessage, OpenFileHandler>(OpenFileHandler.Kind,
+		Assert.That(() => services.AddLauncherMessageHandler<OpenFileMessage, OpenFileHandler>(
 			TestMessagesJsonContext.Default.OpenFileMessage), Throws.ArgumentException);
 	}
 
 	[Test]
-	public void AddLauncherMessageHandler_KitBringToFrontKind_Throws()
+	public void AddLauncherMessageHandler_BlankKind_Throws()
 	{
 		// Arrange
 		var services = new ServiceCollection();
-		services.AddLauncherKitDesktop();
 
 		// Act & Assert
-		Assert.That(() => services.AddLauncherMessageHandler<OpenFileMessage, OpenFileHandler>(BringToFrontMessage.Kind,
-			TestMessagesJsonContext.Default.OpenFileMessage), Throws.ArgumentException);
+		Assert.That(() => services.AddLauncherMessageHandler<BlankKindMessage, BlankKindHandler>(
+			TestMessagesJsonContext.Default.BlankKindMessage), Throws.ArgumentException);
 	}
 
 	[Test]
@@ -77,22 +75,21 @@ public sealed class LauncherMessageProcessorTests
 
 		// Act
 		sut.Process("secret-kind", Payload("a"));
-		sut.Process(OpenFileHandler.Kind, Payload("fail-secret-path"));
+		sut.Process(OpenFileMessage.Kind, Payload("fail-secret-path"));
 
 		// Assert
 		Assert.Multiple(() =>
 		{
 			Assert.That(logs.Entries, Has.Count.EqualTo(2));
 			Assert.That(logs.Entries, Has.None.Contains("secret"));
-			Assert.That(logs.Entries[1], Does.Contain(OpenFileHandler.Kind).And.Contain(nameof(InvalidOperationException)));
+			Assert.That(logs.Entries[1], Does.Contain(OpenFileMessage.Kind).And.Contain(nameof(InvalidOperationException)));
 		});
 	}
 
-	internal static ServiceProvider CreateServices(ILoggerProvider? logs = null, LauncherKitDesktopOptions? options = null)
+	internal static ServiceProvider CreateServices(ILoggerProvider? logs = null)
 	{
 		var services = new ServiceCollection();
 		services.AddLauncherKitDesktop();
-		if (options is not null) services.AddSingleton(options);
 		services.AddLogging(builder =>
 		{
 			builder.ClearProviders();
@@ -100,11 +97,10 @@ public sealed class LauncherMessageProcessorTests
 		});
 		services.AddSingleton<HandledMessages>();
 		services.AddScoped<ScopeMarker>();
-		services.AddLauncherMessageHandler<OpenFileMessage, OpenFileHandler>(OpenFileHandler.Kind,
-			TestMessagesJsonContext.Default.OpenFileMessage);
+		services.AddLauncherMessageHandler<OpenFileMessage, OpenFileHandler>(TestMessagesJsonContext.Default.OpenFileMessage);
 		return services.BuildServiceProvider();
 	}
 
 	internal static System.Text.Json.JsonElement Payload(string path) =>
-		LaunchRequest.Message(OpenFileHandler.Kind, new OpenFileMessage(path), TestMessagesJsonContext.Default.OpenFileMessage).Payload;
+		LaunchRequest.Message(OpenFileMessage.Kind, new OpenFileMessage(path), TestMessagesJsonContext.Default.OpenFileMessage).Payload;
 }

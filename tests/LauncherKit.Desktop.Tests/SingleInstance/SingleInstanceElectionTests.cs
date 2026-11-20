@@ -51,13 +51,13 @@ public sealed class SingleInstanceElectionTests
 		Assert.That(disconnected.Wait(DeliveryTimeout), Is.True, "The stalled connection was not disconnected.");
 
 		// Act
-		var result = RunOnOtherThread(names, null);
+		var result = RunOnOtherThread(names, SendOpenFile);
 
 		// Assert
 		Assert.Multiple(() =>
 		{
 			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
-			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { BringToFrontMessage.Kind }));
+			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { OpenFileMessage.Kind }));
 		});
 		owner.ReleaseMutex();
 	}
@@ -80,7 +80,7 @@ public sealed class SingleInstanceElectionTests
 					using var previousListener = new SingleInstanceListener(names.Pipe, previousQueue,
 						() => Timeout.InfiniteTimeSpan, null);
 					lingering = Connect(names);
-					var json = SingleInstanceProtocol.Serialize(LaunchRequest.Message(OpenFileHandler.Kind,
+					var json = SingleInstanceProtocol.Serialize(LaunchRequest.Message(OpenFileMessage.Kind,
 						new OpenFileMessage("a.7z"), TestMessagesJsonContext.Default.OpenFileMessage));
 					lingering.Write(Length(json.Length));
 					lingering.Write(json);
@@ -96,13 +96,13 @@ public sealed class SingleInstanceElectionTests
 			using var listener = new SingleInstanceListener(names.Pipe, queue);
 
 			// Act
-			var result = RunOnOtherThread(names, null);
+			var result = RunOnOtherThread(names, SendOpenFile);
 
 			// Assert
 			Assert.Multiple(() =>
 			{
 				Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
-				Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { BringToFrontMessage.Kind }));
+				Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { OpenFileMessage.Kind }));
 			});
 			owner.ReleaseMutex();
 		}
@@ -132,7 +132,11 @@ public sealed class SingleInstanceElectionTests
 			try
 			{
 				callingThread = Environment.CurrentManagedThreadId;
-				return SingleInstanceElection.Run(names, _ => callbackThread = Environment.CurrentManagedThreadId);
+				return SingleInstanceElection.Run(names, sender =>
+				{
+					callbackThread = Environment.CurrentManagedThreadId;
+					SendOpenFile(sender);
+				});
 			}
 			finally
 			{
@@ -146,13 +150,13 @@ public sealed class SingleInstanceElectionTests
 			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
 			Assert.That(context.Posted, Is.False);
 			Assert.That(callbackThread, Is.EqualTo(callingThread));
-			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { BringToFrontMessage.Kind }));
+			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { OpenFileMessage.Kind }));
 		});
 		owner.ReleaseMutex();
 	}
 
 	[Test]
-	public void Run_OwnerListening_DeliversActivationThenMessagesInOrder()
+	public void Run_OwnerListening_DeliversMessagesInOrder()
 	{
 		// Arrange
 		var names = UniqueNames();
@@ -163,17 +167,40 @@ public sealed class SingleInstanceElectionTests
 		// Act
 		var result = RunOnOtherThread(names, sender =>
 		{
-			sender.Send(OpenFileHandler.Kind, new OpenFileMessage("a.7z"), TestMessagesJsonContext.Default.OpenFileMessage);
-			sender.Send(OpenFileHandler.Kind, new OpenFileMessage("b.7z"), TestMessagesJsonContext.Default.OpenFileMessage);
+			sender.Send(new OpenFileMessage("a.7z"), TestMessagesJsonContext.Default.OpenFileMessage);
+			sender.Send(new OpenFileMessage("b.7z"), TestMessagesJsonContext.Default.OpenFileMessage);
 		});
-		var requests = Dequeue(queue, 3);
+		var requests = Dequeue(queue, 2);
 
 		// Assert
 		Assert.Multiple(() =>
 		{
 			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
-			Assert.That(requests.Select(r => r.Kind), Is.EqualTo(new[] { BringToFrontMessage.Kind, OpenFileHandler.Kind, OpenFileHandler.Kind }));
-			Assert.That(requests.Skip(1).Select(r => r.Payload.GetProperty("Path").GetString()), Is.EqualTo(new[] { "a.7z", "b.7z" }));
+			Assert.That(Kinds(requests), Is.EqualTo(new[] { OpenFileMessage.Kind, OpenFileMessage.Kind }));
+			Assert.That(requests.Select(r => r.Payload.GetProperty("Path").GetString()), Is.EqualTo(new[] { "a.7z", "b.7z" }));
+		});
+		owner.ReleaseMutex();
+	}
+
+	[Test]
+	public void Run_NoCallback_SendsNothingAndReturnsSecondary()
+	{
+		// Arrange
+		var names = UniqueNames();
+		using var owner = Own(names);
+		using var queue = new LaunchRequestQueue();
+		using var listener = new SingleInstanceListener(names.Pipe, queue);
+
+		// Act
+		var result = RunOnOtherThread(names, null);
+		// A later relaunch's message arrives first: the one without a callback sent nothing.
+		RunOnOtherThread(names, SendOpenFile);
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
+			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { OpenFileMessage.Kind }));
 		});
 		owner.ReleaseMutex();
 	}
@@ -187,7 +214,11 @@ public sealed class SingleInstanceElectionTests
 		var sent = false;
 
 		// Act
-		var result = RunOnOtherThread(names, _ => sent = true);
+		var result = RunOnOtherThread(names, sender =>
+		{
+			sender.Send(new OpenFileMessage("a.7z"), TestMessagesJsonContext.Default.OpenFileMessage);
+			sent = true;
+		});
 
 		// Assert
 		Assert.Multiple(() =>
@@ -214,13 +245,13 @@ public sealed class SingleInstanceElectionTests
 		}
 
 		// Act
-		var result = RunOnOtherThread(names, null);
+		var result = RunOnOtherThread(names, SendOpenFile);
 
 		// Assert
 		Assert.Multiple(() =>
 		{
 			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
-			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { BringToFrontMessage.Kind }));
+			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { OpenFileMessage.Kind }));
 		});
 		owner.ReleaseMutex();
 	}
@@ -237,13 +268,13 @@ public sealed class SingleInstanceElectionTests
 			client.Write(Length(SingleInstanceProtocol.MaxRequestBytes + 1));
 
 		// Act
-		var result = RunOnOtherThread(names, null);
+		var result = RunOnOtherThread(names, SendOpenFile);
 
 		// Assert
 		Assert.Multiple(() =>
 		{
 			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
-			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { BringToFrontMessage.Kind }));
+			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { OpenFileMessage.Kind }));
 		});
 		owner.ReleaseMutex();
 	}
@@ -261,13 +292,13 @@ public sealed class SingleInstanceElectionTests
 		}
 
 		// Act
-		var result = RunOnOtherThread(names, null);
+		var result = RunOnOtherThread(names, SendOpenFile);
 
 		// Assert
 		Assert.Multiple(() =>
 		{
 			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
-			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { BringToFrontMessage.Kind }));
+			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { OpenFileMessage.Kind }));
 		});
 		owner.ReleaseMutex();
 	}
@@ -283,7 +314,7 @@ public sealed class SingleInstanceElectionTests
 		using var listener = new SingleInstanceListener(names.Pipe, queue);
 
 		// Act
-		var result = RunOnOtherThread(names, null);
+		var result = RunOnOtherThread(names, SendOpenFile);
 
 		// Assert
 		Assert.Multiple(() =>
@@ -295,7 +326,7 @@ public sealed class SingleInstanceElectionTests
 	}
 
 	[Test]
-	public void Run_CallbackThrows_DeliversBringToFrontAndSentMessagesAndReturnsSecondary()
+	public void Run_CallbackThrows_DeliversSentMessagesAndReturnsSecondary()
 	{
 		// Arrange
 		var names = UniqueNames();
@@ -306,7 +337,7 @@ public sealed class SingleInstanceElectionTests
 		// Act
 		var result = RunOnOtherThread(names, sender =>
 		{
-			sender.Send(OpenFileHandler.Kind, new OpenFileMessage("a.7z"), TestMessagesJsonContext.Default.OpenFileMessage);
+			SendOpenFile(sender);
 			throw new InvalidOperationException("Consumer failure.");
 		});
 
@@ -314,7 +345,7 @@ public sealed class SingleInstanceElectionTests
 		Assert.Multiple(() =>
 		{
 			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
-			Assert.That(Kinds(Dequeue(queue, 2)), Is.EqualTo(new[] { BringToFrontMessage.Kind, OpenFileHandler.Kind }));
+			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { OpenFileMessage.Kind }));
 		});
 		owner.ReleaseMutex();
 	}
@@ -331,8 +362,8 @@ public sealed class SingleInstanceElectionTests
 		// Act
 		var result = RunOnOtherThread(names, sender =>
 		{
-			sender.Send(OpenFileHandler.Kind, new OpenFileMessage("a.7z"), TestMessagesJsonContext.Default.OpenFileMessage);
-			sender.Send(OpenFileHandler.Kind, new OpenFileMessage(new string('a', SingleInstanceProtocol.MaxRequestBytes)),
+			SendOpenFile(sender);
+			sender.Send(new OpenFileMessage(new string('a', SingleInstanceProtocol.MaxRequestBytes)),
 				TestMessagesJsonContext.Default.OpenFileMessage);
 		});
 
@@ -340,12 +371,15 @@ public sealed class SingleInstanceElectionTests
 		Assert.Multiple(() =>
 		{
 			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
-			var requests = Dequeue(queue, 2);
-			Assert.That(Kinds(requests), Is.EqualTo(new[] { BringToFrontMessage.Kind, OpenFileHandler.Kind }));
-			Assert.That(requests[1].Payload.GetProperty("Path").GetString(), Is.EqualTo("a.7z"));
+			var requests = Dequeue(queue, 1);
+			Assert.That(Kinds(requests), Is.EqualTo(new[] { OpenFileMessage.Kind }));
+			Assert.That(requests[0].Payload.GetProperty("Path").GetString(), Is.EqualTo("a.7z"));
 		});
 		owner.ReleaseMutex();
 	}
+
+	private static void SendOpenFile(ILauncherMessageSender sender) =>
+		sender.Send(new OpenFileMessage("a.7z"), TestMessagesJsonContext.Default.OpenFileMessage);
 
 	private static string[] Kinds(IEnumerable<LaunchRequest> requests) => [.. requests.Select(r => r.Kind)];
 

@@ -9,10 +9,10 @@ public static class LauncherKitProgram
 {
 	/// <summary>
 	/// Runs the launcher with the classic desktop lifetime unless a launcher already runs for the same product
-	/// (<see cref="LauncherProductOptions.RegistryKey"/>), Windows user and session. Then this launch asks it to activate its
-	/// main window, runs <paramref name="onSecondLaunch"/> with this launch's arguments and working directory to send any
-	/// messages to the handlers registered with
-	/// <see cref="LauncherKitDesktopServiceCollectionExtensions.AddLauncherMessageHandler{TMessage, THandler}"/>, and exits.
+	/// (<see cref="LauncherProductOptions.RegistryKey"/>), Windows user and session. Then this launch runs
+	/// <paramref name="onSecondLaunch"/> with its arguments and working directory to send any messages to the handlers
+	/// registered with <see cref="LauncherKitDesktopServiceCollectionExtensions.AddLauncherMessageHandler{TMessage, THandler}"/>,
+	/// and exits. Nothing else is sent: activating the running launcher's window is up to such a message.
 	/// Delivery is one-way and best effort. The first launch ignores <paramref name="onSecondLaunch"/>: the consumer handles
 	/// its own arguments at startup. The owner's console output goes to <c>console.log</c> in the working directory, which
 	/// the log collector includes; a failure that escapes the application is written there and rethrown.

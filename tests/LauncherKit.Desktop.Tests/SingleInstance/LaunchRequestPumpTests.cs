@@ -36,34 +36,6 @@ public sealed class LaunchRequestPumpTests
 	}
 
 	[Test]
-	public void Start_BringToFrontMessage_RunsKitHandlerInCurrentScope()
-	{
-		// Arrange
-		var mainWindowRequests = 0;
-		IServiceScope? scope = null;
-		var options = CreateOptions(() => scope!.ServiceProvider, () =>
-		{
-			mainWindowRequests++;
-			return null;
-		});
-		using var provider = LauncherMessageProcessorTests.CreateServices(options: options);
-		using var current = provider.CreateScope();
-		scope = current;
-		using var queue = new LaunchRequestQueue();
-		var dispatcher = new QueuedDispatcher();
-		using var sut = new LaunchRequestPump(queue, dispatcher, options);
-		queue.TryEnqueue(LaunchRequest.Message(BringToFrontMessage.Kind, BringToFrontMessage.Instance,
-			SingleInstanceJsonContext.Default.BringToFrontMessage));
-
-		// Act
-		sut.Start();
-		dispatcher.Drain();
-
-		// Assert
-		Assert.That(mainWindowRequests, Is.EqualTo(1));
-	}
-
-	[Test]
 	public void Dispose_PendingDrain_LeavesRequestsUnhandled()
 	{
 		// Arrange
@@ -83,13 +55,12 @@ public sealed class LaunchRequestPumpTests
 		Assert.That(provider.GetRequiredService<HandledMessages>().Items, Is.Empty);
 	}
 
-	private static LaunchRequest Request(string path) => LaunchRequest.Message(OpenFileHandler.Kind,
+	private static LaunchRequest Request(string path) => LaunchRequest.Message(OpenFileMessage.Kind,
 		new OpenFileMessage(path), TestMessagesJsonContext.Default.OpenFileMessage);
 
-	private static LauncherKitDesktopOptions CreateOptions(Func<IServiceProvider> getCurrentServices,
-		Func<Avalonia.Controls.Window?>? getMainWindow = null) => new()
+	private static LauncherKitDesktopOptions CreateOptions(Func<IServiceProvider> getCurrentServices) => new()
 	{
-		GetMainWindow = getMainWindow ?? (() => null),
+		GetMainWindow = () => null,
 		GetLifetime = () => throw new AssertionException("Unexpected lifetime use."),
 		GetCurrentServices = getCurrentServices,
 		RefreshMainWindow = () => throw new AssertionException("Unexpected refresh."),

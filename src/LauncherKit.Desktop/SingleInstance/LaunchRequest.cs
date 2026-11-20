@@ -5,8 +5,8 @@ using System.Text.Json.Serialization.Metadata;
 namespace LauncherKit.Desktop.SingleInstance;
 
 /// <summary>
-/// One message a relaunch sends to the owner: its <see cref="Kind"/> selects the registered handler, which deserializes
-/// <see cref="Payload"/>. Bringing the launcher to the front is the kit's own <see cref="BringToFrontMessage"/>.
+/// One message a relaunch sends to the owner: its <see cref="Kind"/> (the message type's <see cref="ILauncherMessage.Kind"/>)
+/// selects the registered handler, which deserializes <see cref="Payload"/>.
 /// </summary>
 internal sealed record LaunchRequest(int Version, string Kind, JsonElement Payload)
 {
@@ -22,7 +22,6 @@ internal sealed record LaunchRequest(int Version, string Kind, JsonElement Paylo
 }
 
 [JsonSerializable(typeof(LaunchRequest))]
-[JsonSerializable(typeof(BringToFrontMessage))]
 [JsonSourceGenerationOptions(RespectRequiredConstructorParameters = true)]
 internal sealed partial class SingleInstanceJsonContext : JsonSerializerContext
 {

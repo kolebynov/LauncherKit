@@ -1,5 +1,4 @@
 using System.IO.Pipes;
-using LauncherKit.Desktop.Interop;
 using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Desktop.SingleInstance;
@@ -23,7 +22,7 @@ internal static class SingleInstanceElection
 
 	/// <summary>
 	/// Must run on the thread that later releases an owned mutex. Only when another process owns the launcher does it send
-	/// the <see cref="BringToFrontMessage"/> followed by the messages <paramref name="sendMessages"/> sends.
+	/// the messages <paramref name="sendMessages"/> sends; without it nothing is sent.
 	/// </summary>
 	public static Result Run(SingleInstanceNames names, Action<ILauncherMessageSender>? sendMessages)
 	{
@@ -37,11 +36,11 @@ internal static class SingleInstanceElection
 				return new Result.Owner(owned);
 			}
 
+			if (sendMessages is null) return Result.Secondary.Instance;
 			var sender = new LauncherMessageSender();
-			sender.Send(BringToFrontMessage.Kind, BringToFrontMessage.Instance, SingleInstanceJsonContext.Default.BringToFrontMessage);
 			try
 			{
-				sendMessages?.Invoke(sender);
+				sendMessages(sender);
 			}
 			// Consumer code (or an oversized message): what it sent so far still goes, and the relaunch still exits normally.
 			catch (Exception)
@@ -49,7 +48,7 @@ internal static class SingleInstanceElection
 			}
 
 			// On the thread pool, so blocking here cannot deadlock under the caller's single-threaded context.
-			Task.Run(() => Send(names.Pipe, sender.Frames)).GetAwaiter().GetResult();
+			if (sender.Frames.Count > 0) Task.Run(() => Send(names.Pipe, sender.Frames)).GetAwaiter().GetResult();
 			return Result.Secondary.Instance;
 		}
 		finally
@@ -82,7 +81,6 @@ internal static class SingleInstanceElection
 			await using var client = new NamedPipeClientStream(".", pipeName, PipeDirection.Out,
 				PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
 			await client.ConnectAsync(ConnectTimeoutMilliseconds).ConfigureAwait(false);
-			SingleInstanceNativeMethods.AllowPipeServerForeground(client.SafePipeHandle);
 			using var timeout = new CancellationTokenSource(SingleInstanceProtocol.ExchangeTimeout);
 			foreach (var frame in frames) await SingleInstanceProtocol.WriteFrame(client, frame, timeout.Token).ConfigureAwait(false);
 			await client.FlushAsync(timeout.Token).ConfigureAwait(false);

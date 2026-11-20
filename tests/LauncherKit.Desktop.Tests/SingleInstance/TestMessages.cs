@@ -4,9 +4,23 @@ using LauncherKit.Desktop.SingleInstance;
 
 namespace LauncherKit.Desktop.Tests.SingleInstance;
 
-internal sealed record OpenFileMessage(string Path);
+internal sealed record OpenFileMessage(string Path) : ILauncherMessage
+{
+	public static string Kind => "openFile";
+}
+
+internal sealed record BlankKindMessage : ILauncherMessage
+{
+	public static string Kind => " ";
+}
+
+internal sealed class BlankKindHandler : ILauncherMessageHandler<BlankKindMessage>
+{
+	public void Handle(BlankKindMessage message) => throw new AssertionException("Unexpected message.");
+}
 
 [JsonSerializable(typeof(OpenFileMessage))]
+[JsonSerializable(typeof(BlankKindMessage))]
 [JsonSerializable(typeof(int))]
 internal sealed partial class TestMessagesJsonContext : JsonSerializerContext;
 
@@ -21,8 +35,6 @@ internal sealed class HandledMessages
 /// <summary>Records each message with its scope; a path starting with <c>fail</c> throws with the path in its message.</summary>
 internal sealed class OpenFileHandler(HandledMessages handled, ScopeMarker scope) : ILauncherMessageHandler<OpenFileMessage>
 {
-	public const string Kind = "openFile";
-
 	public void Handle(OpenFileMessage message)
 	{
 		if (message.Path.StartsWith("fail", StringComparison.Ordinal))

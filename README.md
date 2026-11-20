@@ -284,20 +284,25 @@ The kit attaches its `Closing` handler to the main window. Application/OS shutdo
 
 #### Single instance and launch messages
 
-One launcher runs per product (`LauncherProductOptions.RegistryKey`, case-insensitive and normalized like the registry: a trailing or doubled `\` does not matter, spaces do), Windows user and interactive session, whether installed, copied, debugged or sandboxed. `LauncherKitProgram.Run` decides before anything else (no `console.log`, logging or services): the launch that creates and owns a session-local, current-user mutex runs; any later launch sends the running launcher one-way messages over a current-user-only named pipe and exits with `0`. Nothing answers them: when the running launcher cannot be reached (it is exiting, runs at another elevation level, or stays busy past a few seconds) the later launch still exits with `0` and never starts a second launcher. Every later launch first sends the kit's bring-to-front message (kind `LauncherKit.BringToFront`), handled like any other message by a handler the kit registers in `AddLauncherKitDesktop`: once the window is shown, the running launcher restores its main window if minimized and activates it.
+One launcher runs per product (`LauncherProductOptions.RegistryKey`, case-insensitive and normalized like the registry: a trailing or doubled `\` does not matter, spaces do), Windows user and interactive session, whether installed, copied, debugged or sandboxed. `LauncherKitProgram.Run` decides before anything else (no `console.log`, logging or services): the launch that creates and owns a session-local, current-user mutex runs; any later launch sends the running launcher one-way messages over a current-user-only named pipe and exits with `0`. Nothing answers them: when the running launcher cannot be reached (it is exiting, runs at another elevation level, or stays busy past a few seconds) the later launch still exits with `0` and never starts a second launcher. The kit sends nothing of its own and has no built-in activation: a later launch without messages just exits, and a consumer that wants the running launcher to come to the front sends its own message whose handler activates the main window (Windows may refuse to give it the foreground unless the later launch first allows it, e.g. with `AllowSetForegroundWindow`).
 
-To pass data, such as a file to open, give `Run` an `onSecondLaunch` callback. It runs only in a later launch, with that launch's arguments and working directory (`LaunchContext`), and can send any number of messages, serialized with the consumer's source-generated `JsonTypeInfo` (64 KiB each at most; `Send` throws for a larger one), after the bring-to-front message. If the callback throws, the messages sent before still go and the launch still exits with `0`. The first launch ignores it, so handle its own arguments in your startup code. Register one scoped handler per message kind (registering a kind twice, including the kit's, throws):
+To pass data, such as a file to open, give `Run` an `onSecondLaunch` callback. It runs only in a later launch, with that launch's arguments and working directory (`LaunchContext`), and can send any number of messages, serialized with the consumer's source-generated `JsonTypeInfo` (64 KiB each at most; `Send` throws for a larger one). A message type implements `ILauncherMessage`, whose static `Kind` names it on the wire and selects its handler. If the callback throws, the messages sent before still go and the launch still exits with `0`. The first launch ignores it, so handle its own arguments in your startup code. Register one scoped handler per message kind (a blank kind or registering a kind twice throws):
 
 ```csharp
+public sealed record OpenFile(string Path) : ILauncherMessage
+{
+	public static string Kind => "MyLauncher.OpenFile";
+}
+
 public static int Main(string[] args) => LauncherKitProgram.Run<App>(args, ProductIdentity.CreateOptions(),
 	(launch, sender) =>
 	{
 		foreach (var path in launch.Args)
-			sender.Send("openFile", new OpenFile(Path.GetFullPath(path, launch.WorkingDirectory)), MyJsonContext.Default.OpenFile);
+			sender.Send(new OpenFile(Path.GetFullPath(path, launch.WorkingDirectory)), MyJsonContext.Default.OpenFile);
 	});
 
 // In ConfigureServices; OpenFileHandler implements ILauncherMessageHandler<OpenFile>.
-services.AddLauncherMessageHandler<OpenFile, OpenFileHandler>("openFile", MyJsonContext.Default.OpenFile);
+services.AddLauncherMessageHandler<OpenFile, OpenFileHandler>(MyJsonContext.Default.OpenFile);
 ```
 
 Handlers run on the UI thread and should only start the work (e.g. enqueue a task). Invalid frames, unknown kinds, invalid payloads and failing handlers are logged and skipped. The kit registers no file association.

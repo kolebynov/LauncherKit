@@ -64,12 +64,7 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 		services.TryAddTransient<ActivateBetaCodeViewModel>();
 		services.TryAddScoped<DiscordIntegrationViewModel>();
 		services.TryAddScoped<ModUpdateNotifications>();
-		// LauncherKitApp registers the owner's queue first; this one serves the designer and other hosts.
-		services.TryAddSingleton<LaunchRequestQueue>();
-		services.TryAddSingleton<LaunchRequestPump>();
 		services.TryAddScoped<LauncherMessageProcessor>();
-		services.AddLauncherMessageHandler<BringToFrontMessage, BringToFrontMessageHandler>(BringToFrontMessage.Kind,
-			SingleInstanceJsonContext.Default.BringToFrontMessage);
 		services.AddSingleton<IAppCloseHandler, NavigationGuardCloseHandler>();
 		services.AddScoped<IAppCloseHandler, PendingTasksCloseHandler>();
 		services.TryAddSingleton<MainWindowStateHandler>();
@@ -104,19 +99,22 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 	}
 
 	/// <summary>
-	/// Has the scoped <typeparamref name="THandler"/> handle the messages of
-	/// <paramref name="kind"/>, deserialized with the consumer's source-generated <paramref name="typeInfo"/>. Each kind has
-	/// one handler; relaunches send them through <see cref="ILauncherMessageSender"/>; messages of unregistered kinds are logged and dropped.
+	/// Has the scoped <typeparamref name="THandler"/> handle the messages of <typeparamref name="TMessage"/>'s
+	/// <see cref="ILauncherMessage.Kind"/>, deserialized with the consumer's source-generated <paramref name="typeInfo"/>. Each
+	/// kind has one handler; relaunches send them through <see cref="ILauncherMessageSender"/>; messages of unregistered kinds
+	/// are logged and dropped.
 	/// </summary>
 	public static IServiceCollection AddLauncherMessageHandler<TMessage,
 		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services,
-		string kind, JsonTypeInfo<TMessage> typeInfo) where THandler : class, ILauncherMessageHandler<TMessage>
+		JsonTypeInfo<TMessage> typeInfo) where TMessage : ILauncherMessage where THandler : class, ILauncherMessageHandler<TMessage>
 	{
-		ArgumentException.ThrowIfNullOrWhiteSpace(kind);
+		var kind = TMessage.Kind;
+		if (string.IsNullOrWhiteSpace(kind))
+			throw new ArgumentException($"The launcher message kind of {typeof(TMessage).Name} is blank.", nameof(TMessage));
 		ArgumentNullException.ThrowIfNull(typeInfo);
 		if (services.Any(d => !d.IsKeyedService && d.ServiceType == typeof(LauncherMessageRegistration)
 			&& d.ImplementationInstance is LauncherMessageRegistration registration && registration.Kind == kind))
-			throw new ArgumentException($"A launcher message handler for the kind '{kind}' is already registered.", nameof(kind));
+			throw new ArgumentException($"A launcher message handler for the kind '{kind}' is already registered.", nameof(TMessage));
 		services.TryAddScoped<THandler>();
 		services.AddSingleton(new LauncherMessageRegistration(kind, (sp, payload) => sp.GetRequiredService<THandler>()
 			.Handle(payload.Deserialize(typeInfo) ?? throw new JsonException($"The '{kind}' launcher message is null."))));

@@ -13,7 +13,7 @@ public interface ILauncherMessageSender
 	/// Queues <paramref name="value"/>, serialized with the consumer's source-generated <paramref name="typeInfo"/>, after
 	/// the previous messages; throws <see cref="ArgumentException"/> when it exceeds the 64 KiB frame limit.
 	/// </summary>
-	void Send<TMessage>(string kind, TMessage value, JsonTypeInfo<TMessage> typeInfo);
+	void Send<TMessage>(TMessage value, JsonTypeInfo<TMessage> typeInfo) where TMessage : ILauncherMessage;
 }
 
 internal sealed class LauncherMessageSender : ILauncherMessageSender
@@ -23,6 +23,6 @@ internal sealed class LauncherMessageSender : ILauncherMessageSender
 	/// <summary>The sent messages in order.</summary>
 	public IReadOnlyList<byte[]> Frames => _frames;
 
-	public void Send<TMessage>(string kind, TMessage value, JsonTypeInfo<TMessage> typeInfo) =>
-		_frames.Add(SingleInstanceProtocol.Serialize(LaunchRequest.Message(kind, value, typeInfo)));
+	public void Send<TMessage>(TMessage value, JsonTypeInfo<TMessage> typeInfo) where TMessage : ILauncherMessage =>
+		_frames.Add(SingleInstanceProtocol.Serialize(LaunchRequest.Message(TMessage.Kind, value, typeInfo)));
 }
