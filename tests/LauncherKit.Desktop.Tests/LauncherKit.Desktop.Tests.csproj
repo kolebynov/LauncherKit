@@ -6,4 +6,8 @@
 		<PackageReference Include="Avalonia.Headless"/>
 		<PackageReference Include="Avalonia.Headless.NUnit"/>
 	</ItemGroup>
+	<ItemGroup>
+		<!-- Required for Moq/Castle to proxy interfaces closed over internal test types. -->
+		<InternalsVisibleTo Include="DynamicProxyGenAssembly2"/>
+	</ItemGroup>
 </Project>

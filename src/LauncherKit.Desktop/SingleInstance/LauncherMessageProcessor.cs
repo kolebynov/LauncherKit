@@ -2,13 +2,13 @@ using Microsoft.Extensions.Logging;
 
 namespace LauncherKit.Desktop.SingleInstance;
 
-/// <summary>Scoped dispatcher of consumer messages to the handlers registered for their kind.</summary>
+/// <inheritdoc cref="ILauncherMessageProcessor"/>
 internal sealed class LauncherMessageProcessor(
 	IServiceProvider services,
 	IEnumerable<LauncherMessageRegistration> registrations,
-	ILogger<LauncherMessageProcessor> logger)
+	ILogger<LauncherMessageProcessor> logger) : ILauncherMessageProcessor
 {
-	/// <summary>Runs the registered handler; an unknown kind, invalid payload or failing handler is logged and dropped.</summary>
+	/// <inheritdoc/>
 	public void Process(string kind, string payload)
 	{
 		var registration = registrations.FirstOrDefault(r => r.Kind == kind);

@@ -27,31 +27,15 @@ internal sealed class BlankKindHandler : ILauncherMessageHandler<BlankKindMessag
 [JsonSerializable(typeof(BlankKindMessage))]
 internal sealed partial class TestMessagesJsonContext : JsonSerializerContext;
 
-/// <summary>A scoped service whose identity tells which scope handled a message.</summary>
-internal sealed class ScopeMarker;
-
-internal sealed class HandledMessages
+internal sealed class OpenFileHandler : ILauncherMessageHandler<OpenFileMessage>
 {
-	public List<(string Path, ScopeMarker Scope)> Items { get; } = [];
-}
-
-/// <summary>Records each message with its scope; a path starting with <c>fail</c> throws with the path in its message.</summary>
-internal sealed class OpenFileHandler(HandledMessages handled, ScopeMarker scope) : ILauncherMessageHandler<OpenFileMessage>
-{
-	public void Handle(OpenFileMessage message)
-	{
-		if (message.Path.StartsWith("fail", StringComparison.Ordinal))
-			throw new InvalidOperationException($"Cannot open {message.Path}.");
-		handled.Items.Add((message.Path, scope));
-	}
+	public void Handle(OpenFileMessage message) => throw new AssertionException("Unexpected message.");
 }
 
 /// <summary>Collects every log entry with its level, formatted message and exception.</summary>
-internal sealed class CapturedLogs : ILoggerProvider, ILogger
+internal sealed class CapturedLogs<TCategory> : ILogger<TCategory>
 {
 	public List<(LogLevel Level, string Message, Exception? Exception)> Entries { get; } = [];
-
-	public ILogger CreateLogger(string categoryName) => this;
 
 	public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
 
@@ -60,8 +44,4 @@ internal sealed class CapturedLogs : ILoggerProvider, ILogger
 	public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
 		Func<TState, Exception?, string> formatter) =>
 		Entries.Add((logLevel, formatter(state, exception), exception));
-
-	public void Dispose()
-	{
-	}
 }

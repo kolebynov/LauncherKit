@@ -192,10 +192,19 @@ public abstract class LauncherKitApp : Application
 		appBuilder.Configuration.AddInMemoryCollection(GetInMemoryConfiguration());
 		appBuilder.Configuration.AddLauncherKitConfiguration(Directory.GetCurrentDirectory(), appBuilder.Product);
 		services.AddLauncherKitLocalization(GetType().Assembly);
-		// The owner's queue outlives the services: the program disposes it only after its listener has stopped. Without an
-		// owner (designer) the services create and dispose an empty one.
-		if (OwnerLaunchRequests is { } ownerLaunchRequests) services.AddSingleton(ownerLaunchRequests);
-		else services.AddSingleton<LaunchRequestQueue>();
+		// The owner's queue outlives the services: the program disposes it only after its listener has stopped, so both
+		// registrations are of the instance, which the services never dispose. Without an owner (designer) the services
+		// create and dispose an empty one.
+		if (OwnerLaunchRequests is { } ownerLaunchRequests)
+		{
+			services.AddSingleton(ownerLaunchRequests);
+			services.AddSingleton<ILaunchRequestQueue>(ownerLaunchRequests);
+		}
+		else
+		{
+			services.AddSingleton<LaunchRequestQueue>();
+			services.AddSingleton<ILaunchRequestQueue>(sp => sp.GetRequiredService<LaunchRequestQueue>());
+		}
 		services.AddSingleton<LaunchRequestPump>();
 		services.AddSingleton(new LauncherKitDesktopOptions
 		{

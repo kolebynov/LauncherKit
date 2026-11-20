@@ -1,3 +1,4 @@
+using System.Text.Json;
 using LauncherKit.Desktop.SingleInstance;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -11,9 +12,11 @@ public sealed class LauncherMessageProcessorTests
 	public void Process_UnknownKindInvalidPayloadOrFailingHandler_KeepsHandlingLaterMessages()
 	{
 		// Arrange
-		using var provider = CreateServices();
-		using var scope = provider.CreateScope();
-		var sut = scope.ServiceProvider.GetRequiredService<LauncherMessageProcessor>();
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		var handler = SetupHandler(mocker);
+		handler.Setup(h => h.Handle(new OpenFileMessage("fail"))).Throws(new InvalidOperationException("Cannot open fail."));
+		handler.Setup(h => h.Handle(new OpenFileMessage("b")));
+		var sut = CreateSut(mocker, new CapturedLogs<LauncherMessageProcessor>());
 
 		// Act
 		sut.Process("unknown", Payload("a"));
@@ -22,23 +25,26 @@ public sealed class LauncherMessageProcessorTests
 		sut.Process(OpenFileMessage.Kind, Payload("b"));
 
 		// Assert
-		Assert.That(provider.GetRequiredService<HandledMessages>().Items.Select(i => i.Path), Is.EqualTo(new[] { "b" }));
+		handler.Verify(h => h.Handle(new OpenFileMessage("fail")), Times.Once);
+		handler.Verify(h => h.Handle(new OpenFileMessage("b")), Times.Once);
+		handler.VerifyNoOtherCalls();
 	}
 
 	[Test]
 	public void Process_RegisteredKind_RunsHandlerOfProcessorScope()
 	{
 		// Arrange
-		using var provider = CreateServices();
-		using var scope = provider.CreateScope();
-		var sut = scope.ServiceProvider.GetRequiredService<LauncherMessageProcessor>();
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		var handler = SetupHandler(mocker);
+		handler.Setup(h => h.Handle(new OpenFileMessage("a")));
+		var sut = CreateSut(mocker, new CapturedLogs<LauncherMessageProcessor>());
 
 		// Act
 		sut.Process(OpenFileMessage.Kind, Payload("a"));
 
 		// Assert
-		Assert.That(provider.GetRequiredService<HandledMessages>().Items.Single().Scope,
-			Is.SameAs(scope.ServiceProvider.GetRequiredService<ScopeMarker>()));
+		mocker.GetMock<IServiceProvider>().Verify(s => s.GetService(typeof(ILauncherMessageHandler<OpenFileMessage>)), Times.Once);
+		handler.Verify(h => h.Handle(new OpenFileMessage("a")), Times.Once);
 	}
 
 	[Test]
@@ -65,13 +71,39 @@ public sealed class LauncherMessageProcessorTests
 	}
 
 	[Test]
+	public void AddLauncherMessageHandler_RegisteredHandler_ProcessorDispatchesValidPayloadOnly()
+	{
+		// Arrange
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		var handler = mocker.GetMock<ILauncherMessageHandler<OpenFileMessage>>();
+		handler.Setup(h => h.Handle(new OpenFileMessage("a")));
+		var services = new ServiceCollection();
+		services.AddLogging();
+		services.AddLauncherKitDesktop();
+		services.AddScoped(_ => handler.Object);
+		services.AddLauncherMessageHandler<OpenFileMessage, ILauncherMessageHandler<OpenFileMessage>>(
+			TestMessagesJsonContext.Default.OpenFileMessage);
+		using var provider = services.BuildServiceProvider();
+		using var scope = provider.CreateScope();
+		var sut = scope.ServiceProvider.GetRequiredService<ILauncherMessageProcessor>();
+
+		// Act
+		sut.Process(OpenFileMessage.Kind, Payload("a"));
+		sut.Process(OpenFileMessage.Kind, "1");
+
+		// Assert
+		handler.Verify(h => h.Handle(new OpenFileMessage("a")), Times.Once);
+		handler.VerifyNoOtherCalls();
+	}
+
+	[Test]
 	public void Process_UnknownKind_LogsWarningWithoutWireKind()
 	{
 		// Arrange
-		var logs = new CapturedLogs();
-		using var provider = CreateServices(logs);
-		using var scope = provider.CreateScope();
-		var sut = scope.ServiceProvider.GetRequiredService<LauncherMessageProcessor>();
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		SetupHandler(mocker);
+		var logs = new CapturedLogs<LauncherMessageProcessor>();
+		var sut = CreateSut(mocker, logs);
 
 		// Act
 		sut.Process("secret-kind", Payload("a"));
@@ -90,10 +122,12 @@ public sealed class LauncherMessageProcessorTests
 	public void Process_FailingHandler_LogsErrorWithExceptionAndRegisteredKind()
 	{
 		// Arrange
-		var logs = new CapturedLogs();
-		using var provider = CreateServices(logs);
-		using var scope = provider.CreateScope();
-		var sut = scope.ServiceProvider.GetRequiredService<LauncherMessageProcessor>();
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		var handler = SetupHandler(mocker);
+		var failure = new InvalidOperationException("Cannot open fail-path.");
+		handler.Setup(h => h.Handle(new OpenFileMessage("fail-path"))).Throws(failure);
+		var logs = new CapturedLogs<LauncherMessageProcessor>();
+		var sut = CreateSut(mocker, logs);
 
 		// Act
 		sut.Process(OpenFileMessage.Kind, Payload("fail-path"));
@@ -104,26 +138,33 @@ public sealed class LauncherMessageProcessorTests
 		{
 			Assert.That(logs.Entries[0].Level, Is.EqualTo(LogLevel.Error));
 			Assert.That(logs.Entries[0].Message, Does.Contain(OpenFileMessage.Kind));
-			Assert.That(logs.Entries[0].Exception, Is.TypeOf<InvalidOperationException>()
-				.With.Message.Contain("fail-path"));
+			Assert.That(logs.Entries[0].Exception, Is.SameAs(failure));
 		});
 	}
 
-	internal static ServiceProvider CreateServices(ILoggerProvider? logs = null)
+	/// <summary>Resolves the handler mock through the processor's service provider mock.</summary>
+	private static Mock<ILauncherMessageHandler<OpenFileMessage>> SetupHandler(AutoMocker mocker)
 	{
-		var services = new ServiceCollection();
-		services.AddLauncherKitDesktop();
-		services.AddLogging(builder =>
-		{
-			builder.ClearProviders();
-			if (logs is not null) builder.AddProvider(logs);
-		});
-		services.AddSingleton<HandledMessages>();
-		services.AddScoped<ScopeMarker>();
-		services.AddLauncherMessageHandler<OpenFileMessage, OpenFileHandler>(TestMessagesJsonContext.Default.OpenFileMessage);
-		return services.BuildServiceProvider();
+		var handler = mocker.GetMock<ILauncherMessageHandler<OpenFileMessage>>();
+		mocker.GetMock<IServiceProvider>()
+			.Setup(s => s.GetService(typeof(ILauncherMessageHandler<OpenFileMessage>)))
+			.Returns(handler.Object);
+		return handler;
 	}
 
-	internal static string Payload(string path) =>
+	/// <summary>Registers the <see cref="OpenFileMessage"/> kind as <c>AddLauncherMessageHandler</c> does.</summary>
+	private static LauncherMessageProcessor CreateSut(AutoMocker mocker, CapturedLogs<LauncherMessageProcessor> logs)
+	{
+		mocker.Use<IEnumerable<LauncherMessageRegistration>>([
+			new LauncherMessageRegistration(OpenFileMessage.Kind, (services, payload) => services
+				.GetRequiredService<ILauncherMessageHandler<OpenFileMessage>>()
+				.Handle(JsonSerializer.Deserialize(payload, TestMessagesJsonContext.Default.OpenFileMessage)
+					?? throw new JsonException("The message is null."))),
+		]);
+		mocker.Use<ILogger<LauncherMessageProcessor>>(logs);
+		return mocker.CreateInstance<LauncherMessageProcessor>();
+	}
+
+	private static string Payload(string path) =>
 		LaunchRequest.Message(new OpenFileMessage(path), TestMessagesJsonContext.Default.OpenFileMessage).Payload;
 }

@@ -1,7 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
 using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.SingleInstance;
 using LauncherKit.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
+using R3;
 
 namespace LauncherKit.Desktop.Tests.SingleInstance;
 
@@ -12,47 +13,73 @@ public sealed class LaunchRequestPumpTests
 	public void Start_BacklogAdmittedBeforeStartAndDuringScopeReplacement_HandlesInOrderInCurrentScope()
 	{
 		// Arrange
-		using var provider = LauncherMessageProcessorTests.CreateServices();
-		var current = provider.CreateScope();
-		using var queue = new LaunchRequestQueue();
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		using var enqueued = new Subject<Unit>();
+		var pending = new Queue<LaunchRequest>();
+		SetupQueue(mocker, enqueued, pending);
 		var dispatcher = new QueuedDispatcher();
-		using var sut = new LaunchRequestPump(queue, dispatcher, CreateOptions(() => current.ServiceProvider));
-		queue.TryEnqueue(Request("a"));
+		mocker.Use<IUiDispatcher>(dispatcher);
+		var initialScope = new AutoMocker(MockBehavior.Strict);
+		var replacementScope = new AutoMocker(MockBehavior.Strict);
+		var processed = new List<string>();
+		replacementScope.GetMock<ILauncherMessageProcessor>()
+			.Setup(p => p.Process(OpenFileMessage.Kind, It.IsAny<string>()))
+			.Callback<string, string>((_, payload) => processed.Add(payload));
+		IServiceProvider current = initialScope;
+		mocker.Use(CreateOptions(() => current));
+		using var sut = mocker.CreateInstance<LaunchRequestPump>();
+		var a = Request("a");
+		var b = Request("b");
+		pending.Enqueue(a);
+		enqueued.OnNext(Unit.Default);
 		dispatcher.Drain();
-		var handled = provider.GetRequiredService<HandledMessages>().Items;
-		Assert.That(handled, Is.Empty);
 
 		// Act
 		sut.Start();
-		queue.TryEnqueue(Request("b"));
-		current.Dispose();
-		using var replacement = provider.CreateScope();
-		current = replacement;
+		pending.Enqueue(b);
+		enqueued.OnNext(Unit.Default);
+		current = replacementScope;
 		dispatcher.Drain();
 
 		// Assert
-		var marker = replacement.ServiceProvider.GetRequiredService<ScopeMarker>();
-		Assert.That(handled, Is.EqualTo(new[] { ("a", marker), ("b", marker) }));
+		Assert.That(processed, Is.EqualTo(new[] { a.Payload, b.Payload }));
+		initialScope.GetMock<ILauncherMessageProcessor>().VerifyNoOtherCalls();
 	}
 
 	[Test]
 	public void Dispose_PendingDrain_LeavesRequestsUnhandled()
 	{
 		// Arrange
-		using var provider = LauncherMessageProcessorTests.CreateServices();
-		using var scope = provider.CreateScope();
-		using var queue = new LaunchRequestQueue();
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		using var enqueued = new Subject<Unit>();
+		var pending = new Queue<LaunchRequest>();
+		SetupQueue(mocker, enqueued, pending);
 		var dispatcher = new QueuedDispatcher();
-		var sut = new LaunchRequestPump(queue, dispatcher, CreateOptions(() => scope.ServiceProvider));
+		mocker.Use<IUiDispatcher>(dispatcher);
+		var scope = new AutoMocker(MockBehavior.Strict);
+		mocker.Use(CreateOptions(() => scope));
+		var sut = mocker.CreateInstance<LaunchRequestPump>();
 		sut.Start();
-		queue.TryEnqueue(Request("a"));
+		pending.Enqueue(Request("a"));
+		enqueued.OnNext(Unit.Default);
 
 		// Act
 		sut.Dispose();
 		dispatcher.Drain();
 
 		// Assert
-		Assert.That(provider.GetRequiredService<HandledMessages>().Items, Is.Empty);
+		Assert.That(pending, Has.Count.EqualTo(1));
+		scope.GetMock<ILauncherMessageProcessor>().VerifyNoOtherCalls();
+	}
+
+	private delegate bool TryDequeueCallback([MaybeNullWhen(false)] out LaunchRequest request);
+
+	private static void SetupQueue(AutoMocker mocker, Subject<Unit> enqueued, Queue<LaunchRequest> pending)
+	{
+		var queue = mocker.GetMock<ILaunchRequestQueue>();
+		queue.Setup(q => q.Enqueued).Returns(enqueued);
+		queue.Setup(q => q.TryDequeue(out It.Ref<LaunchRequest>.IsAny!))
+			.Returns(new TryDequeueCallback(pending.TryDequeue));
 	}
 
 	private static LaunchRequest Request(string path) =>

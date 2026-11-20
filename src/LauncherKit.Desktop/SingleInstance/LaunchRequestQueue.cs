@@ -7,7 +7,7 @@ namespace LauncherKit.Desktop.SingleInstance;
 /// The owner's bounded FIFO of admitted launch requests. It exists before the services and is registered as their
 /// singleton, so requests admitted during startup or a scope reload wait until the pump drains them.
 /// </summary>
-internal sealed class LaunchRequestQueue : IDisposable
+internal sealed class LaunchRequestQueue : ILaunchRequestQueue, IDisposable
 {
 	public const int Capacity = 32;
 

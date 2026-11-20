@@ -6,10 +6,10 @@ namespace LauncherKit.Desktop.SingleInstance;
 
 /// <summary>
 /// Drains the <see cref="LaunchRequestQueue"/> on the UI thread once started (when the main window is shown): each
-/// message goes to the <see cref="LauncherMessageProcessor"/> of the scope current at that moment, so scope replacements
+/// message goes to the <see cref="ILauncherMessageProcessor"/> of the scope current at that moment, so scope replacements
 /// (made in one UI turn) never see a disposed scope. Stops when disposed.
 /// </summary>
-internal sealed class LaunchRequestPump(LaunchRequestQueue queue, IUiDispatcher dispatcher, LauncherKitDesktopOptions options)
+internal sealed class LaunchRequestPump(ILaunchRequestQueue queue, IUiDispatcher dispatcher, LauncherKitDesktopOptions options)
 	: IDisposable
 {
 	private IDisposable? _subscription;
@@ -33,6 +33,6 @@ internal sealed class LaunchRequestPump(LaunchRequestQueue queue, IUiDispatcher 
 	private void Drain()
 	{
 		while (!_disposed && queue.TryDequeue(out var request))
-			options.GetCurrentServices().GetRequiredService<LauncherMessageProcessor>().Process(request.Kind, request.Payload);
+			options.GetCurrentServices().GetRequiredService<ILauncherMessageProcessor>().Process(request.Kind, request.Payload);
 	}
 }
