@@ -1,7 +1,9 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using LauncherKit.Core.Services.Abstractions;
 using LauncherKit.Desktop;
+using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.ViewModels;
 using LauncherKit.Infrastructure;
 using Microsoft.Extensions.Options;
@@ -12,16 +14,21 @@ namespace SampleLauncher.App.Views;
 
 /// <summary>
 /// A plain window: navigation buttons and the current page, rendered through the kit's view locator. Every navigation
-/// goes through the kit's guard. A new data context (a replaced scope) or home page shows the home page.
+/// goes through the kit's guard. A new data context (a replaced scope) or home page shows the home page. Toasts appear
+/// in its bottom-right corner, rendered by the application's <see cref="AppNotification"/> template.
 /// </summary>
-public partial class MainWindow : Window, IMainView
+public partial class MainWindow : Window, IMainView, INotificationManagerProvider
 {
 	private Func<Action, ValueTask>? _navigationGuard;
 
 	public MainWindow()
 	{
 		InitializeComponent();
+		// Created with the window so its template is applied before the first toast.
+		NotificationManager = new WindowNotificationManager(this) { Position = NotificationPosition.BottomRight, MaxItems = 3 };
 	}
+
+	public WindowNotificationManager NotificationManager { get; }
 
 	public MainWindow(IOptions<LauncherProductOptions> product, IAppVersionProvider appVersionProvider) : this()
 	{

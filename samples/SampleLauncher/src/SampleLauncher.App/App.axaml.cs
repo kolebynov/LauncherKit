@@ -38,7 +38,10 @@ public sealed class App : LauncherKitApp
 		services.AddScoped<HomePageViewModel>();
 		services.AddSingleton<MainWindow>();
 		services.AddSingleton<IMainView>(sp => sp.GetRequiredService<MainWindow>());
+		services.AddSingleton<INotificationManagerProvider>(sp => sp.GetRequiredService<MainWindow>());
 		services.AddSingleton<IDialogService, DialogService>();
+		services.AddLauncherMessageHandler<SecondLaunchMessage, SecondLaunchMessageHandler>(
+			SampleJsonContext.Default.SecondLaunchMessage);
 	}
 
 	protected override void ReloadViews(Window mainWindow) => ((MainWindow)mainWindow).ReloadViews();
