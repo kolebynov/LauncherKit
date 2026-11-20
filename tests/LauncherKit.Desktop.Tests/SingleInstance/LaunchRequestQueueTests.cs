@@ -1,0 +1,67 @@
+using LauncherKit.Desktop.SingleInstance;
+using LauncherKit.TestSupport;
+using R3;
+
+namespace LauncherKit.Desktop.Tests.SingleInstance;
+
+[TestFixture]
+public sealed class LaunchRequestQueueTests
+{
+	[Test]
+	public void TryEnqueue_SeveralRequests_DequeuesInOrderAndNotifiesEach()
+	{
+		// Arrange
+		using var queue = new LaunchRequestQueue();
+		using var recorder = new ObservableRecorder<Unit>(queue.Enqueued);
+		var first = Request();
+		var second = LaunchRequest.Message("b", 1, TestMessagesJsonContext.Default.Int32);
+
+		// Act
+		queue.TryEnqueue(first);
+		queue.TryEnqueue(second);
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(recorder.Values, Has.Count.EqualTo(2));
+			Assert.That(queue.TryDequeue(out var a) ? a : null, Is.SameAs(first));
+			Assert.That(queue.TryDequeue(out var b) ? b : null, Is.SameAs(second));
+			Assert.That(queue.TryDequeue(out _), Is.False);
+		});
+	}
+
+	[Test]
+	public void TryEnqueue_Full_RejectsWithoutNotifying()
+	{
+		// Arrange
+		using var queue = new LaunchRequestQueue();
+		for (var i = 0; i < LaunchRequestQueue.Capacity; i++) queue.TryEnqueue(Request());
+		using var recorder = new ObservableRecorder<Unit>(queue.Enqueued);
+
+		// Act
+		var accepted = queue.TryEnqueue(Request());
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(accepted, Is.False);
+			Assert.That(recorder.Values, Is.Empty);
+		});
+	}
+
+	[Test]
+	public void TryEnqueue_Completed_Rejects()
+	{
+		// Arrange
+		using var queue = new LaunchRequestQueue();
+		queue.Complete();
+
+		// Act
+		var accepted = queue.TryEnqueue(Request());
+
+		// Assert
+		Assert.That(accepted, Is.False);
+	}
+
+	private static LaunchRequest Request() => LaunchRequest.Message("a", 1, TestMessagesJsonContext.Default.Int32);
+}

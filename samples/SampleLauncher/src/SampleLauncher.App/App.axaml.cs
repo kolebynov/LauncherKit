@@ -20,8 +20,6 @@ namespace SampleLauncher.App;
 
 public sealed class App : LauncherKitApp
 {
-	protected override LauncherProductOptions CreateProductOptions() => ProductIdentity.CreateOptions();
-
 	// A supported language skips the setup's language step.
 	protected override IEnumerable<KeyValuePair<string, string?>> GetInMemoryConfiguration() => [new("App:Language", "en")];
 

@@ -218,10 +218,10 @@ namespace MyLauncher.App;
 sealed class Program
 {
 	[STAThread]
-	public static void Main(string[] args) => LauncherKitProgram.Run<App>(args);
+	public static int Main(string[] args) => LauncherKitProgram.Run<App>(args, ProductIdentity.CreateOptions());
 
 	// Used by the Avalonia designer.
-	public static AppBuilder BuildAvaloniaApp() => LauncherKitProgram.BuildAvaloniaApp<App>();
+	public static AppBuilder BuildAvaloniaApp() => LauncherKitProgram.BuildAvaloniaApp<App>(ProductIdentity.CreateOptions());
 }
 ```
 
@@ -230,8 +230,6 @@ sealed class Program
 ```csharp
 public sealed class App : LauncherKitApp
 {
-	protected override LauncherProductOptions CreateProductOptions() => ProductIdentity.CreateOptions();
-
 	// Must be written in the class named by App.axaml's x:Class.
 	protected override void LoadXaml() => AvaloniaXamlLoader.Load(this);
 
@@ -283,6 +281,26 @@ View models expose typed facts and act directly. Views own the wording, confirma
 #### Closing the main window
 
 The kit attaches its `Closing` handler to the main window. Application/OS shutdown and owner closing close at once. When the user closes the window, the close is cancelled and the current scope's `IAppCloseHandler`s (`LauncherKit.Desktop.Services`, `Handle(Window mainWindow)`) run in registration order; the window closes when none returns `CannotClose`. A failing handler is logged and skipped, and close requests while handlers run are ignored. The kit registers two handlers: the scoped pending-tasks confirmation (with unfinished tasks it asks through `IDialogService`, `DesktopStrings` `PendingTasksCloseTitle`/`PendingTasksCloseMessage`, "No" by default, and the question closes itself and allows the close once the queue empties) and the singleton window-state save into `AllSettings.Window` (nothing when minimized; a maximized window keeps its saved normal bounds). Consumers add their own with `AddScoped<IAppCloseHandler, ...>()` (or singleton). The kit also restores the saved size, position and maximized state before showing the main window, so consumer windows handle neither.
+
+#### Single instance and launch messages
+
+One launcher runs per product (`LauncherProductOptions.RegistryKey`, case-insensitive and normalized like the registry: a trailing or doubled `\` does not matter, spaces do), Windows user and interactive session, whether installed, copied, debugged or sandboxed. `LauncherKitProgram.Run` decides before anything else (no `console.log`, logging or services): the launch that creates and owns a session-local, current-user mutex runs; any later launch sends the running launcher one-way messages over a current-user-only named pipe and exits with `0`. Nothing answers them: when the running launcher cannot be reached (it is exiting, runs at another elevation level, or stays busy past a few seconds) the later launch still exits with `0` and never starts a second launcher. Every later launch first sends the kit's bring-to-front message (kind `LauncherKit.BringToFront`), handled like any other message by a handler the kit registers in `AddLauncherKitDesktop`: once the window is shown, the running launcher restores its main window if minimized and activates it.
+
+To pass data, such as a file to open, give `Run` an `onSecondLaunch` callback. It runs only in a later launch, with that launch's arguments and working directory (`LaunchContext`), and can send any number of messages, serialized with the consumer's source-generated `JsonTypeInfo` (64 KiB each at most; `Send` throws for a larger one), after the bring-to-front message. If the callback throws, the messages sent before still go and the launch still exits with `0`. The first launch ignores it, so handle its own arguments in your startup code. Register one scoped handler per message kind (registering a kind twice, including the kit's, throws):
+
+```csharp
+public static int Main(string[] args) => LauncherKitProgram.Run<App>(args, ProductIdentity.CreateOptions(),
+	(launch, sender) =>
+	{
+		foreach (var path in launch.Args)
+			sender.Send("openFile", new OpenFile(Path.GetFullPath(path, launch.WorkingDirectory)), MyJsonContext.Default.OpenFile);
+	});
+
+// In ConfigureServices; OpenFileHandler implements ILauncherMessageHandler<OpenFile>.
+services.AddLauncherMessageHandler<OpenFile, OpenFileHandler>("openFile", MyJsonContext.Default.OpenFile);
+```
+
+Handlers run on the UI thread and should only start the work (e.g. enqueue a task). Invalid frames, unknown kinds, invalid payloads and failing handlers are logged and skipped. The kit registers no file association.
 
 #### Notifications
 
