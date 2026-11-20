@@ -160,13 +160,7 @@ public abstract class LauncherKitApp : Application
 	{
 		if (string.IsNullOrEmpty(Services.GetRequiredService<IOptionsSnapshot<AppSettings>>().Value.SkyrimDirectory)) return;
 		var notifications = Services.GetRequiredService<ModUpdateNotifications>();
-		mainWindow.Opened += OnOpened;
-
-		void OnOpened(object? sender, EventArgs e)
-		{
-			mainWindow.Opened -= OnOpened;
-			_ = notifications.Start();
-		}
+		OnceOpened(mainWindow, () => _ = notifications.Start());
 	}
 
 	// Requests admitted before the window opens wait until it is shown, so handlers can rely on the window.
@@ -174,12 +168,18 @@ public abstract class LauncherKitApp : Application
 	private void StartLaunchRequests(Window mainWindow)
 	{
 		var pump = Services.GetRequiredService<LaunchRequestPump>();
-		mainWindow.Opened += OnOpened;
+		OnceOpened(mainWindow, pump.Start);
+	}
+
+	// Runs the action the first time the window raises Opened.
+	private static void OnceOpened(Window window, Action action)
+	{
+		window.Opened += OnOpened;
 
 		void OnOpened(object? sender, EventArgs e)
 		{
-			mainWindow.Opened -= OnOpened;
-			pump.Start();
+			window.Opened -= OnOpened;
+			action();
 		}
 	}
 
