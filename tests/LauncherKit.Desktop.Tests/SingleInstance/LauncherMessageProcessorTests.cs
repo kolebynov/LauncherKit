@@ -65,7 +65,7 @@ public sealed class LauncherMessageProcessorTests
 	}
 
 	[Test]
-	public void Process_UnknownKindOrFailingHandler_LogsNoWireOrPayloadText()
+	public void Process_UnknownKind_LogsWarningWithoutWireKind()
 	{
 		// Arrange
 		var logs = new CapturedLogs();
@@ -75,14 +75,37 @@ public sealed class LauncherMessageProcessorTests
 
 		// Act
 		sut.Process("secret-kind", Payload("a"));
-		sut.Process(OpenFileMessage.Kind, Payload("fail-secret-path"));
 
 		// Assert
+		Assert.That(logs.Entries, Has.Count.EqualTo(1));
 		Assert.Multiple(() =>
 		{
-			Assert.That(logs.Entries, Has.Count.EqualTo(2));
-			Assert.That(logs.Entries, Has.None.Contains("secret"));
-			Assert.That(logs.Entries[1], Does.Contain(OpenFileMessage.Kind).And.Contain(nameof(InvalidOperationException)));
+			Assert.That(logs.Entries[0].Level, Is.EqualTo(LogLevel.Warning));
+			Assert.That(logs.Entries[0].Message, Does.Not.Contain("secret"));
+			Assert.That(logs.Entries[0].Exception, Is.Null);
+		});
+	}
+
+	[Test]
+	public void Process_FailingHandler_LogsErrorWithExceptionAndRegisteredKind()
+	{
+		// Arrange
+		var logs = new CapturedLogs();
+		using var provider = CreateServices(logs);
+		using var scope = provider.CreateScope();
+		var sut = scope.ServiceProvider.GetRequiredService<LauncherMessageProcessor>();
+
+		// Act
+		sut.Process(OpenFileMessage.Kind, Payload("fail-path"));
+
+		// Assert
+		Assert.That(logs.Entries, Has.Count.EqualTo(1));
+		Assert.Multiple(() =>
+		{
+			Assert.That(logs.Entries[0].Level, Is.EqualTo(LogLevel.Error));
+			Assert.That(logs.Entries[0].Message, Does.Contain(OpenFileMessage.Kind));
+			Assert.That(logs.Entries[0].Exception, Is.TypeOf<InvalidOperationException>()
+				.With.Message.Contain("fail-path"));
 		});
 	}
 

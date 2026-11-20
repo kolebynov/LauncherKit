@@ -46,10 +46,10 @@ internal sealed class OpenFileHandler(HandledMessages handled, ScopeMarker scope
 	}
 }
 
-/// <summary>Collects every formatted log entry with its exception text.</summary>
+/// <summary>Collects every log entry with its level, formatted message and exception.</summary>
 internal sealed class CapturedLogs : ILoggerProvider, ILogger
 {
-	public List<string> Entries { get; } = [];
+	public List<(LogLevel Level, string Message, Exception? Exception)> Entries { get; } = [];
 
 	public ILogger CreateLogger(string categoryName) => this;
 
@@ -59,7 +59,7 @@ internal sealed class CapturedLogs : ILoggerProvider, ILogger
 
 	public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
 		Func<TState, Exception?, string> formatter) =>
-		Entries.Add($"{formatter(state, exception)} {exception}");
+		Entries.Add((logLevel, formatter(state, exception), exception));
 
 	public void Dispose()
 	{

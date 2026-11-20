@@ -26,9 +26,7 @@ internal sealed class LauncherMessageProcessor(
 		// Handlers are consumer code: one failing message must not stop the following ones.
 		catch (Exception e)
 		{
-			// Handler exceptions may carry payload-derived values, so only their type is logged.
-			logger.LogError("Failed to handle a launcher message of the kind {Kind}: {FailureType}", registration.Kind,
-				e.GetType().Name);
+			logger.LogError(e, "Failed to handle a launcher message of the kind {Kind}", registration.Kind);
 		}
 	}
 }
