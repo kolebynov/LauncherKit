@@ -1,4 +1,4 @@
-﻿﻿namespace LauncherKit.Core.Initialization;
+﻿namespace LauncherKit.Core.Initialization;
 
 public interface IGlobalInitializer
 {

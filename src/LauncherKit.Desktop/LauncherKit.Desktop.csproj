@@ -4,6 +4,8 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<InternalsVisibleTo Include="LauncherKit.Desktop.Tests"/>
+		<!-- Required for Moq/Castle to proxy internal interfaces in tests. -->
+		<InternalsVisibleTo Include="DynamicProxyGenAssembly2"/>
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="../LauncherKit.Core/LauncherKit.Core.csproj"/>

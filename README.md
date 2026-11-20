@@ -218,10 +218,10 @@ namespace MyLauncher.App;
 sealed class Program
 {
 	[STAThread]
-	public static void Main(string[] args) => LauncherKitProgram.Run<App>(args);
+	public static int Main(string[] args) => LauncherKitProgram.Run<App>(args, ProductIdentity.CreateOptions());
 
 	// Used by the Avalonia designer.
-	public static AppBuilder BuildAvaloniaApp() => LauncherKitProgram.BuildAvaloniaApp<App>();
+	public static AppBuilder BuildAvaloniaApp() => LauncherKitProgram.BuildAvaloniaApp<App>(ProductIdentity.CreateOptions());
 }
 ```
 
@@ -230,8 +230,6 @@ sealed class Program
 ```csharp
 public sealed class App : LauncherKitApp
 {
-	protected override LauncherProductOptions CreateProductOptions() => ProductIdentity.CreateOptions();
-
 	// Must be written in the class named by App.axaml's x:Class.
 	protected override void LoadXaml() => AvaloniaXamlLoader.Load(this);
 
@@ -283,6 +281,10 @@ View models expose typed facts and act directly. Views own the wording, confirma
 #### Closing the main window
 
 The kit attaches its `Closing` handler to the main window. Application/OS shutdown and owner closing close at once. When the user closes the window, the close is cancelled and the current scope's `IAppCloseHandler`s (`LauncherKit.Desktop.Services`, `Handle(Window mainWindow)`) run in registration order; the window closes when none returns `CannotClose`. A failing handler is logged and skipped, and close requests while handlers run are ignored. The kit registers two handlers: the scoped pending-tasks confirmation (with unfinished tasks it asks through `IDialogService`, `DesktopStrings` `PendingTasksCloseTitle`/`PendingTasksCloseMessage`, "No" by default, and the question closes itself and allows the close once the queue empties) and the singleton window-state save into `AllSettings.Window` (nothing when minimized; a maximized window keeps its saved normal bounds). Consumers add their own with `AddScoped<IAppCloseHandler, ...>()` (or singleton). The kit also restores the saved size, position and maximized state before showing the main window, so consumer windows handle neither.
+
+#### Single instance and launch messages
+
+One launcher runs per product (`LauncherProductOptions.RegistryKey`), Windows user and interactive session; a later launch sends the running launcher one-way, best-effort messages and exits with `0`. The kit has no built-in activation. To pass data (for example a file to open), give `LauncherKitProgram.Run` an `onSecondLaunch` callback that sends `ILauncherMessage` messages, and register one handler per message kind with `services.AddLauncherMessageHandler<TMessage, THandler>(typeInfo)`. See [single instance](docs/single-instance.md) for the election, protocol, limits and a full example.
 
 #### Notifications
 

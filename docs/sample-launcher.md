@@ -14,9 +14,10 @@ files. It references kit projects and `msbuild/LauncherKit.Product.props` by rel
 | Path | Contents |
 |---|---|
 | `SampleLauncher.Product.props` | The sample's own identity: `SAMPLE_LAUNCHER_` prefix, `SampleLauncher.App.exe`, the `HKEY_CURRENT_USER\Software\LauncherKit Sample\Sample Launcher` registry key. |
-| `src/SampleLauncher.App` | The app. It has one plain Avalonia window with Home, Tasks and Downloads buttons, a view registry, a yes/no `IDialogService` and a root directory manager whose root is the parent of the working directory. |
+| `src/SampleLauncher.App` | The app. It has one plain Avalonia window with Home, Tasks and Downloads buttons, a view registry, a yes/no `IDialogService` and a root directory manager whose root is the parent of the working directory. The window is the `INotificationManagerProvider`, and `App.axaml` holds the `AppNotification` toast template (`NotificationTitle`, `NotificationMessage`). |
+| `src/SampleLauncher.App/SecondLaunchMessage.cs` | The single-instance message: every later launch sends `SecondLaunchMessage` (its arguments and working directory, source-generated `SampleJsonContext`), and the running launcher's `SecondLaunchMessageHandler` shows a `Launched again` toast listing them. |
 | `scripts/make_mocks.py` | Writes the ignored `scripts/Mock`: `feedV12.json` (one category, `Sample Tools`), `Test.zip` for the setup's server check and `Sample/sample-download.txt`. |
-| `scripts/launcher_flows.py` | Runs the kit's `scripts/launcher_dev.py` CLI with the sample's defaults, plus the `setup`, `home`, `download` and `smoke` flows. |
+| `scripts/launcher_flows.py` | Runs the kit's `scripts/launcher_dev.py` CLI with the sample's defaults, plus the `setup`, `home`, `download`, `smoke` and `second-launch` flows. |
 
 The download task (`SampleDownload.cs`) downloads `Sample/sample-download.txt` with a SHA-256 check. `make_mocks.py`
 fails when the hash compiled into the app does not match the file it generates.
@@ -32,8 +33,23 @@ python scripts\launcher_flows.py start --fresh          # build with dev automat
 python scripts\launcher_flows.py smoke                  # first setup, Home category, new sample download
 python scripts\launcher_flows.py start --no-build       # warm restart: the setup and the download are kept
 python scripts\launcher_flows.py smoke --configured     # Home without setup, then the download (cache hit or transfer)
+python scripts\launcher_flows.py second-launch          # a later launch exits 0; the running launcher shows a toast
 python scripts\launcher_flows.py stop --mock
 ```
+
+`second-launch` runs `scripts\Sandbox\current\Launcher\SampleLauncher.App.exe` again from
+`scripts\Sandbox\current\SecondLaunch` with a unique `--second-launch-test=...` argument, then clicks the toast to close
+it. It needs a running sandbox launcher (without one it refuses before launching anything) and fails, with a nonzero
+exit code, when:
+
+- the second launch does not exit within `--timeout` seconds (15) or exits with a code other than `0`;
+- within `--timeout`, the running launcher shows no toast containing the argument, or the toast does not name the
+  working directory, or that same toast's own title (the `NotificationTitle` right before its `NotificationMessage`;
+  other toasts' titles do not count) is not `Launched again`;
+- the automation API then reports another process ID than before the launch, or that process is gone;
+- the clicked toast does not close within 10 s.
+
+It is not part of `smoke`. The sample's toasts also show the kit's feed loading progress and errors.
 
 `smoke` fails, with a nonzero exit code, in these cases:
 

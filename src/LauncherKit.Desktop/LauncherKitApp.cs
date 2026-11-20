@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using LauncherKit.Desktop.SingleInstance;
 using R3;
 using Serilog;
 using Serilog.Events;
@@ -24,19 +25,29 @@ namespace LauncherKit.Desktop;
 /// The kit's Avalonia application: composes logging, configuration, kit services and the application scope, has the
 /// consumer load its XAML, installs the view locator, shows the main window with the current scope's
 /// <see cref="MainWindowViewModelBase"/> and disposes everything on exit. A consumer derives its <c>App</c> from it and only
-/// supplies its identity, registrations, views and main window through the abstract and virtual members.
+/// supplies its registrations, views and main window through the abstract and virtual members; its identity comes from
+/// <see cref="LauncherKitProgram"/>.
 /// </summary>
 public abstract class LauncherKitApp : Application
 {
 	private AppInstance? _appInstance;
 	private ILogger<LauncherKitApp> _logger = null!;
 
+	/// <summary>The consumer's complete product identity, given to <see cref="LauncherKitProgram"/>.</summary>
+	internal LauncherProductOptions Product { get; init; } = null!;
+
+	/// <summary>
+	/// The owner's launch requests, created before the services so requests admitted during startup wait; the services
+	/// register it as their singleton; without it (designer) they register an empty one.
+	/// </summary>
+	internal LaunchRequestQueue? OwnerLaunchRequests { get; init; }
+
 	/// <summary>The current application scope's services; the scope is replaced when installation settings change.</summary>
 	public IServiceProvider Services => (_appInstance ?? throw new InvalidOperationException("The application is not initialized.")).ServiceProvider;
 
 	public sealed override void Initialize()
 	{
-		var appBuilder = new AppBuilder(CreateProductOptions());
+		var appBuilder = new AppBuilder(Product);
 		ConfigureAppServices(appBuilder);
 		_appInstance = appBuilder.Build();
 		LocalizationMarkup.Configure(Services.GetRequiredService<IStringLocalizer<DesktopStrings>>());
@@ -75,10 +86,12 @@ public abstract class LauncherKitApp : Application
 			desktop.MainWindow = mainWindow;
 			Services.GetRequiredService<MainWindowCloseHandler>().Attach(mainWindow);
 			StartModUpdateNotifications(mainWindow);
+			StartLaunchRequests(mainWindow);
 			var desktopServices = StartDesktopServices(desktop);
 			desktop.Exit += (_, _) =>
 			{
 				_logger.LogInformation("Exiting...");
+				Services.GetRequiredService<LaunchRequestQueue>().Complete();
 				desktopServices?.Dispose();
 				DisposeServices();
 			};
@@ -90,9 +103,6 @@ public abstract class LauncherKitApp : Application
 			throw;
 		}
 	}
-
-	/// <summary>The consumer's complete product identity; validated before anything reads configuration or state.</summary>
-	protected abstract LauncherProductOptions CreateProductOptions();
 
 	/// <summary>
 	/// Loads the application XAML; implement it as <c>AvaloniaXamlLoader.Load(this)</c>. The call must be written in the
@@ -150,12 +160,26 @@ public abstract class LauncherKitApp : Application
 	{
 		if (string.IsNullOrEmpty(Services.GetRequiredService<IOptionsSnapshot<AppSettings>>().Value.SkyrimDirectory)) return;
 		var notifications = Services.GetRequiredService<ModUpdateNotifications>();
-		mainWindow.Opened += OnOpened;
+		OnceOpened(mainWindow, () => _ = notifications.Start());
+	}
+
+	// Requests admitted before the window opens wait until it is shown, so handlers can rely on the window.
+	// Disposing the services stops the pump.
+	private void StartLaunchRequests(Window mainWindow)
+	{
+		var pump = Services.GetRequiredService<LaunchRequestPump>();
+		OnceOpened(mainWindow, pump.Start);
+	}
+
+	// Runs the action the first time the window raises Opened.
+	private static void OnceOpened(Window window, Action action)
+	{
+		window.Opened += OnOpened;
 
 		void OnOpened(object? sender, EventArgs e)
 		{
-			mainWindow.Opened -= OnOpened;
-			_ = notifications.Start();
+			window.Opened -= OnOpened;
+			action();
 		}
 	}
 
@@ -168,6 +192,20 @@ public abstract class LauncherKitApp : Application
 		appBuilder.Configuration.AddInMemoryCollection(GetInMemoryConfiguration());
 		appBuilder.Configuration.AddLauncherKitConfiguration(Directory.GetCurrentDirectory(), appBuilder.Product);
 		services.AddLauncherKitLocalization(GetType().Assembly);
+		// The owner's queue outlives the services: the program disposes it only after its listener has stopped, so both
+		// registrations are of the instance, which the services never dispose. Without an owner (designer) the services
+		// create and dispose an empty one.
+		if (OwnerLaunchRequests is { } ownerLaunchRequests)
+		{
+			services.AddSingleton(ownerLaunchRequests);
+			services.AddSingleton<ILaunchRequestQueue>(ownerLaunchRequests);
+		}
+		else
+		{
+			services.AddSingleton<LaunchRequestQueue>();
+			services.AddSingleton<ILaunchRequestQueue>(sp => sp.GetRequiredService<LaunchRequestQueue>());
+		}
+		services.AddSingleton<LaunchRequestPump>();
 		services.AddSingleton(new LauncherKitDesktopOptions
 		{
 			GetMainWindow = () => (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow,

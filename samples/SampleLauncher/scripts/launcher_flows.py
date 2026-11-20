@@ -5,6 +5,7 @@
     python scripts/launcher_flows.py smoke                 # setup, Home and a new sample download
     python scripts/launcher_flows.py start --no-build
     python scripts/launcher_flows.py smoke --configured    # Home and the download (reports cache hit or transfer)
+    python scripts/launcher_flows.py second-launch         # a later launch exits 0; the running launcher shows a toast
     python scripts/launcher_flows.py stop --mock
 
 Every generic launcher_dev command (tree, find, click, wait, screenshot, snapshot, log, ...) works too, with the
@@ -14,6 +15,8 @@ mock feed 8190) as defaults; commands refuse an automation API not served by the
 
 import hashlib
 import json
+import os
+import subprocess
 import sys
 import time
 import urllib.error
@@ -32,6 +35,9 @@ SKYRIM_HEADING = 'Skyrim directory (an empty directory is fine)'
 DATA_HEADING = 'Directory for downloads and temporary files'
 DOWNLOAD_FILE_NAME = Path(make_mocks.SAMPLE_DOWNLOAD_PATH).name
 POLL_INTERVAL = 0.5
+EXE_NAME = 'SampleLauncher.App.exe'
+# SecondLaunchMessageHandler.Title in the app.
+SECOND_LAUNCH_TITLE = 'Launched again'
 # Distinct from other launchers' defaults (kit 8095/8090) so a running launcher is never mistaken for the sample.
 SAMPLE_API_PORT = 8195
 SAMPLE_MOCK_PORT = 8190
@@ -179,6 +185,57 @@ def download_sample(data_dir: Path, timeout: float, fresh: bool = False) -> None
         print('The file existed before this run; use start --fresh and smoke for the transfer test')
 
 
+def second_launch(timeout: float) -> None:
+    """Starts the sandbox's executable again from another working directory with a unique argument: it must exit with 0,
+    the running launcher must keep its process ID and show the "Launched again" toast naming that directory and
+    argument. Clicking the toast then closes it."""
+    launcher = client()
+    owner = launcher.status().process_id
+    working_dir = launcher_dev.CURRENT_DIR / 'SecondLaunch'
+    working_dir.mkdir(parents=True, exist_ok=True)
+    token = f'--second-launch-test={os.getpid()}-{time.time_ns()}'
+    try:
+        result = subprocess.run([str(launcher_dev.LAUNCHER_DIR / EXE_NAME), token], cwd=working_dir,
+                                stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                timeout=timeout)
+    except subprocess.TimeoutExpired:
+        raise FlowError(f'the second launch did not exit within {timeout} s') from None
+    if result.returncode != 0:
+        raise FlowError(f'the second launch exited with code {result.returncode}, expected 0')
+    print(f'Second launch from {working_dir} exited with 0')
+    try:
+        message = launcher.wait(contains=token, timeout=timeout).matches[0]
+    except AutomationError as error:
+        raise FlowError(f'the running launcher showed no toast with {token} ({error})') from None
+    # The semantic tree flattens the toast template: each toast contributes its NotificationTitle, NotificationMessage
+    # (and progress bar) as consecutive siblings, so this toast's title is the sibling right before its message,
+    # aligned with it and directly above it; another toast's title never sits there.
+    tree = launcher.tree()
+    groups = [r.children for r in tree.roots] + [x.children for x in tree.walk()]
+    siblings = next((g for g in groups if any(c.ref == message.ref for c in g)), ())
+    index = next((i for i, c in enumerate(siblings) if c.ref == message.ref), None)
+    if index is None:
+        raise FlowError(f'the message with {token} vanished from the tree before its toast could be checked')
+    message = siblings[index]
+    title = siblings[index - 1] if index > 0 else None
+    if title is None or title.id != 'NotificationTitle' or title.hidden \
+            or abs(title.bounds.x - message.bounds.x) > 1 or abs(title.bounds.width - message.bounds.width) > 1 \
+            or not 0 <= message.bounds.y - (title.bounds.y + title.bounds.height) <= 16:
+        raise FlowError(f'the toast with {token} has no title of its own; preceding element: '
+                        f'{title.describe() if title else None}')
+    if str(working_dir) not in message.text:
+        raise FlowError(f'the toast does not name the working directory {working_dir}: {message.text!r}')
+    if title.text != SECOND_LAUNCH_TITLE:
+        raise FlowError(f'the toast with {token} is titled {title.text!r}, not "{SECOND_LAUNCH_TITLE}"')
+    reported = launcher.status().process_id
+    if reported != owner or not launcher_dev.is_running(owner):
+        raise FlowError(f'the running launcher changed from process {owner} to {reported}')
+    print(f'Launcher pid {owner} shows "{SECOND_LAUNCH_TITLE}": {message.text!r}')
+    launcher.click(message)
+    launcher.wait(contains=token, state='absent', timeout=10)
+    print('Second launch flow passed')
+
+
 # ----- CLI -----
 
 def default_dir(value: str | None, name: str) -> Path:
@@ -216,6 +273,11 @@ def cmd_home(args) -> int:
 
 def cmd_download(args) -> int:
     download_sample(effective_data_dir(args), args.timeout)
+    return 0
+
+
+def cmd_second_launch(args) -> int:
+    second_launch(args.timeout)
     return 0
 
 
@@ -274,7 +336,7 @@ def configure_cli(parser, commands) -> None:
             action.help = f'mock feed port ({SAMPLE_MOCK_PORT})'
     start.set_defaults(
         project=SAMPLE_DIR / 'src' / 'SampleLauncher.App' / 'SampleLauncher.App.csproj',
-        exe_name='SampleLauncher.App.exe', environment_prefix='SAMPLE_LAUNCHER_',
+        exe_name=EXE_NAME, environment_prefix='SAMPLE_LAUNCHER_',
         mock_dir=SCRIPT_DIR / 'Mock', state_name=['launcher.db*'],
         port=SAMPLE_API_PORT, mock_port=SAMPLE_MOCK_PORT, verify_mock=verify_mock_fixtures)
 
@@ -299,6 +361,12 @@ def configure_cli(parser, commands) -> None:
     smoke.add_argument('--configured', action='store_true', help='expect Home instead of the first setup')
     smoke.add_argument('--timeout', type=float, default=60, help='seconds for the download task (60)')
     smoke.set_defaults(handler=cmd_smoke)
+
+    second = commands.add_parser('second-launch',
+                                 help='launch the sandbox executable again and check the running launcher\'s toast')
+    second.add_argument('--timeout', type=float, default=15,
+                        help='seconds for the second launch to exit and for the toast (15)')
+    second.set_defaults(handler=cmd_second_launch)
 
 
 if __name__ == '__main__':
