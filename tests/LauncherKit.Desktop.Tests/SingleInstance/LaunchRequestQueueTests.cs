@@ -14,7 +14,7 @@ public sealed class LaunchRequestQueueTests
 		using var queue = new LaunchRequestQueue();
 		using var recorder = new ObservableRecorder<Unit>(queue.Enqueued);
 		var first = Request();
-		var second = LaunchRequest.Message("b", 1, TestMessagesJsonContext.Default.Int32);
+		var second = Request("b.7z");
 
 		// Act
 		queue.TryEnqueue(first);
@@ -63,5 +63,6 @@ public sealed class LaunchRequestQueueTests
 		Assert.That(accepted, Is.False);
 	}
 
-	private static LaunchRequest Request() => LaunchRequest.Message("a", 1, TestMessagesJsonContext.Default.Int32);
+	private static LaunchRequest Request(string path = "a.7z") =>
+		LaunchRequest.Message(new OpenFileMessage(path), TestMessagesJsonContext.Default.OpenFileMessage);
 }

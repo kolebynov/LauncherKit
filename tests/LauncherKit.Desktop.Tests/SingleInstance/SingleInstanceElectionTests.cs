@@ -80,8 +80,8 @@ public sealed class SingleInstanceElectionTests
 					using var previousListener = new SingleInstanceListener(names.Pipe, previousQueue,
 						() => Timeout.InfiniteTimeSpan, null);
 					lingering = Connect(names);
-					var json = SingleInstanceProtocol.Serialize(LaunchRequest.Message(OpenFileMessage.Kind,
-						new OpenFileMessage("a.7z"), TestMessagesJsonContext.Default.OpenFileMessage));
+					var json = SingleInstanceProtocol.Serialize(LaunchRequest.Message(new OpenFileMessage("a.7z"),
+						TestMessagesJsonContext.Default.OpenFileMessage));
 					lingering.Write(Length(json.Length));
 					lingering.Write(json);
 					Dequeue(previousQueue, 1);

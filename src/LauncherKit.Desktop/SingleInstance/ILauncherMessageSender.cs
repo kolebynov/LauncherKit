@@ -24,5 +24,5 @@ internal sealed class LauncherMessageSender : ILauncherMessageSender
 	public IReadOnlyList<byte[]> Frames => _frames;
 
 	public void Send<TMessage>(TMessage value, JsonTypeInfo<TMessage> typeInfo) where TMessage : ILauncherMessage =>
-		_frames.Add(SingleInstanceProtocol.Serialize(LaunchRequest.Message(TMessage.Kind, value, typeInfo)));
+		_frames.Add(SingleInstanceProtocol.Serialize(LaunchRequest.Message(value, typeInfo)));
 }

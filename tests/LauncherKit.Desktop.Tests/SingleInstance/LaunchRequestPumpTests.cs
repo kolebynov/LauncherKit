@@ -55,8 +55,8 @@ public sealed class LaunchRequestPumpTests
 		Assert.That(provider.GetRequiredService<HandledMessages>().Items, Is.Empty);
 	}
 
-	private static LaunchRequest Request(string path) => LaunchRequest.Message(OpenFileMessage.Kind,
-		new OpenFileMessage(path), TestMessagesJsonContext.Default.OpenFileMessage);
+	private static LaunchRequest Request(string path) =>
+		LaunchRequest.Message(new OpenFileMessage(path), TestMessagesJsonContext.Default.OpenFileMessage);
 
 	private static LauncherKitDesktopOptions CreateOptions(Func<IServiceProvider> getCurrentServices) => new()
 	{

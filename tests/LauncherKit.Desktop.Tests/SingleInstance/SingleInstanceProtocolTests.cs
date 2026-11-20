@@ -13,9 +13,8 @@ public sealed class SingleInstanceProtocolTests
 	{
 		// Arrange
 		using var stream = new MemoryStream();
-		var first = LaunchRequest.Message(OpenFileMessage.Kind, new OpenFileMessage("a.7z"),
-			TestMessagesJsonContext.Default.OpenFileMessage);
-		var message = LaunchRequest.Message(OpenFileMessage.Kind, new OpenFileMessage(@"C:\Моды\a ""b"".7z"),
+		var first = LaunchRequest.Message(new OpenFileMessage("a.7z"), TestMessagesJsonContext.Default.OpenFileMessage);
+		var message = LaunchRequest.Message(new OpenFileMessage(@"C:\Моды\a ""b"".7z"),
 			TestMessagesJsonContext.Default.OpenFileMessage);
 		await SingleInstanceProtocol.WriteFrame(stream, SingleInstanceProtocol.Serialize(first), CancellationToken.None);
 		await SingleInstanceProtocol.WriteFrame(stream, SingleInstanceProtocol.Serialize(message), CancellationToken.None);
@@ -63,11 +62,10 @@ public sealed class SingleInstanceProtocolTests
 	}
 
 	[TestCase("not json")]
-	[TestCase("""{"Version":2,"Kind":"openFile","Payload":{}}""")]
-	[TestCase("""{"Version":1,"Kind":"openFile","Payload":null}""")]
-	[TestCase("""{"Version":1,"Kind":null,"Payload":{}}""")]
-	[TestCase("""{"Version":1,"Payload":{}}""")]
-	public async Task ReadFrame_MalformedOrIncompatibleJson_ReturnsInvalid(string json)
+	[TestCase("""{"Kind":"openFile","Payload":null}""")]
+	[TestCase("""{"Kind":null,"Payload":{}}""")]
+	[TestCase("""{"Payload":{}}""")]
+	public async Task ReadFrame_MalformedJson_ReturnsInvalid(string json)
 	{
 		// Arrange
 		var bytes = Encoding.UTF8.GetBytes(json);
@@ -84,8 +82,8 @@ public sealed class SingleInstanceProtocolTests
 	public void Serialize_Oversized_Throws()
 	{
 		// Arrange
-		var message = LaunchRequest.Message(OpenFileMessage.Kind,
-			new OpenFileMessage(new string('a', SingleInstanceProtocol.MaxRequestBytes)), TestMessagesJsonContext.Default.OpenFileMessage);
+		var message = LaunchRequest.Message(new OpenFileMessage(new string('a', SingleInstanceProtocol.MaxRequestBytes)),
+			TestMessagesJsonContext.Default.OpenFileMessage);
 
 		// Act & Assert
 		Assert.That(() => SingleInstanceProtocol.Serialize(message), Throws.ArgumentException);
