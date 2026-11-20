@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using LauncherKit.Desktop.SingleInstance;
 
@@ -7,6 +8,9 @@ namespace LauncherKit.Desktop.Tests.SingleInstance;
 internal sealed record OpenFileMessage(string Path) : ILauncherMessage
 {
 	public static string Kind => "openFile";
+
+	public static string? PathOf(string? payload) =>
+		payload is null ? null : JsonSerializer.Deserialize(payload, TestMessagesJsonContext.Default.OpenFileMessage)?.Path;
 }
 
 internal sealed record BlankKindMessage : ILauncherMessage
@@ -21,7 +25,6 @@ internal sealed class BlankKindHandler : ILauncherMessageHandler<BlankKindMessag
 
 [JsonSerializable(typeof(OpenFileMessage))]
 [JsonSerializable(typeof(BlankKindMessage))]
-[JsonSerializable(typeof(int))]
 internal sealed partial class TestMessagesJsonContext : JsonSerializerContext;
 
 /// <summary>A scoped service whose identity tells which scope handled a message.</summary>

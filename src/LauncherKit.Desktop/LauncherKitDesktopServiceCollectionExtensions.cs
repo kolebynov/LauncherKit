@@ -117,7 +117,8 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 			throw new ArgumentException($"A launcher message handler for the kind '{kind}' is already registered.", nameof(TMessage));
 		services.TryAddScoped<THandler>();
 		services.AddSingleton(new LauncherMessageRegistration(kind, (sp, payload) => sp.GetRequiredService<THandler>()
-			.Handle(payload.Deserialize(typeInfo) ?? throw new JsonException($"The '{kind}' launcher message is null."))));
+			.Handle(JsonSerializer.Deserialize(payload, typeInfo)
+				?? throw new JsonException($"The '{kind}' launcher message is null."))));
 		return services;
 	}
 }

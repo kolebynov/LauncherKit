@@ -17,7 +17,7 @@ public sealed class LauncherMessageProcessorTests
 
 		// Act
 		sut.Process("unknown", Payload("a"));
-		sut.Process(OpenFileMessage.Kind, System.Text.Json.JsonSerializer.SerializeToElement(1, TestMessagesJsonContext.Default.Int32));
+		sut.Process(OpenFileMessage.Kind, "1");
 		sut.Process(OpenFileMessage.Kind, Payload("fail"));
 		sut.Process(OpenFileMessage.Kind, Payload("b"));
 
@@ -101,6 +101,6 @@ public sealed class LauncherMessageProcessorTests
 		return services.BuildServiceProvider();
 	}
 
-	internal static System.Text.Json.JsonElement Payload(string path) =>
+	internal static string Payload(string path) =>
 		LaunchRequest.Message(new OpenFileMessage(path), TestMessagesJsonContext.Default.OpenFileMessage).Payload;
 }

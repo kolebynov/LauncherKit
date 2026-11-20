@@ -177,7 +177,7 @@ public sealed class SingleInstanceElectionTests
 		{
 			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
 			Assert.That(Kinds(requests), Is.EqualTo(new[] { OpenFileMessage.Kind, OpenFileMessage.Kind }));
-			Assert.That(requests.Select(r => r.Payload.GetProperty("Path").GetString()), Is.EqualTo(new[] { "a.7z", "b.7z" }));
+			Assert.That(requests.Select(r => OpenFileMessage.PathOf(r.Payload)), Is.EqualTo(new[] { "a.7z", "b.7z" }));
 		});
 		owner.ReleaseMutex();
 	}
@@ -373,7 +373,7 @@ public sealed class SingleInstanceElectionTests
 			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
 			var requests = Dequeue(queue, 1);
 			Assert.That(Kinds(requests), Is.EqualTo(new[] { OpenFileMessage.Kind }));
-			Assert.That(requests[0].Payload.GetProperty("Path").GetString(), Is.EqualTo("a.7z"));
+			Assert.That(OpenFileMessage.PathOf(requests[0].Payload), Is.EqualTo("a.7z"));
 		});
 		owner.ReleaseMutex();
 	}

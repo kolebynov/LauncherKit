@@ -61,8 +61,7 @@ internal static class SingleInstanceProtocol
 		try
 		{
 			var request = JsonSerializer.Deserialize(json, SingleInstanceJsonContext.Default.LaunchRequest);
-			return request is { Kind: not null }
-				&& request.Payload.ValueKind is not (JsonValueKind.Undefined or JsonValueKind.Null)
+			return request is { Kind: not null, Payload: not null }
 				? new Frame.Request(request)
 				: Frame.Invalid.Instance;
 		}

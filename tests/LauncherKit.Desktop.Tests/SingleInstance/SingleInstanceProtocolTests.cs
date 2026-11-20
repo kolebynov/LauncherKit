@@ -29,10 +29,10 @@ public sealed class SingleInstanceProtocolTests
 		Assert.Multiple(() =>
 		{
 			var firstRequest = firstFrame is SingleInstanceProtocol.Frame.Request(var f) ? f : null;
-			Assert.That(firstRequest?.Payload.GetProperty("Path").GetString(), Is.EqualTo("a.7z"));
+			Assert.That(OpenFileMessage.PathOf(firstRequest?.Payload), Is.EqualTo("a.7z"));
 			var request = received is SingleInstanceProtocol.Frame.Request(var r) ? r : null;
 			Assert.That(request?.Kind, Is.EqualTo(OpenFileMessage.Kind));
-			Assert.That(request?.Payload.GetProperty("Path").GetString(), Is.EqualTo(@"C:\Моды\a ""b"".7z"));
+			Assert.That(OpenFileMessage.PathOf(request?.Payload), Is.EqualTo(@"C:\Моды\a ""b"".7z"));
 			Assert.That(end.Value, Is.TypeOf<SingleInstanceProtocol.Frame.End>());
 		});
 	}
@@ -63,8 +63,10 @@ public sealed class SingleInstanceProtocolTests
 
 	[TestCase("not json")]
 	[TestCase("""{"Kind":"openFile","Payload":null}""")]
-	[TestCase("""{"Kind":null,"Payload":{}}""")]
-	[TestCase("""{"Payload":{}}""")]
+	[TestCase("""{"Kind":"openFile","Payload":{}}""")]
+	[TestCase("""{"Kind":"openFile"}""")]
+	[TestCase("""{"Kind":null,"Payload":"{}"}""")]
+	[TestCase("""{"Payload":"{}"}""")]
 	public async Task ReadFrame_MalformedJson_ReturnsInvalid(string json)
 	{
 		// Arrange

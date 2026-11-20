@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
 namespace LauncherKit.Desktop.SingleInstance;
@@ -10,7 +9,7 @@ internal sealed class LauncherMessageProcessor(
 	ILogger<LauncherMessageProcessor> logger)
 {
 	/// <summary>Runs the registered handler; an unknown kind, invalid payload or failing handler is logged and dropped.</summary>
-	public void Process(string kind, JsonElement payload)
+	public void Process(string kind, string payload)
 	{
 		var registration = registrations.FirstOrDefault(r => r.Kind == kind);
 		if (registration is null)
