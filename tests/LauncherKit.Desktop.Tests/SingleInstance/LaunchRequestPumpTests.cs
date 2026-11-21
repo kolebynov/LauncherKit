@@ -71,7 +71,7 @@ public sealed class LaunchRequestPumpTests
 	}
 
 	[Test]
-	public void Start_ScopeReplacedBetweenContexts_ResolvesHandlersOfCurrentScopeForEachContext()
+	public void Start_ScopeReplacedBetweenHandlers_ResolvesEachHandlerFromCurrentScope()
 	{
 		// Arrange
 		var mocker = new AutoMocker(MockBehavior.Strict);
@@ -83,8 +83,8 @@ public sealed class LaunchRequestPumpTests
 		mocker.Use<ILogger<LaunchRequestPump>>(new CapturedLogs<LaunchRequestPump>());
 		var calls = new List<string>();
 		IServiceProvider? current = null;
-		using var secondScope = CreateScope(new RecordingHandler("second", calls));
-		// The first handler replaces the scope; the context's remaining handler still comes from the first scope.
+		using var secondScope = CreateScope(new RecordingHandler("second-swap", calls), new RecordingHandler("second", calls));
+		// The first handler replaces the scope; the context's remaining handler comes from the new scope.
 		using var firstScope = CreateScope(
 			new RecordingHandler("swap", calls, () => current = secondScope),
 			new RecordingHandler("first", calls));
@@ -99,7 +99,152 @@ public sealed class LaunchRequestPumpTests
 		dispatcher.Drain();
 
 		// Assert
-		Assert.That(calls, Is.EqualTo(new[] { "swap:a", "first:a", "second:b" }));
+		Assert.That(calls, Is.EqualTo(new[] { "swap:a", "second:a", "second-swap:b", "second:b" }));
+	}
+
+	[Test]
+	public void Start_ScopeDisposedWhileHandlerPending_CallsRemainingHandlersFromNewScope()
+	{
+		// Arrange
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		using var enqueued = new Subject<Unit>();
+		var pending = new Queue<LaunchContext>();
+		SetupQueue(mocker, enqueued, pending);
+		var dispatcher = new QueuedDispatcher();
+		mocker.Use<IUiDispatcher>(dispatcher);
+		var logs = new CapturedLogs<LaunchRequestPump>();
+		mocker.Use<ILogger<LaunchRequestPump>>(logs);
+		var calls = new List<string>();
+		var gate = new TaskCompletionSource();
+		var services = new ServiceCollection();
+		var scopeIds = 0;
+		services.AddScoped(_ => new ScopeMarker(++scopeIds));
+		services.AddScoped<ILaunchHandler>(sp => new ScopeHandler("A", calls, sp.GetRequiredService<ScopeMarker>(), gate.Task));
+		services.AddScoped<ILaunchHandler>(sp => new ScopeHandler("B", calls, sp.GetRequiredService<ScopeMarker>(), Task.CompletedTask));
+		using var root = services.BuildServiceProvider();
+		var firstScope = root.CreateScope();
+		using var secondScope = root.CreateScope();
+		var current = firstScope.ServiceProvider;
+		mocker.Use(CreateOptions(() => current));
+		using var sut = mocker.CreateInstance<LaunchRequestPump>();
+		pending.Enqueue(Context("a"));
+		sut.Start();
+		dispatcher.Drain();
+		firstScope.Dispose();
+		current = secondScope.ServiceProvider;
+
+		// Act
+		gate.SetResult();
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(calls, Is.EqualTo(new[] { "A:1:live", "B:2:live" }));
+			Assert.That(logs.Entries, Is.Empty);
+		});
+	}
+
+	[Test]
+	public void Start_HandlerResolutionThrows_RethrowsOnDispatcherAndHandlesLaterContexts()
+	{
+		// Arrange
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		using var enqueued = new Subject<Unit>();
+		var pending = new Queue<LaunchContext>();
+		SetupQueue(mocker, enqueued, pending);
+		var dispatcher = new QueuedDispatcher();
+		mocker.Use<IUiDispatcher>(dispatcher);
+		var logs = new CapturedLogs<LaunchRequestPump>();
+		mocker.Use<ILogger<LaunchRequestPump>>(logs);
+		var calls = new List<string>();
+		var failure = new InvalidOperationException("Constructor failure.");
+		var attempts = 0;
+		var services = new ServiceCollection();
+		services.AddTransient<ILaunchHandler>(_ => attempts++ == 0 ? throw failure : new RecordingHandler("A", calls));
+		using var scope = services.BuildServiceProvider();
+		mocker.Use(CreateOptions(() => scope));
+		using var sut = mocker.CreateInstance<LaunchRequestPump>();
+		pending.Enqueue(Context("a"));
+		pending.Enqueue(Context("b"));
+		sut.Start();
+
+		// Act
+		var thrown = Assert.Throws<InvalidOperationException>(dispatcher.Drain);
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(thrown, Is.SameAs(failure));
+			Assert.That(calls, Is.EqualTo(new[] { "A:b" }));
+			Assert.That(pending, Is.Empty);
+			Assert.That(logs.Entries, Is.Empty);
+		});
+	}
+
+	[Test]
+	public void Start_HandlerTaskFaults_LogsErrorAndRunsLaterHandlers()
+	{
+		// Arrange
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		using var enqueued = new Subject<Unit>();
+		var pending = new Queue<LaunchContext>();
+		SetupQueue(mocker, enqueued, pending);
+		var dispatcher = new QueuedDispatcher();
+		mocker.Use<IUiDispatcher>(dispatcher);
+		var logs = new CapturedLogs<LaunchRequestPump>();
+		mocker.Use<ILogger<LaunchRequestPump>>(logs);
+		var calls = new List<string>();
+		var failure = new InvalidOperationException("Async failure.");
+		var gate = new TaskCompletionSource();
+		using var scope = CreateScope(new AsyncHandler("A", calls, _ => gate.Task), new RecordingHandler("B", calls));
+		mocker.Use(CreateOptions(() => scope));
+		using var sut = mocker.CreateInstance<LaunchRequestPump>();
+		pending.Enqueue(Context("a"));
+		sut.Start();
+		dispatcher.Drain();
+
+		// Act
+		gate.SetException(failure);
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(calls, Is.EqualTo(new[] { "A:a", "B:a" }));
+			Assert.That(logs.Entries.Select(entry => entry.Exception), Is.EqualTo(new[] { failure }));
+		});
+	}
+
+	[Test]
+	public void Dispose_CancellationCallbackThrows_LogsErrorWithoutThrowing()
+	{
+		// Arrange
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		using var enqueued = new Subject<Unit>();
+		var pending = new Queue<LaunchContext>();
+		SetupQueue(mocker, enqueued, pending);
+		var dispatcher = new QueuedDispatcher();
+		mocker.Use<IUiDispatcher>(dispatcher);
+		var logs = new CapturedLogs<LaunchRequestPump>();
+		mocker.Use<ILogger<LaunchRequestPump>>(logs);
+		var calls = new List<string>();
+		var failure = new InvalidOperationException("Callback failure.");
+		using var scope = CreateScope(new AsyncHandler("A", calls, ct =>
+		{
+			ct.Register(() => throw failure);
+			return new TaskCompletionSource().Task;
+		}));
+		mocker.Use(CreateOptions(() => scope));
+		var sut = mocker.CreateInstance<LaunchRequestPump>();
+		pending.Enqueue(Context("a"));
+		sut.Start();
+		dispatcher.Drain();
+
+		// Act
+		Assert.DoesNotThrow(sut.Dispose);
+
+		// Assert
+		Assert.That(logs.Entries, Has.Count.EqualTo(1));
+		Assert.That(((AggregateException)logs.Entries[0].Exception!).InnerExceptions, Is.EqualTo(new[] { failure }));
 	}
 
 	[Test]
@@ -361,6 +506,24 @@ public sealed class LaunchRequestPumpTests
 		{
 			calls.Add($"{name}:{string.Join(",", context.Args)}");
 			return new ValueTask(run(cancellationToken));
+		}
+	}
+
+	/// <summary>A scoped service recording its scope's number and whether the scope was disposed.</summary>
+	private sealed class ScopeMarker(int id) : IDisposable
+	{
+		public int Id { get; } = id;
+		public bool Disposed { get; private set; }
+		public void Dispose() => Disposed = true;
+	}
+
+	/// <summary>Records <c>name:scope:live|disposed</c> for each launch and returns the given task.</summary>
+	private sealed class ScopeHandler(string name, List<string> calls, ScopeMarker scope, Task run) : ILaunchHandler
+	{
+		public ValueTask Handle(LaunchContext context, CancellationToken cancellationToken)
+		{
+			calls.Add($"{name}:{scope.Id}:{(scope.Disposed ? "disposed" : "live")}");
+			return new ValueTask(run);
 		}
 	}
 

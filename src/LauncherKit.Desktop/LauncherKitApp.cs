@@ -93,6 +93,9 @@ public abstract class LauncherKitApp : Application
 			{
 				_logger.LogInformation("Exiting...");
 				Services.GetRequiredService<LaunchRequestQueue>().Complete();
+				// Cancel the running handler here, on the UI thread, while its scope is still alive: its cancellation may
+				// touch UI (e.g. close a dialog), which fails from the disposal worker. Callback failures are logged.
+				Services.GetRequiredService<LaunchRequestPump>().Dispose();
 				desktopServices?.Dispose();
 				DisposeServices();
 			};
@@ -164,8 +167,8 @@ public abstract class LauncherKitApp : Application
 		OnceOpened(mainWindow, () => _ = notifications.Start());
 	}
 
-	// Launches admitted before the window opens wait until it is shown, so handlers can rely on the window. Disposing the
-	// services stops the pump.
+	// Launches admitted before the window opens wait until it is shown, so handlers can rely on the window. The exit handler
+	// stops the pump on the UI thread before the services are disposed.
 	private void StartLaunchRequests(Window mainWindow)
 	{
 		var pump = Services.GetRequiredService<LaunchRequestPump>();
