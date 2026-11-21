@@ -9,5 +9,5 @@ internal interface ILaunchRequestQueue
 	/// <summary>Raised after each admitted request, on the admitting thread.</summary>
 	Observable<Unit> Enqueued { get; }
 
-	bool TryDequeue([MaybeNullWhen(false)] out LaunchRequest request);
+	bool TryDequeue([MaybeNullWhen(false)] out LaunchContext request);
 }

@@ -4,7 +4,7 @@ using Serilog;
 namespace LauncherKit.Desktop.SingleInstance;
 
 /// <summary>
-/// The owner's pipe server: admits each relaunch's frames into the <see cref="LaunchRequestQueue"/> until the relaunch
+/// The owner's pipe server: admits each relaunch's <see cref="LaunchContext"/> frames into the <see cref="LaunchRequestQueue"/> until the relaunch
 /// closes, one connection at a time, each bounded by the exchange timeout. Nothing is answered; invalid frames and frames
 /// the queue does not admit are dropped without stopping it. Failures go to the static Serilog logger, which the
 /// application configures later.
@@ -117,9 +117,9 @@ internal sealed class SingleInstanceListener : IDisposable
 			is not SingleInstanceProtocol.Frame.End and var frame)
 		{
 			// Frame contents are untrusted text from another process, so they stay out of the logs.
-			if (frame is not SingleInstanceProtocol.Frame.Request(var request))
+			if (frame is not SingleInstanceProtocol.Frame.Request(var context))
 				Log.Warning("Dropped an invalid launcher relaunch request");
-			else if (!queue.TryEnqueue(request))
+			else if (!queue.TryEnqueue(context))
 				Log.Warning("Dropped a launcher relaunch request: the queue is full or closed");
 		}
 	}

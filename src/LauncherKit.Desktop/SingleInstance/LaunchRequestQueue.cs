@@ -12,7 +12,7 @@ internal sealed class LaunchRequestQueue : ILaunchRequestQueue, IDisposable
 	public const int Capacity = 32;
 
 	private readonly Lock _lock = new();
-	private readonly Queue<LaunchRequest> _requests = new();
+	private readonly Queue<LaunchContext> _requests = new();
 	private readonly Subject<Unit> _enqueued = new();
 	private bool _completed;
 
@@ -20,7 +20,7 @@ internal sealed class LaunchRequestQueue : ILaunchRequestQueue, IDisposable
 	public Observable<Unit> Enqueued => _enqueued;
 
 	/// <summary>Admits <paramref name="request"/> unless the queue is full or completed.</summary>
-	public bool TryEnqueue(LaunchRequest request)
+	public bool TryEnqueue(LaunchContext request)
 	{
 		lock (_lock)
 		{
@@ -32,7 +32,7 @@ internal sealed class LaunchRequestQueue : ILaunchRequestQueue, IDisposable
 		return true;
 	}
 
-	public bool TryDequeue([MaybeNullWhen(false)] out LaunchRequest request)
+	public bool TryDequeue([MaybeNullWhen(false)] out LaunchContext request)
 	{
 		lock (_lock) return _requests.TryDequeue(out request);
 	}

@@ -12,21 +12,16 @@ public sealed class SingleInstanceElectionTests
 	private static readonly TimeSpan DeliveryTimeout = TimeSpan.FromSeconds(10);
 
 	[Test]
-	public void Run_NoOwner_BecomesOwnerWithoutSendingMessages()
+	public void Run_NoOwner_BecomesOwner()
 	{
 		// Arrange
 		var names = UniqueNames();
-		var invoked = false;
 
 		// Act
-		var result = SingleInstanceElection.Run(names, _ => invoked = true);
+		var result = SingleInstanceElection.Run(names, ["a.7z"], WorkingDirectory);
 
 		// Assert
-		Assert.Multiple(() =>
-		{
-			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Owner>());
-			Assert.That(invoked, Is.False);
-		});
+		Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Owner>());
 		if (result is SingleInstanceElection.Result.Owner(var mutex))
 		{
 			mutex.ReleaseMutex();
@@ -51,13 +46,13 @@ public sealed class SingleInstanceElectionTests
 		Assert.That(disconnected.Wait(DeliveryTimeout), Is.True, "The stalled connection was not disconnected.");
 
 		// Act
-		var result = RunOnOtherThread(names, SendOpenFile);
+		var result = RunOnOtherThread(names, Args);
 
 		// Assert
 		Assert.Multiple(() =>
 		{
 			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
-			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { OpenFileMessage.Kind }));
+			Assert.That(Dequeue(queue, 1)[0].Args, Is.EqualTo(Args));
 		});
 		owner.ReleaseMutex();
 	}
@@ -80,8 +75,7 @@ public sealed class SingleInstanceElectionTests
 					using var previousListener = new SingleInstanceListener(names.Pipe, previousQueue,
 						() => Timeout.InfiniteTimeSpan, null);
 					lingering = Connect(names);
-					var json = SingleInstanceProtocol.Serialize(LaunchRequest.Message(new OpenFileMessage("a.7z"),
-						TestMessagesJsonContext.Default.OpenFileMessage));
+					var json = SingleInstanceProtocol.Serialize(new LaunchContext(Args, WorkingDirectory, false));
 					lingering.Write(Length(json.Length));
 					lingering.Write(json);
 					Dequeue(previousQueue, 1);
@@ -96,13 +90,13 @@ public sealed class SingleInstanceElectionTests
 			using var listener = new SingleInstanceListener(names.Pipe, queue);
 
 			// Act
-			var result = RunOnOtherThread(names, SendOpenFile);
+			var result = RunOnOtherThread(names, Args);
 
 			// Assert
 			Assert.Multiple(() =>
 			{
 				Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
-				Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { OpenFileMessage.Kind }));
+				Assert.That(Dequeue(queue, 1)[0].Args, Is.EqualTo(Args));
 			});
 			owner.ReleaseMutex();
 		}
@@ -113,7 +107,7 @@ public sealed class SingleInstanceElectionTests
 	}
 
 	[Test]
-	public void Run_SecondaryUnderSingleThreadedContext_NeverPostsAndCallsBackOnCallingThread()
+	public void Run_SecondaryUnderSingleThreadedContext_NeverPosts()
 	{
 		// Arrange
 		var names = UniqueNames();
@@ -121,8 +115,6 @@ public sealed class SingleInstanceElectionTests
 		using var queue = new LaunchRequestQueue();
 		using var listener = new SingleInstanceListener(names.Pipe, queue);
 		var context = new NonPumpingSynchronizationContext();
-		var callingThread = 0;
-		var callbackThread = -1;
 
 		// Act
 		var result = Task.Run(() =>
@@ -131,12 +123,7 @@ public sealed class SingleInstanceElectionTests
 			SynchronizationContext.SetSynchronizationContext(context);
 			try
 			{
-				callingThread = Environment.CurrentManagedThreadId;
-				return SingleInstanceElection.Run(names, sender =>
-				{
-					callbackThread = Environment.CurrentManagedThreadId;
-					SendOpenFile(sender);
-				});
+				return SingleInstanceElection.Run(names, Args, WorkingDirectory);
 			}
 			finally
 			{
@@ -149,58 +136,7 @@ public sealed class SingleInstanceElectionTests
 		{
 			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
 			Assert.That(context.Posted, Is.False);
-			Assert.That(callbackThread, Is.EqualTo(callingThread));
-			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { OpenFileMessage.Kind }));
-		});
-		owner.ReleaseMutex();
-	}
-
-	[Test]
-	public void Run_OwnerListening_DeliversMessagesInOrder()
-	{
-		// Arrange
-		var names = UniqueNames();
-		using var owner = Own(names);
-		using var queue = new LaunchRequestQueue();
-		using var listener = new SingleInstanceListener(names.Pipe, queue);
-
-		// Act
-		var result = RunOnOtherThread(names, sender =>
-		{
-			sender.Send(new OpenFileMessage("a.7z"), TestMessagesJsonContext.Default.OpenFileMessage);
-			sender.Send(new OpenFileMessage("b.7z"), TestMessagesJsonContext.Default.OpenFileMessage);
-		});
-		var requests = Dequeue(queue, 2);
-
-		// Assert
-		Assert.Multiple(() =>
-		{
-			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
-			Assert.That(Kinds(requests), Is.EqualTo(new[] { OpenFileMessage.Kind, OpenFileMessage.Kind }));
-			Assert.That(requests.Select(r => OpenFileMessage.PathOf(r.Payload)), Is.EqualTo(new[] { "a.7z", "b.7z" }));
-		});
-		owner.ReleaseMutex();
-	}
-
-	[Test]
-	public void Run_NoCallback_SendsNothingAndReturnsSecondary()
-	{
-		// Arrange
-		var names = UniqueNames();
-		using var owner = Own(names);
-		using var queue = new LaunchRequestQueue();
-		using var listener = new SingleInstanceListener(names.Pipe, queue);
-
-		// Act
-		var result = RunOnOtherThread(names, null);
-		// A later relaunch's message arrives first: the one without a callback sent nothing.
-		RunOnOtherThread(names, SendOpenFile);
-
-		// Assert
-		Assert.Multiple(() =>
-		{
-			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
-			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { OpenFileMessage.Kind }));
+			Assert.That(Dequeue(queue, 1)[0].Args, Is.EqualTo(Args));
 		});
 		owner.ReleaseMutex();
 	}
@@ -211,21 +147,12 @@ public sealed class SingleInstanceElectionTests
 		// Arrange
 		var names = UniqueNames();
 		using var owner = Own(names);
-		var sent = false;
 
 		// Act
-		var result = RunOnOtherThread(names, sender =>
-		{
-			sender.Send(new OpenFileMessage("a.7z"), TestMessagesJsonContext.Default.OpenFileMessage);
-			sent = true;
-		});
+		var result = RunOnOtherThread(names, Args);
 
 		// Assert
-		Assert.Multiple(() =>
-		{
-			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
-			Assert.That(sent, Is.True);
-		});
+		Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
 		owner.ReleaseMutex();
 	}
 
@@ -245,13 +172,13 @@ public sealed class SingleInstanceElectionTests
 		}
 
 		// Act
-		var result = RunOnOtherThread(names, SendOpenFile);
+		var result = RunOnOtherThread(names, Args);
 
 		// Assert
 		Assert.Multiple(() =>
 		{
 			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
-			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { OpenFileMessage.Kind }));
+			Assert.That(Dequeue(queue, 1)[0].Args, Is.EqualTo(Args));
 		});
 		owner.ReleaseMutex();
 	}
@@ -268,13 +195,13 @@ public sealed class SingleInstanceElectionTests
 			client.Write(Length(SingleInstanceProtocol.MaxRequestBytes + 1));
 
 		// Act
-		var result = RunOnOtherThread(names, SendOpenFile);
+		var result = RunOnOtherThread(names, Args);
 
 		// Assert
 		Assert.Multiple(() =>
 		{
 			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
-			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { OpenFileMessage.Kind }));
+			Assert.That(Dequeue(queue, 1)[0].Args, Is.EqualTo(Args));
 		});
 		owner.ReleaseMutex();
 	}
@@ -292,13 +219,13 @@ public sealed class SingleInstanceElectionTests
 		}
 
 		// Act
-		var result = RunOnOtherThread(names, SendOpenFile);
+		var result = RunOnOtherThread(names, Args);
 
 		// Assert
 		Assert.Multiple(() =>
 		{
 			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
-			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { OpenFileMessage.Kind }));
+			Assert.That(Dequeue(queue, 1)[0].Args, Is.EqualTo(Args));
 		});
 		owner.ReleaseMutex();
 	}
@@ -314,7 +241,7 @@ public sealed class SingleInstanceElectionTests
 		using var listener = new SingleInstanceListener(names.Pipe, queue);
 
 		// Act
-		var result = RunOnOtherThread(names, SendOpenFile);
+		var result = RunOnOtherThread(names, Args);
 
 		// Assert
 		Assert.Multiple(() =>
@@ -326,32 +253,38 @@ public sealed class SingleInstanceElectionTests
 	}
 
 	[Test]
-	public void Run_CallbackThrows_DeliversSentMessagesAndReturnsSecondary()
+	public void Run_OwnerListening_ForwardsOneContextPerLaunchIncludingArgumentless()
 	{
 		// Arrange
 		var names = UniqueNames();
 		using var owner = Own(names);
 		using var queue = new LaunchRequestQueue();
 		using var listener = new SingleInstanceListener(names.Pipe, queue);
+		string[] args = ["a.7z", "", @"..\b ""c"".7z", "Моды"];
 
 		// Act
-		var result = RunOnOtherThread(names, sender =>
-		{
-			SendOpenFile(sender);
-			throw new InvalidOperationException("Consumer failure.");
-		});
+		var first = RunOnOtherThread(names, args, @"C:\first");
+		var second = RunOnOtherThread(names, [], @"D:\second");
+		var contexts = Dequeue(queue, 2);
 
 		// Assert
 		Assert.Multiple(() =>
 		{
-			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
-			Assert.That(Kinds(Dequeue(queue, 1)), Is.EqualTo(new[] { OpenFileMessage.Kind }));
+			Assert.That(first.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
+			Assert.That(second.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
+			Assert.That(contexts[0].Args, Is.EqualTo(args));
+			Assert.That(contexts[0].WorkingDirectory, Is.EqualTo(@"C:\first"));
+			Assert.That(contexts[0].IsFirstLaunch, Is.False);
+			Assert.That(contexts[1].Args, Is.Empty);
+			Assert.That(contexts[1].WorkingDirectory, Is.EqualTo(@"D:\second"));
+			Assert.That(contexts[1].IsFirstLaunch, Is.False);
+			Assert.That(queue.TryDequeue(out _), Is.False);
 		});
 		owner.ReleaseMutex();
 	}
 
 	[Test]
-	public void Run_OversizedMessage_DeliversEarlierMessagesAndReturnsSecondary()
+	public void Run_OversizedContext_DropsItAndLaterRelaunchIsAdmitted()
 	{
 		// Arrange
 		var names = UniqueNames();
@@ -360,28 +293,23 @@ public sealed class SingleInstanceElectionTests
 		using var listener = new SingleInstanceListener(names.Pipe, queue);
 
 		// Act
-		var result = RunOnOtherThread(names, sender =>
-		{
-			SendOpenFile(sender);
-			sender.Send(new OpenFileMessage(new string('a', SingleInstanceProtocol.MaxRequestBytes)),
-				TestMessagesJsonContext.Default.OpenFileMessage);
-		});
+		var oversized = RunOnOtherThread(names, [new string('a', SingleInstanceProtocol.MaxRequestBytes)]);
+		var result = RunOnOtherThread(names, Args);
 
 		// Assert
 		Assert.Multiple(() =>
 		{
+			Assert.That(oversized.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
 			Assert.That(result.Value, Is.TypeOf<SingleInstanceElection.Result.Secondary>());
-			var requests = Dequeue(queue, 1);
-			Assert.That(Kinds(requests), Is.EqualTo(new[] { OpenFileMessage.Kind }));
-			Assert.That(OpenFileMessage.PathOf(requests[0].Payload), Is.EqualTo("a.7z"));
+			Assert.That(Dequeue(queue, 1)[0].Args, Is.EqualTo(Args));
+			Assert.That(queue.TryDequeue(out _), Is.False);
 		});
 		owner.ReleaseMutex();
 	}
 
-	private static void SendOpenFile(ILauncherMessageSender sender) =>
-		sender.Send(new OpenFileMessage("a.7z"), TestMessagesJsonContext.Default.OpenFileMessage);
+	private const string WorkingDirectory = @"C:\relaunch";
 
-	private static string[] Kinds(IEnumerable<LaunchRequest> requests) => [.. requests.Select(r => r.Kind)];
+	private static string[] Args => ["a.7z"];
 
 	private static SingleInstanceNames UniqueNames() =>
 		SingleInstanceNames.ForCurrentUser($@"HKEY_CURRENT_USER\Software\LauncherKitTests\{Guid.NewGuid():N}");
@@ -404,9 +332,9 @@ public sealed class SingleInstanceElectionTests
 	}
 
 	// Delivery is one-way, so the test waits for the listener to admit the expected number of requests.
-	private static LaunchRequest[] Dequeue(LaunchRequestQueue queue, int count)
+	private static LaunchContext[] Dequeue(LaunchRequestQueue queue, int count)
 	{
-		var requests = new List<LaunchRequest>();
+		var requests = new List<LaunchContext>();
 		using var admitted = new SemaphoreSlim(0);
 		using var subscription = queue.Enqueued.Subscribe(_ => admitted.Release());
 		while (requests.Count < count)
@@ -419,8 +347,9 @@ public sealed class SingleInstanceElectionTests
 	}
 
 	// A mutex belongs to its thread, so the relaunch runs on another one.
-	private static SingleInstanceElection.Result RunOnOtherThread(SingleInstanceNames names, Action<ILauncherMessageSender>? sendMessages) =>
-		Task.Run(() => SingleInstanceElection.Run(names, sendMessages)).GetAwaiter().GetResult();
+	private static SingleInstanceElection.Result RunOnOtherThread(SingleInstanceNames names, string[] args,
+		string workingDirectory = WorkingDirectory) =>
+		Task.Run(() => SingleInstanceElection.Run(names, args, workingDirectory)).GetAwaiter().GetResult();
 
 	// Like a UI context whose thread is blocked in Run: anything posted to it would never run, so it only records posts
 	// and runs them elsewhere to keep a failing test from hanging.

@@ -37,7 +37,8 @@ public abstract class LauncherKitApp : Application
 	internal LauncherProductOptions Product { get; init; } = null!;
 
 	/// <summary>
-	/// The owner's launch requests, created before the services so requests admitted during startup wait; the services
+	/// The owner's launch requests (its own launch first), created before the services so requests admitted during startup
+	/// wait; the services
 	/// register it as their singleton; without it (designer) they register an empty one.
 	/// </summary>
 	internal LaunchRequestQueue? OwnerLaunchRequests { get; init; }
@@ -163,8 +164,8 @@ public abstract class LauncherKitApp : Application
 		OnceOpened(mainWindow, () => _ = notifications.Start());
 	}
 
-	// Requests admitted before the window opens wait until it is shown, so handlers can rely on the window.
-	// Disposing the services stops the pump.
+	// Launches admitted before the window opens wait until it is shown, so handlers can rely on the window. Disposing the
+	// services stops the pump.
 	private void StartLaunchRequests(Window mainWindow)
 	{
 		var pump = Services.GetRequiredService<LaunchRequestPump>();

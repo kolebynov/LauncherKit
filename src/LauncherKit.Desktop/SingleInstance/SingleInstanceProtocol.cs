@@ -6,7 +6,7 @@ namespace LauncherKit.Desktop.SingleInstance;
 
 /// <summary>
 /// One-way frames from a relaunch to the owner until the relaunch closes the pipe: each a little-endian 32-bit length
-/// and that many bytes of UTF-8 JSON <see cref="LaunchRequest"/>. Nothing is sent back.
+/// and that many bytes of UTF-8 JSON <see cref="LaunchContext"/> (one per relaunch). Nothing is sent back.
 /// </summary>
 internal static class SingleInstanceProtocol
 {
@@ -17,7 +17,7 @@ internal static class SingleInstanceProtocol
 
 	public union Frame(Frame.Request, Frame.Invalid, Frame.End)
 	{
-		public sealed record Request(LaunchRequest Value);
+		public sealed record Request(LaunchContext Value);
 
 		/// <summary>A well-framed but malformed or incompatible request; the following frames are still readable.</summary>
 		public sealed record Invalid;
@@ -26,13 +26,13 @@ internal static class SingleInstanceProtocol
 		public sealed record End;
 	}
 
-	/// <summary>The request's JSON; throws <see cref="ArgumentException"/> when it exceeds <see cref="MaxRequestBytes"/>.</summary>
-	public static byte[] Serialize(LaunchRequest request)
+	/// <summary>The context's JSON; throws <see cref="ArgumentException"/> when it exceeds <see cref="MaxRequestBytes"/>.</summary>
+	public static byte[] Serialize(LaunchContext context)
 	{
-		var json = JsonSerializer.SerializeToUtf8Bytes(request, SingleInstanceJsonContext.Default.LaunchRequest);
+		var json = JsonSerializer.SerializeToUtf8Bytes(context, SingleInstanceJsonContext.Default.LaunchContext);
 		return json.Length <= MaxRequestBytes
 			? json
-			: throw new ArgumentException($"The launch request exceeds {MaxRequestBytes} bytes.", nameof(request));
+			: throw new ArgumentException($"The launch context exceeds {MaxRequestBytes} bytes.", nameof(context));
 	}
 
 	public static async Task WriteFrame(Stream stream, byte[] json, CancellationToken cancellationToken)
@@ -60,9 +60,10 @@ internal static class SingleInstanceProtocol
 		await stream.ReadExactlyAsync(json, cancellationToken).ConfigureAwait(false);
 		try
 		{
-			var request = JsonSerializer.Deserialize(json, SingleInstanceJsonContext.Default.LaunchRequest);
-			return request is { Kind: not null, Payload: not null }
-				? new Frame.Request(request)
+			var context = JsonSerializer.Deserialize(json, SingleInstanceJsonContext.Default.LaunchContext);
+			// Only the owner itself admits its first launch: a relaunch claiming it is invalid.
+			return context is { Args: not null, WorkingDirectory: not null, IsFirstLaunch: false } && !context.Args.Contains(null!)
+				? new Frame.Request(context)
 				: Frame.Invalid.Instance;
 		}
 		catch (JsonException)

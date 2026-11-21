@@ -36,7 +36,7 @@ DATA_HEADING = 'Directory for downloads and temporary files'
 DOWNLOAD_FILE_NAME = Path(make_mocks.SAMPLE_DOWNLOAD_PATH).name
 POLL_INTERVAL = 0.5
 EXE_NAME = 'SampleLauncher.App.exe'
-# SecondLaunchMessageHandler.Title in the app.
+# SampleLaunchHandler.Title in the app.
 SECOND_LAUNCH_TITLE = 'Launched again'
 # Distinct from other launchers' defaults (kit 8095/8090) so a running launcher is never mistaken for the sample.
 SAMPLE_API_PORT = 8195
