@@ -10,11 +10,12 @@ namespace LauncherKit.Desktop.SingleInstance;
 /// </summary>
 internal sealed class MainWindowActivationLaunchHandler(IMainView mainView) : ILaunchHandler
 {
-	public void Handle(LaunchContext context)
+	public ValueTask Handle(LaunchContext context, CancellationToken cancellationToken)
 	{
-		if (context.IsFirstLaunch) return;
+		if (context.IsFirstLaunch) return ValueTask.CompletedTask;
 		var window = (Window)mainView;
 		if (window.WindowState == WindowState.Minimized) window.WindowState = WindowState.Normal;
 		window.Activate();
+		return ValueTask.CompletedTask;
 	}
 }

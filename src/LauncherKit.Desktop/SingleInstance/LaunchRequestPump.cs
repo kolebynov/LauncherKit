@@ -6,11 +6,12 @@ using R3;
 namespace LauncherKit.Desktop.SingleInstance;
 
 /// <summary>
-/// Drains the <see cref="LaunchRequestQueue"/> on the UI thread once started (when the main window is shown). Each context
-/// goes, in registration order, to every <see cref="ILaunchHandler"/> of the scope current at that moment (the kit's
-/// <see cref="MainWindowActivationLaunchHandler"/> first), so scope replacements (made in one UI turn) never see a disposed
-/// scope. Without registered handlers contexts are dropped; a failing handler is logged and the remaining handlers and
-/// following contexts still run. Stops when disposed, also by a handler, before the next handler call.
+/// Drains the <see cref="LaunchRequestQueue"/> on the UI thread once started (when the main window is shown), one context
+/// at a time. Each context goes, in registration order, to every <see cref="ILaunchHandler"/> of the scope current when
+/// its handling starts (the kit's <see cref="MainWindowActivationLaunchHandler"/> first); each handler is awaited before
+/// the next one and the next context waits for all of them. Without registered handlers contexts are dropped; a failing
+/// handler is logged and the remaining handlers and following contexts still run. Disposing it (also by a handler) cancels
+/// the token passed to the running handler and stops before the next handler call.
 /// </summary>
 internal sealed class LaunchRequestPump(
 	ILaunchRequestQueue queue,
@@ -18,7 +19,9 @@ internal sealed class LaunchRequestPump(
 	LauncherKitDesktopOptions options,
 	ILogger<LaunchRequestPump> logger) : IDisposable
 {
+	private readonly CancellationTokenSource _disposeCts = new();
 	private IDisposable? _subscription;
+	private bool _draining;
 	private bool _disposed;
 
 	/// <summary>Drains the backlog and every later request.</summary>
@@ -32,27 +35,51 @@ internal sealed class LaunchRequestPump(
 
 	public void Dispose()
 	{
+		if (_disposed) return;
 		_disposed = true;
 		_subscription?.Dispose();
+		_disposeCts.Cancel();
+		_disposeCts.Dispose();
+	}
+
+	// A drain already awaiting a handler picks up the newly enqueued contexts itself.
+	private void Drain()
+	{
+		if (_draining || _disposed) return;
+		_ = DrainAsync();
 	}
 
 	// The context stays out of every log template; handlers are consumer code, so one failure must not stop the others.
-	private void Drain()
+	// Every exception is caught here, so the discarded task never faults.
+	private async Task DrainAsync()
 	{
-		while (!_disposed && queue.TryDequeue(out var context))
+		_draining = true;
+		try
 		{
-			foreach (var handler in options.GetCurrentServices().GetServices<ILaunchHandler>())
+			var cancellationToken = _disposeCts.Token;
+			while (!_disposed && queue.TryDequeue(out var context))
 			{
-				if (_disposed) return;
-				try
+				foreach (var handler in options.GetCurrentServices().GetServices<ILaunchHandler>().ToArray())
 				{
-					handler.Handle(context);
-				}
-				catch (Exception e)
-				{
-					logger.LogError(e, "Failed to handle a launch");
+					if (_disposed) return;
+					try
+					{
+						await handler.Handle(context, cancellationToken);
+					}
+					catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+					{
+						return;
+					}
+					catch (Exception e)
+					{
+						logger.LogError(e, "Failed to handle a launch");
+					}
 				}
 			}
+		}
+		finally
+		{
+			_draining = false;
 		}
 	}
 }

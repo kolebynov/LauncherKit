@@ -25,13 +25,13 @@
 
 - Before the application starts, the owner creates a bounded `LaunchRequestQueue` (32 contexts), admits its own `LaunchContext` (`IsFirstLaunch = true`) and only then creates a `SingleInstanceListener` on the pipe, so its own launch is always handled first. Its own context counts toward the capacity.
 - The listener serves one connection at a time, each bounded by the 5 s exchange timeout, and keeps listening after every connection. A well-framed but invalid context (malformed JSON, a missing or null field or argument, or a forged `IsFirstLaunch: true`), or one the queue does not admit (full, or completed because the launcher is exiting), is skipped and the listener keeps reading that connection. An invalid length or a truncated frame ends that connection (its unread remainder is discarded) and the listener accepts the next one. Drops are logged as warnings that never include frame content; the listener starts before `LauncherKitApp` configures Serilog, so drops in that startup window may go unlogged.
-- `LauncherKitApp` registers the queue and the `LaunchRequestPump` as singletons. The pump starts when the main window first opens, so contexts admitted during startup wait and handlers can rely on the window. It dispatches each context on the UI thread, in admission order, to every `ILaunchHandler` resolved from the scope current at that moment, in registration order, with the same context, so scope reloads never see a disposed scope. The first of them is the kit's own activation handler (see below).
-- Without registered handlers contexts are dropped silently. A handler whose `Handle` throws is logged (without the context) with its exception, and the remaining handlers and following contexts still run. Resolving the handlers is not guarded: if a constructor or factory throws, the exception propagates out of the pump's Avalonia dispatcher callback unhandled (the kit installs no `Dispatcher.UnhandledException` handler), so under default unhandled-exception handling it reaches `LauncherKitApp`'s `AppDomain` unhandled-exception log and ends the launcher, like any other unhandled UI-thread exception. A consumer that installs its own dispatcher exception handler may mark it handled, in which case the launcher keeps running.
-- On exit the queue stops admitting contexts and disposing the services stops the pump.
+- `LauncherKitApp` registers the queue and the `LaunchRequestPump` as singletons. The pump starts when the main window first opens, so contexts admitted during startup wait and handlers can rely on the window. It dispatches each context on the UI thread, in admission order and one at a time, to every `ILaunchHandler` resolved from the scope current when that context's handling starts, in registration order, with the same context. Each handler's `ValueTask` is awaited before the next handler runs, and the next context waits until every handler of the current one has completed, so a handler may await work (e.g. a dialog) without a later launch's handling overlapping it. A scope reload made while a handler awaits does not change the handlers already resolved for that context; such a handler must not use its scope's services after the reload. The first of them is the kit's own activation handler (see below).
+- Without registered handlers contexts are dropped silently. A handler whose `Handle` throws or whose task faults is logged (without the context) with its exception, and the remaining handlers and following contexts still run. Resolving the handlers is not guarded: if a constructor or factory throws, the exception propagates out of the pump's Avalonia dispatcher callback unhandled (the kit installs no `Dispatcher.UnhandledException` handler), so under default unhandled-exception handling it reaches `LauncherKitApp`'s `AppDomain` unhandled-exception log and ends the launcher, like any other unhandled UI-thread exception. A consumer that installs its own dispatcher exception handler may mark it handled, in which case the launcher keeps running.
+- On exit the queue stops admitting contexts and disposing the services stops the pump: the token passed to the running handler is cancelled (an `OperationCanceledException` it then throws is not logged), and no further handler or context is processed.
 
 ## Consumer API
 
-Implement `ILaunchHandler.Handle(LaunchContext)` and register it, scoped, with `services.AddLaunchHandler<THandler>()` in `ConfigureServices`. Several handlers may be registered; each gets every launch, in registration order. `AddLaunchHandler` uses `TryAddEnumerable`, so adding the same type again does nothing; other non-keyed `ILaunchHandler` registrations also take part, in their registration order, without that deduplication.
+Implement `ILaunchHandler.Handle(LaunchContext, CancellationToken)` and register it, scoped, with `services.AddLaunchHandler<THandler>()` in `ConfigureServices`. Several handlers may be registered; each gets every launch, in registration order. `AddLaunchHandler` uses `TryAddEnumerable`, so adding the same type again does nothing; other non-keyed `ILaunchHandler` registrations also take part, in their registration order, without that deduplication.
 
 ```csharp
 [STAThread]
@@ -42,15 +42,15 @@ services.AddLaunchHandler<OpenFileLaunchHandler>();
 
 public sealed class OpenFileLaunchHandler(IFileOpener opener) : ILaunchHandler
 {
-	public void Handle(LaunchContext context)
+	public async ValueTask Handle(LaunchContext context, CancellationToken cancellationToken)
 	{
 		foreach (var path in context.Args)
-			opener.Start(Path.GetFullPath(path, context.WorkingDirectory));
+			await opener.Open(Path.GetFullPath(path, context.WorkingDirectory), cancellationToken);
 	}
 }
 ```
 
-The handler runs on the UI thread and should only start the work (e.g. enqueue a task). The same handler sees the first launch and relaunches, so startup argument handling needs no separate code path; use `IsFirstLaunch` where the two differ. Handlers need not activate the window: the kit's activation handler already ran for relaunches. The kit registers no file association.
+The handler runs on the UI thread. Later launches wait while it is awaited, so await only work that belongs to handling the launch (e.g. a question to the user) and start long background work (e.g. enqueue a task) instead. The same handler sees the first launch and relaunches, so startup argument handling needs no separate code path; use `IsFirstLaunch` where the two differ. Handlers need not activate the window: the kit's activation handler already ran for relaunches. The kit registers no file association.
 
 ## Foreground and the activation handler
 

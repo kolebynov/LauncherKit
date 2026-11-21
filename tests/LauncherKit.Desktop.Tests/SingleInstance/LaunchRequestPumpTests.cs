@@ -234,6 +234,87 @@ public sealed class LaunchRequestPumpTests
 		});
 	}
 
+	[Test]
+	public void Start_PendingHandler_DefersLaterHandlersAndContextsUntilItCompletes()
+	{
+		// Arrange
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		using var enqueued = new Subject<Unit>();
+		var pending = new Queue<LaunchContext>();
+		SetupQueue(mocker, enqueued, pending);
+		var dispatcher = new QueuedDispatcher();
+		mocker.Use<IUiDispatcher>(dispatcher);
+		mocker.Use<ILogger<LaunchRequestPump>>(new CapturedLogs<LaunchRequestPump>());
+		var calls = new List<string>();
+		var gate = new TaskCompletionSource();
+		using var scope = CreateScope(
+			new AsyncHandler("A", calls, _ => calls.Count == 1 ? gate.Task : Task.CompletedTask),
+			new RecordingHandler("B", calls));
+		mocker.Use(CreateOptions(() => scope));
+		using var sut = mocker.CreateInstance<LaunchRequestPump>();
+		pending.Enqueue(Context("a"));
+		pending.Enqueue(Context("b"));
+		sut.Start();
+		dispatcher.Drain();
+		pending.Enqueue(Context("c"));
+		enqueued.OnNext(Unit.Default);
+		dispatcher.Drain();
+		var beforeCompletion = calls.ToArray();
+
+		// Act
+		gate.SetResult();
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(beforeCompletion, Is.EqualTo(new[] { "A:a" }));
+			Assert.That(calls, Is.EqualTo(new[] { "A:a", "B:a", "A:b", "B:b", "A:c", "B:c" }));
+		});
+	}
+
+	[Test]
+	public void Dispose_PendingHandler_CancelsItsTokenAndSkipsLaterHandlersAndContextsWithoutLogging()
+	{
+		// Arrange
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		using var enqueued = new Subject<Unit>();
+		var pending = new Queue<LaunchContext>();
+		SetupQueue(mocker, enqueued, pending);
+		var dispatcher = new QueuedDispatcher();
+		mocker.Use<IUiDispatcher>(dispatcher);
+		var logs = new CapturedLogs<LaunchRequestPump>();
+		mocker.Use<ILogger<LaunchRequestPump>>(logs);
+		var calls = new List<string>();
+		var token = CancellationToken.None;
+		var gate = new TaskCompletionSource();
+		using var scope = CreateScope(
+			new AsyncHandler("A", calls, ct =>
+			{
+				token = ct;
+				ct.Register(() => gate.SetCanceled(ct));
+				return gate.Task;
+			}),
+			new RecordingHandler("B", calls));
+		mocker.Use(CreateOptions(() => scope));
+		var sut = mocker.CreateInstance<LaunchRequestPump>();
+		pending.Enqueue(Context("a"));
+		pending.Enqueue(Context("b"));
+		sut.Start();
+		dispatcher.Drain();
+
+		// Act
+		sut.Dispose();
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(token.IsCancellationRequested, Is.True);
+			Assert.That(calls, Is.EqualTo(new[] { "A:a" }));
+			Assert.That(pending, Has.Count.EqualTo(1));
+			Assert.That(logs.Entries, Is.Empty);
+		});
+	}
+
 	private delegate bool TryDequeueCallback([MaybeNullWhen(false)] out LaunchContext context);
 
 	private static void SetupQueue(AutoMocker mocker, Subject<Unit> enqueued, Queue<LaunchContext> pending)
@@ -265,10 +346,21 @@ public sealed class LaunchRequestPumpTests
 	/// <summary>Records <c>name:args</c> for each launch, then runs the optional callback.</summary>
 	private sealed class RecordingHandler(string name, List<string> calls, Action? then = null) : ILaunchHandler
 	{
-		public void Handle(LaunchContext context)
+		public ValueTask Handle(LaunchContext context, CancellationToken cancellationToken)
 		{
 			calls.Add($"{name}:{string.Join(",", context.Args)}");
 			then?.Invoke();
+			return ValueTask.CompletedTask;
+		}
+	}
+
+	/// <summary>Records <c>name:args</c> for each launch and returns the task of the callback.</summary>
+	private sealed class AsyncHandler(string name, List<string> calls, Func<CancellationToken, Task> run) : ILaunchHandler
+	{
+		public ValueTask Handle(LaunchContext context, CancellationToken cancellationToken)
+		{
+			calls.Add($"{name}:{string.Join(",", context.Args)}");
+			return new ValueTask(run(cancellationToken));
 		}
 	}
 

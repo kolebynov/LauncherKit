@@ -57,11 +57,11 @@ public sealed class LaunchHandlerRegistrationTests
 
 	private sealed class RecordingHandler : ILaunchHandler
 	{
-		public void Handle(LaunchContext context) => throw new AssertionException("Unexpected launch.");
+		public ValueTask Handle(LaunchContext context, CancellationToken cancellationToken) => throw new AssertionException("Unexpected launch.");
 	}
 
 	private sealed class OtherHandler : ILaunchHandler
 	{
-		public void Handle(LaunchContext context) => throw new AssertionException("Unexpected launch.");
+		public ValueTask Handle(LaunchContext context, CancellationToken cancellationToken) => throw new AssertionException("Unexpected launch.");
 	}
 }

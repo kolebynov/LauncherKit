@@ -10,10 +10,10 @@ public sealed class SampleLaunchHandler(INotificationService notifications) : IL
 	/// <summary>Stable title the automation flows look for.</summary>
 	public const string Title = "Launched again";
 
-	public void Handle(LaunchContext context)
+	public ValueTask Handle(LaunchContext context, CancellationToken cancellationToken)
 	{
 		// The sample has nothing to do with its own launch's arguments.
-		if (context.IsFirstLaunch) return;
+		if (context.IsFirstLaunch) return ValueTask.CompletedTask;
 		notifications.Show(new AppNotification
 		{
 			Type = NotificationType.Information,
@@ -21,5 +21,6 @@ public sealed class SampleLaunchHandler(INotificationService notifications) : IL
 			Message = $"Working directory: {context.WorkingDirectory}\nArguments: "
 				+ (context.Args.Count == 0 ? "(none)" : string.Join(' ', context.Args)),
 		});
+		return ValueTask.CompletedTask;
 	}
 }
