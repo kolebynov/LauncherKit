@@ -1,13 +1,16 @@
 using System.IO.Pipes;
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Desktop.SingleInstance;
 
 /// <summary>
 /// Decides at startup whether this process owns the launcher: it does when it creates and owns the session-local mutex.
-/// Otherwise it sends its frames to the owner, best effort and one-way, and never becomes the owner.
+/// Otherwise it forwards its <see cref="LaunchContext"/> to the owner, best effort and one-way, lets the owner take the
+/// foreground and never becomes the owner.
 /// </summary>
-internal static class SingleInstanceElection
+internal static partial class SingleInstanceElection
 {
 	private const int ConnectTimeoutMilliseconds = 2000;
 
@@ -21,10 +24,10 @@ internal static class SingleInstanceElection
 	}
 
 	/// <summary>
-	/// Must run on the thread that later releases an owned mutex. Only when another process owns the launcher does it send
-	/// the messages <paramref name="sendMessages"/> sends; without it nothing is sent.
+	/// Must run on the thread that later releases an owned mutex. Only when another process owns the launcher does it
+	/// forward <paramref name="args"/> and <paramref name="workingDirectory"/>, even without arguments.
 	/// </summary>
-	public static Result Run(SingleInstanceNames names, Action<ILauncherMessageSender>? sendMessages)
+	public static Result Run(SingleInstanceNames names, IReadOnlyList<string> args, string workingDirectory)
 	{
 		Mutex? mutex = new(false, names.Mutex, new NamedWaitHandleOptions { CurrentUserOnly = true, CurrentSessionOnly = true });
 		try
@@ -36,19 +39,19 @@ internal static class SingleInstanceElection
 				return new Result.Owner(owned);
 			}
 
-			if (sendMessages is null) return Result.Secondary.Instance;
-			var sender = new LauncherMessageSender();
+			byte[] frame;
 			try
 			{
-				sendMessages(sender);
+				frame = SingleInstanceProtocol.Serialize(new LaunchContext(args, workingDirectory, false));
 			}
-			// Consumer code (or an oversized message): what it sent so far still goes, and the relaunch still exits normally.
-			catch (Exception)
+			// An oversized launch is dropped; the relaunch still exits normally.
+			catch (ArgumentException)
 			{
+				return Result.Secondary.Instance;
 			}
 
 			// On the thread pool, so blocking here cannot deadlock under the caller's single-threaded context.
-			if (sender.Frames.Count > 0) Task.Run(() => Send(names.Pipe, sender.Frames)).GetAwaiter().GetResult();
+			Task.Run(() => Send(names.Pipe, frame)).GetAwaiter().GetResult();
 			return Result.Secondary.Instance;
 		}
 		finally
@@ -71,24 +74,45 @@ internal static class SingleInstanceElection
 	}
 
 	/// <summary>
-	/// Writes <paramref name="frames"/>, waits until the owner has read them and closes; an owner that is unreachable
-	/// (exiting, another elevation level, busy past the timeouts) simply misses them.
+	/// Lets the connected owner take the foreground, writes <paramref name="frame"/>, waits until the owner has read it and
+	/// closes; an owner that is unreachable (exiting, another elevation level, busy past the timeouts) simply misses it.
 	/// </summary>
-	private static async Task Send(string pipeName, IReadOnlyList<byte[]> frames)
+	private static async Task Send(string pipeName, byte[] frame)
 	{
 		try
 		{
 			await using var client = new NamedPipeClientStream(".", pipeName, PipeDirection.Out,
 				PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
 			await client.ConnectAsync(ConnectTimeoutMilliseconds).ConfigureAwait(false);
+			AllowOwnerForeground(client.SafePipeHandle);
 			using var timeout = new CancellationTokenSource(SingleInstanceProtocol.ExchangeTimeout);
-			foreach (var frame in frames) await SingleInstanceProtocol.WriteFrame(client, frame, timeout.Token).ConfigureAwait(false);
+			await SingleInstanceProtocol.WriteFrame(client, frame, timeout.Token).ConfigureAwait(false);
 			await client.FlushAsync(timeout.Token).ConfigureAwait(false);
-			// Closing before the owner reads could make it drop the unread frames (ERROR_NO_DATA on accept).
+			// Closing before the owner reads could make it drop the unread frame (ERROR_NO_DATA on accept).
 			await Task.Run(client.WaitForPipeDrain, CancellationToken.None).WaitAsync(timeout.Token).ConfigureAwait(false);
 		}
 		catch (Exception e) when (e is TimeoutException or IOException or UnauthorizedAccessException or OperationCanceledException)
 		{
 		}
 	}
+
+	/// <summary>
+	/// A process that may take the foreground (this relaunch, when the user started it) passes that right to the connected
+	/// owner, so the owner can bring its main window to the front, which it does for every relaunch. Failures only lose the
+	/// permission, never the delivery.
+	/// </summary>
+	private static void AllowOwnerForeground(SafePipeHandle pipe)
+	{
+		if (GetNamedPipeServerProcessId(pipe, out var ownerProcessId)) AllowSetForegroundWindow(ownerProcessId);
+	}
+
+	[LibraryImport("kernel32.dll", SetLastError = true)]
+	[DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	private static partial bool GetNamedPipeServerProcessId(SafePipeHandle pipe, out uint serverProcessId);
+
+	[LibraryImport("user32.dll", SetLastError = true)]
+	[DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	private static partial bool AllowSetForegroundWindow(uint processId);
 }

@@ -15,7 +15,7 @@ files. It references kit projects and `msbuild/LauncherKit.Product.props` by rel
 |---|---|
 | `SampleLauncher.Product.props` | The sample's own identity: `SAMPLE_LAUNCHER_` prefix, `SampleLauncher.App.exe`, the `HKEY_CURRENT_USER\Software\LauncherKit Sample\Sample Launcher` registry key. |
 | `src/SampleLauncher.App` | The app. It has one plain Avalonia window with Home, Tasks and Downloads buttons, a view registry, a yes/no `IDialogService` and a root directory manager whose root is the parent of the working directory. The window is the `INotificationManagerProvider`, and `App.axaml` holds the `AppNotification` toast template (`NotificationTitle`, `NotificationMessage`). |
-| `src/SampleLauncher.App/SecondLaunchMessage.cs` | The single-instance message: every later launch sends `SecondLaunchMessage` (its arguments and working directory, source-generated `SampleJsonContext`), and the running launcher's `SecondLaunchMessageHandler` shows a `Launched again` toast listing them. |
+| `src/SampleLauncher.App/SampleLaunchHandler.cs` | The single-instance `ILaunchHandler`: for every later launch (not its own first launch) the running launcher shows a `Launched again` toast listing that launch's working directory and arguments. Bringing the window to the front is done by the kit's activation handler, registered before the sample's, not by this handler. |
 | `scripts/make_mocks.py` | Writes the ignored `scripts/Mock`: `feedV12.json` (one category, `Sample Tools`), `Test.zip` for the setup's server check and `Sample/sample-download.txt`. |
 | `scripts/launcher_flows.py` | Runs the kit's `scripts/launcher_dev.py` CLI with the sample's defaults, plus the `setup`, `home`, `download`, `smoke` and `second-launch` flows. |
 

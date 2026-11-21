@@ -50,6 +50,25 @@ public sealed class LaunchRequestQueueTests
 	}
 
 	[Test]
+	public void TryEnqueue_OwnerContextThenRelaunchesUpToCapacity_RejectsTheNext()
+	{
+		// Arrange
+		using var queue = new LaunchRequestQueue();
+		queue.TryEnqueue(new LaunchContext([], @"C:\work", true));
+		for (var i = 1; i < LaunchRequestQueue.Capacity; i++) queue.TryEnqueue(Request());
+
+		// Act
+		var accepted = queue.TryEnqueue(Request());
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(accepted, Is.False);
+			Assert.That(queue.TryDequeue(out var first) ? first.IsFirstLaunch : (bool?)null, Is.True);
+		});
+	}
+
+	[Test]
 	public void TryEnqueue_Completed_Rejects()
 	{
 		// Arrange
@@ -63,6 +82,5 @@ public sealed class LaunchRequestQueueTests
 		Assert.That(accepted, Is.False);
 	}
 
-	private static LaunchRequest Request(string path = "a.7z") =>
-		LaunchRequest.Message(new OpenFileMessage(path), TestMessagesJsonContext.Default.OpenFileMessage);
+	private static LaunchContext Request(string path = "a.7z") => new([path], @"C:\work", false);
 }
