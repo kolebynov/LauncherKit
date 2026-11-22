@@ -1,6 +1,5 @@
 using LauncherKit.Infrastructure;
 using Microsoft.Extensions.Time.Testing;
-using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.ViewModels;
 using R3;
 using LauncherKit.Core.Feed;
@@ -57,11 +56,6 @@ public sealed class FeedLoadStatusViewModelTests
 	{
 		var feed = new Mock<IFeedProvider>(MockBehavior.Strict);
 		feed.SetupGet(x => x.LoadEvents).Returns(events);
-		return new FeedLoadStatusViewModel(feed.Object, clock, ImmediateDispatcher.Instance);
-	}
-
-	private sealed class ImmediateDispatcher : IUiDispatcher
-	{
-		public void Post(Action action) => action();
+		return new FeedLoadStatusViewModel(feed.Object, clock, ImmediateUiDispatcher.Instance);
 	}
 }

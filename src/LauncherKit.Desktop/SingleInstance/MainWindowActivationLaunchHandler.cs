@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using LauncherKit.Desktop.Extensions;
 
 namespace LauncherKit.Desktop.SingleInstance;
 
@@ -8,13 +9,13 @@ namespace LauncherKit.Desktop.SingleInstance;
 /// brings the main window to the front for each later launch, restoring it when minimized.
 /// <see cref="LauncherKitApp"/> guarantees the <see cref="IMainView"/> is the main window.
 /// </summary>
-internal sealed class MainWindowActivationLaunchHandler(IMainView mainView) : ILaunchHandler
+internal sealed class MainWindowActivationLaunchHandler(IAvaloniaApplicationLifetime applicationLifetime) : ILaunchHandler
 {
-	public void Handle(LaunchContext context)
+	public ValueTask Handle(LaunchContext context, CancellationToken cancellationToken)
 	{
-		if (context.IsFirstLaunch) return;
-		var window = (Window)mainView;
+		if (context.IsFirstLaunch || applicationLifetime.MainWindow?.AsWindow() is not { } window) return ValueTask.CompletedTask;
 		if (window.WindowState == WindowState.Minimized) window.WindowState = WindowState.Normal;
 		window.Activate();
+		return ValueTask.CompletedTask;
 	}
 }

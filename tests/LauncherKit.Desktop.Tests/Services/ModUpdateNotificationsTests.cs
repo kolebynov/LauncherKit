@@ -138,7 +138,7 @@ public sealed class ModUpdateNotificationsTests
 		await sut.Start();
 
 		sut.Dispose();
-		dispatcher.RunAll();
+		dispatcher.Drain();
 
 		mocker.GetMock<INotificationService>().Verify(x => x.Show(It.IsAny<AppNotification>()), Times.Never);
 	}
@@ -190,14 +190,5 @@ public sealed class ModUpdateNotificationsTests
 		var shown = new List<AppNotification>();
 		mocker.GetMock<INotificationService>().Setup(x => x.Show(It.IsAny<AppNotification>())).Callback(shown.Add);
 		return shown;
-	}
-
-	private sealed class QueuedUiDispatcher : IUiDispatcher
-	{
-		private readonly List<Action> _actions = [];
-
-		public void Post(Action action) => _actions.Add(action);
-
-		public void RunAll() => _actions.ForEach(x => x());
 	}
 }

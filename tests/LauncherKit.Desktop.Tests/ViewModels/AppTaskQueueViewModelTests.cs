@@ -17,7 +17,7 @@ public sealed class AppTaskQueueViewModelTests
 		// Arrange
 		using var events = new Subject<AppTaskQueue.Event>();
 		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.Use<IUiDispatcher>(ImmediateDispatcher.Instance);
+		mocker.Use<IUiDispatcher>(ImmediateUiDispatcher.Instance);
 		mocker.GetMock<IAppTaskQueue>().SetupGet(x => x.Events).Returns(events);
 		using var sut = mocker.CreateInstance<AppTaskQueueViewModel>();
 		var task = new AppTask("install", new AppTaskDescription.Custom("Install"), _ => [], [], null);
@@ -40,7 +40,7 @@ public sealed class AppTaskQueueViewModelTests
 	{
 		using var events = new Subject<AppTaskQueue.Event>();
 		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.Use<IUiDispatcher>(ImmediateDispatcher.Instance);
+		mocker.Use<IUiDispatcher>(ImmediateUiDispatcher.Instance);
 		mocker.GetMock<IAppTaskQueue>().SetupGet(x => x.Events).Returns(events);
 		using var sut = mocker.CreateInstance<AppTaskQueueViewModel>();
 		var task = new AppTask("install", new AppTaskDescription.Custom("Install"), _ => [], [], null);
@@ -54,10 +54,5 @@ public sealed class AppTaskQueueViewModelTests
 			Assert.That(sut.AppTasks, Is.Empty);
 			Assert.That(projection.ChoiceSelection, Is.Null);
 		});
-	}
-
-	private sealed class ImmediateDispatcher : IUiDispatcher
-	{
-		public void Post(Action action) => action();
 	}
 }

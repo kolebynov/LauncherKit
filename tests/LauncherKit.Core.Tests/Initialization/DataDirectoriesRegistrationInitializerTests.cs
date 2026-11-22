@@ -23,7 +23,7 @@ public sealed class DataDirectoriesRegistrationInitializerTests
 		using var sut = CreateSut(mocker);
 
 		// Act
-		await sut.Initialize();
+		sut.Initialize();
 
 		// Assert
 		registry.Verify(x => x.SetValue(Key, "DownloadsDirectory", @"D:\LauncherData\Downloads"), Times.Once);
@@ -42,7 +42,7 @@ public sealed class DataDirectoriesRegistrationInitializerTests
 		using var sut = CreateSut(mocker);
 
 		// Act
-		await sut.Initialize();
+		sut.Initialize();
 
 		// Assert
 		registry.Verify(x => x.SetValue(Key, "DownloadsDirectory", @"D:\Downloads"), Times.Once);
@@ -59,7 +59,7 @@ public sealed class DataDirectoriesRegistrationInitializerTests
 		var registry = mocker.GetMock<IRegistryManager>();
 		registry.Setup(x => x.SetValue(Key, It.IsAny<string>(), It.IsAny<object>()));
 		using var sut = CreateSut(mocker);
-		await sut.Initialize();
+		sut.Initialize();
 		registry.Verify(x => x.SetValue(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<object>()), Times.Never);
 
 		// Act
@@ -81,7 +81,7 @@ public sealed class DataDirectoriesRegistrationInitializerTests
 		using var sut = CreateSut(mocker);
 
 		// Act + Assert
-		Assert.That(async () => await sut.Initialize(), Throws.Nothing);
+		Assert.That(sut.Initialize, Throws.Nothing);
 	}
 
 	private static DataDirectoriesRegistrationInitializer CreateSut(AutoMocker mocker)

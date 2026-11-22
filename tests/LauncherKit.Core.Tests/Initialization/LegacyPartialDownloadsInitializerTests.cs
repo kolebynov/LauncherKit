@@ -25,7 +25,7 @@ public sealed class LegacyPartialDownloadsInitializerTests
 		var sut = mocker.CreateInstance<LegacyPartialDownloadsInitializer>(enablePrivate: true);
 
 		// Act
-		await sut.Initialize();
+		sut.Initialize();
 
 		// Assert
 		storage.Verify(

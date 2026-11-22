@@ -22,11 +22,7 @@ internal sealed class InstallationAnalyticsInitializer : IGlobalInitializer
 		_timeProvider = timeProvider;
 	}
 
-	public ValueTask Initialize()
-	{
-		ReportInstallation().Forget();
-		return ValueTask.CompletedTask;
-	}
+	public void Initialize() => ReportInstallation().Forget();
 
 	private async Task ReportInstallation()
 	{

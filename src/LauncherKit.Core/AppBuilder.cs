@@ -32,6 +32,7 @@ public sealed class AppBuilder
 			false;
 #endif
 
-		return new AppInstance(Services.BuildServiceProvider(validateScopes));
+		var rootSp = Services.BuildServiceProvider(validateScopes);
+		return new AppInstance(rootSp, Configuration);
 	}
 }

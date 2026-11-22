@@ -2,5 +2,5 @@
 
 public interface IEarlyConfiguredScopeInitializer
 {
-	ValueTask Initialize();
+	void Initialize();
 }

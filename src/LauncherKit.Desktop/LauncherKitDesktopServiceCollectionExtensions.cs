@@ -1,4 +1,8 @@
+using System.ComponentModel;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using LauncherKit.Core.Initialization;
+using LauncherKit.Infrastructure;
 using LauncherKit.Desktop.Initialization;
 using LauncherKit.Desktop.Interop;
 using LauncherKit.Desktop.Services;
@@ -14,6 +18,9 @@ using LauncherKit.Core.OAuth;
 using LauncherKit.Core.Services.Abstractions;
 using LauncherKit.Desktop.SingleInstance;
 using System.Diagnostics.CodeAnalysis;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using IApplicationLifetime = LauncherKit.Core.Services.Abstractions.IApplicationLifetime;
 
 namespace LauncherKit.Desktop;
 
@@ -23,10 +30,9 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 	/// Registers kit desktop behavior. The consumer supplies LauncherKitDesktopOptions, its <see cref="IViewRegistry"/>
 	/// and localization overrides.
 	/// </summary>
-	public static IServiceCollection AddLauncherKitDesktop(this IServiceCollection services)
+	public static IServiceCollection AddLauncherKitDesktop(
+		this IServiceCollection services, IClassicDesktopStyleApplicationLifetime? applicationLifetime)
 	{
-		services.AddEarlyGlobalInitializer(sp =>
-			LanguageCulture.Apply(sp.GetRequiredService<IConfiguration>()["App:Language"] ?? string.Empty));
 		services.TryAddSingleton<IUiDispatcher, AvaloniaUiDispatcher>();
 		services.TryAddSingleton<IMarkdownLoader, MarkdownLoader>();
 		services.TryAddSingleton<FeedLoadStatusViewModel>();
@@ -67,32 +73,55 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 		services.AddScoped<IAppCloseHandler, PendingTasksCloseHandler>();
 		services.TryAddSingleton<MainWindowStateHandler>();
 		services.AddSingleton<IAppCloseHandler>(sp => sp.GetRequiredService<MainWindowStateHandler>());
+		// Run in registration order when the main window is assigned, before its data context is set.
+		services.AddSingleton<IGlobalInitializer>(sp => sp.GetRequiredService<MainWindowStateHandler>());
+		services.AddGlobalInitializer<NavigationGuard>();
 		services.TryAddSingleton<MainWindowCloseHandler>();
+		services.AddSingleton<IGlobalInitializer>(sp => sp.GetRequiredService<MainWindowCloseHandler>());
+		// Once per process, only for the installation configured at startup: later scopes (first setup, Skyrim directory
+		// changes) are not checked. Waiting for the window to open lets its notification manager apply its template first.
+		services.AddGlobalInitializer(sp =>
+		{
+			if (string.IsNullOrEmpty(sp.GetRequiredService<IOptionsMonitor<AppSettings>>().CurrentValue.SkyrimDirectory))
+			{
+				return;
+			}
+
+			var lifetime = sp.GetRequiredService<IAvaloniaApplicationLifetime>();
+			lifetime.MainWindowOpened.Register(() => _ = lifetime.Services.GetRequiredService<ModUpdateNotifications>().Start());
+		});
 		services.AddConfiguredScopeInitializer<TaskbarProgressInitializer>();
 		services.AddGlobalInitializer<FeedLoadNotificationsInitializer>();
-		services.TryAddSingleton<Core.Services.Abstractions.IApplicationLifetime>(sp =>
-			new ApplicationLifetime(sp.GetRequiredService<LauncherKitDesktopOptions>().GetLifetime()));
-		services.TryAddSingleton<IExternalBrowser>(sp => new ExternalBrowser(() =>
-			sp.GetRequiredService<LauncherKitDesktopOptions>().GetMainWindow()
-				?? throw new InvalidOperationException("The consumer main window is not available.")));
+		if (applicationLifetime != null)
+		{
+			services.TryAddSingleton<IAvaloniaApplicationLifetime>(
+				_ => new AvaloniaApplicationLifetime(applicationLifetime));
+		}
+		else
+		{
+			services.TryAddSingleton<IAvaloniaApplicationLifetime, DesignAvaloniaApplicationLifetime>();
+		}
+
+		services.TryAddSingleton<IApplicationLifetime>(sp => sp.GetRequiredService<IAvaloniaApplicationLifetime>());
+		services.TryAddSingleton<IExternalBrowser, ExternalBrowser>();
 		services.TryAddSingleton<ITaskbarProgressSink>(sp => new TaskbarProgressSink(
-			sp.GetRequiredService<LauncherKitDesktopOptions>().GetMainWindow, TaskbarList.Create,
+			sp.GetRequiredService<IAvaloniaApplicationLifetime>(), TaskbarList.Create,
 			sp.GetRequiredService<ILogger<TaskbarProgressSink>>()));
 		services.TryAddSingleton<INotificationService>(sp => new NotificationService(
 			sp.GetRequiredService<IServiceProviderIsService>().IsService(typeof(INotificationManagerProvider))
 				? () => sp.GetRequiredService<INotificationManagerProvider>().NotificationManager
 				: null));
-		services.TryAddSingleton<LauncherKitScopeReloadService>();
+		services.AddGlobalInitializer<LauncherKitScopeReloadService>();
 		services.TryAddSingleton<IAppReloader>(sp => new AppReloader(
 			() => sp.GetRequiredService<IUiDispatcher>().Post(() =>
 			{
 				LanguageCulture.ApplyToCurrentThread();
-				sp.GetRequiredService<LauncherKitDesktopOptions>().ReloadViews();
+				sp.GetRequiredService<IAvaloniaApplicationLifetime>().ReloadViews();
 			})));
 		services.TryAddSingleton(sp => new ViewLocator(
 			sp.GetService<IViewRegistry>() ?? throw new InvalidOperationException(
 				$"No {nameof(IViewRegistry)} is registered: the consumer must register its view model to view mapping."),
-			sp.GetRequiredService<LauncherKitDesktopOptions>().GetCurrentServices));
+			sp.GetRequiredService<IAvaloniaApplicationLifetime>()));
 		return services;
 	}
 
@@ -109,5 +138,32 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 	{
 		services.TryAddEnumerable(ServiceDescriptor.Scoped<ILaunchHandler, THandler>());
 		return services;
+	}
+
+	private sealed class DesignAvaloniaApplicationLifetime : IAvaloniaApplicationLifetime
+	{
+		public IServiceProvider Services => ((LauncherKitApp)Application.Current!).Services;
+
+		public IMainView? MainWindow => null;
+
+		public CancellationToken MainWindowOpened => CancellationToken.None;
+
+		public event PropertyChangedEventHandler? PropertyChanged
+		{
+			add { }
+			remove { }
+		}
+
+		public void ReloadViews()
+		{
+		}
+
+		public void CreateNewScope()
+		{
+		}
+
+		public void Exit()
+		{
+		}
 	}
 }

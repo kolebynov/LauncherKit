@@ -105,6 +105,7 @@ static async Task HandleTestDownload(CancellationToken cancellationToken)
 		services.GetRequiredService<IFileSystemUtils>(), services.GetRequiredService<IRegistryManager>(),
 		appBuilder.Product));
 	using var app = appBuilder.Build();
+	app.Initialize();
 	var sp = app.ServiceProvider;
 	var feedSourceFactory = sp.GetRequiredService<IFeedFileSourceFactory>();
 	var downloader = sp.GetRequiredService<IFileSourceDownloader>();

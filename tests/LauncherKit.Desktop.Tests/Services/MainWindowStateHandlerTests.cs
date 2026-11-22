@@ -1,8 +1,10 @@
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.NUnit;
 using LauncherKit.Core.Services.Abstractions;
 using LauncherKit.Core.UserSettings;
+using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Services;
 using LauncherKit.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,17 +18,20 @@ public sealed class MainWindowStateHandlerTests
 	[AvaloniaTest]
 	[TestCase(true, WindowState.Maximized)]
 	[TestCase(false, WindowState.Normal)]
-	public void Restore_AppliesSavedBoundsAndState(bool isMaximized, WindowState expectedState)
+	public void Initialize_MainWindowAssigned_AppliesSavedBoundsAndState(bool isMaximized, WindowState expectedState)
 	{
 		// Arrange
 		var mocker = new AutoMocker(MockBehavior.Strict);
 		var settings = CreateSettings();
 		settings.Window.IsMaximized = isMaximized;
 		mocker.GetMock<ISettingsService>().Setup(s => s.GetSettings()).Returns(settings);
-		var window = new Window();
+		var window = new MainViewWindow();
+		mocker.GetMock<IAvaloniaApplicationLifetime>().SetupGet(x => x.MainWindow).Returns(window);
+		CreateHandler(mocker).Initialize();
 
 		// Act
-		CreateHandler(mocker).Restore(window);
+		mocker.GetMock<IAvaloniaApplicationLifetime>().Raise(x => x.PropertyChanged += null,
+			new PropertyChangedEventArgs(nameof(IAvaloniaApplicationLifetime.MainWindow)));
 
 		// Assert
 		Assert.Multiple(() =>
@@ -35,6 +40,35 @@ public sealed class MainWindowStateHandlerTests
 			Assert.That(window.Height, Is.EqualTo(600));
 			Assert.That(window.Position, Is.EqualTo(new PixelPoint(10, 20)));
 			Assert.That(window.WindowState, Is.EqualTo(expectedState));
+		});
+	}
+
+	[Test]
+	public void OnMainWindowAssigned_ActionThrows_PropagatesToRaiserAndRunsOnce()
+	{
+		// Arrange
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		var lifetime = mocker.GetMock<IAvaloniaApplicationLifetime>();
+		var mainView = mocker.Get<IMainView>();
+		lifetime.SetupGet(x => x.MainWindow).Returns(mainView);
+		var calls = new List<IMainView>();
+		lifetime.Object.OnMainWindowAssigned(view =>
+		{
+			calls.Add(view);
+			throw new InvalidOperationException("restore failed");
+		});
+		var args = new PropertyChangedEventArgs(nameof(IAvaloniaApplicationLifetime.MainWindow));
+
+		// Act
+		lifetime.Raise(x => x.PropertyChanged += null, new PropertyChangedEventArgs("Other"));
+		var exception = Assert.Throws<InvalidOperationException>(() => lifetime.Raise(x => x.PropertyChanged += null, args));
+		lifetime.Raise(x => x.PropertyChanged += null, args);
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(exception!.Message, Is.EqualTo("restore failed"));
+			Assert.That(calls, Is.EqualTo(new[] { mainView }));
 		});
 	}
 
@@ -85,14 +119,7 @@ public sealed class MainWindowStateHandlerTests
 	private static MainWindowStateHandler CreateHandler(AutoMocker mocker)
 	{
 		var services = new ServiceCollection().AddSingleton(mocker.Get<ISettingsService>()).BuildServiceProvider();
-		mocker.Use(new LauncherKitDesktopOptions
-		{
-			GetMainWindow = () => null,
-			GetLifetime = () => throw new AssertionException("No lifetime expected."),
-			GetCurrentServices = () => services,
-			RefreshMainWindow = () => { },
-			ReloadViews = () => { },
-		});
+		mocker.GetMock<IAvaloniaApplicationLifetime>().SetupGet(x => x.Services).Returns(services);
 		return mocker.CreateInstance<MainWindowStateHandler>();
 	}
 
@@ -108,5 +135,15 @@ public sealed class MainWindowStateHandlerTests
 		window.Show();
 		window.WindowState = state;
 		return window;
+	}
+
+	private sealed class MainViewWindow : Window, IMainView
+	{
+		public object? CurrentContent => null;
+
+		public void SetNavigationGuard(Func<Action, ValueTask> navigate) =>
+			throw new AssertionException("No navigation guard expected.");
+
+		public void ReloadViews() => throw new AssertionException("No view reload expected.");
 	}
 }

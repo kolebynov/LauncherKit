@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Headless.NUnit;
 using Avalonia.Threading;
@@ -123,18 +124,14 @@ public sealed class MainWindowCloseHandlerTests
 		var provider = services.BuildServiceProvider();
 		var mocker = new AutoMocker(MockBehavior.Strict);
 		mocker.Use<ILogger<MainWindowCloseHandler>>(NullLogger<MainWindowCloseHandler>.Instance);
-		mocker.Use(new LauncherKitDesktopOptions
-		{
-			GetMainWindow = () => null,
-			GetLifetime = () => throw new AssertionException("No lifetime expected."),
-			GetCurrentServices = () => provider,
-			RefreshMainWindow = () => { },
-			ReloadViews = () => { },
-		});
-		var window = new Window();
+		mocker.GetMock<IAvaloniaApplicationLifetime>().SetupGet(x => x.Services).Returns(provider);
+		var window = new MainViewWindow();
+		mocker.GetMock<IAvaloniaApplicationLifetime>().SetupGet(x => x.MainWindow).Returns(window);
 		var isClosed = false;
 		window.Closed += (_, _) => isClosed = true;
-		mocker.CreateInstance<MainWindowCloseHandler>().Attach(window);
+		mocker.CreateInstance<MainWindowCloseHandler>().Initialize();
+		mocker.GetMock<IAvaloniaApplicationLifetime>().Raise(x => x.PropertyChanged += null,
+			new PropertyChangedEventArgs(nameof(IAvaloniaApplicationLifetime.MainWindow)));
 		window.Show();
 		closed = () => isClosed;
 		return window;
@@ -149,5 +146,15 @@ public sealed class MainWindowCloseHandlerTests
 			CallCount++;
 			return handle(mainWindow);
 		}
+	}
+
+	private sealed class MainViewWindow : Window, IMainView
+	{
+		public object? CurrentContent => null;
+
+		public void SetNavigationGuard(Func<Action, ValueTask> navigate) =>
+			throw new AssertionException("No navigation guard expected.");
+
+		public void ReloadViews() => throw new AssertionException("No view reload expected.");
 	}
 }

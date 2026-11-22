@@ -30,8 +30,8 @@ internal sealed class CleanupOldDataInitializer : IConfiguredScopeInitializer
 		_downloadSettings = downloadSettings.Value;
 	}
 
-	public async ValueTask Initialize() =>
-		await _appTaskQueue.Enqueue(
+	public void Initialize() =>
+		Task.Run(async () => await _appTaskQueue.Enqueue(
 			new AppTask(
 				"CleanupOldData", AppTaskDescription.CleanupOldData.Instance,
 				context =>
@@ -52,7 +52,7 @@ internal sealed class CleanupOldDataInitializer : IConfiguredScopeInitializer
 						MicroTaskDescription.DeleteTemporaryFiles.Instance),
 				],
 				[], null),
-			CancellationToken.None);
+			CancellationToken.None)).GetAwaiter().GetResult();
 
 	private void RemoveOldDownloads(IFileStorageService fileStorageService)
 	{

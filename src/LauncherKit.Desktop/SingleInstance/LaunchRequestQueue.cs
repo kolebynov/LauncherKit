@@ -37,11 +37,9 @@ internal sealed class LaunchRequestQueue : ILaunchRequestQueue, IDisposable
 		lock (_lock) return _requests.TryDequeue(out request);
 	}
 
-	/// <summary>Stops admitting requests once the launcher is exiting.</summary>
-	public void Complete()
+	public void Dispose()
 	{
 		lock (_lock) _completed = true;
+		_enqueued.Dispose();
 	}
-
-	public void Dispose() => _enqueued.Dispose();
 }

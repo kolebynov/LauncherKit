@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Headless.NUnit;
 using LauncherKit.Desktop.Services;
@@ -20,7 +21,7 @@ public sealed class NavigationGuardTests
 		var navigations = 0;
 
 		// Act
-		await new NavigationGuard(view).Navigate(() => navigations++);
+		await CreateGuard(new AutoMocker(MockBehavior.Strict), view).Navigate(() => navigations++);
 
 		// Assert
 		Assert.That(navigations, Is.EqualTo(canNavigate ? 1 : 0));
@@ -34,7 +35,7 @@ public sealed class NavigationGuardTests
 		var navigations = 0;
 
 		// Act
-		await new NavigationGuard(view).Navigate(() => navigations++);
+		await CreateGuard(new AutoMocker(MockBehavior.Strict), view).Navigate(() => navigations++);
 
 		// Assert
 		Assert.That(navigations, Is.EqualTo(1));
@@ -46,7 +47,7 @@ public sealed class NavigationGuardTests
 		// Arrange
 		var answer = new TaskCompletionSource<bool>();
 		var guard = new StubGuard(() => new ValueTask<bool>(answer.Task));
-		var navigationGuard = new NavigationGuard(new MainViewWindow { CurrentContent = guard });
+		var navigationGuard = CreateGuard(new AutoMocker(MockBehavior.Strict), new MainViewWindow { CurrentContent = guard });
 		var navigations = new List<string>();
 		var first = navigationGuard.Navigate(() => navigations.Add("first"));
 
@@ -68,7 +69,7 @@ public sealed class NavigationGuardTests
 	public async Task Navigate_RequestedWhileNavigating_IsSkipped()
 	{
 		// Arrange
-		var navigationGuard = new NavigationGuard(new MainViewWindow());
+		var navigationGuard = CreateGuard(new AutoMocker(MockBehavior.Strict), new MainViewWindow());
 		var navigations = new List<string>();
 		Task? inner = null;
 
@@ -95,7 +96,7 @@ public sealed class NavigationGuardTests
 				? ValueTask.FromException<bool>(new InvalidOperationException("guard failed"))
 				: ValueTask.FromResult(true)),
 		};
-		var navigationGuard = new NavigationGuard(view);
+		var navigationGuard = CreateGuard(new AutoMocker(MockBehavior.Strict), view);
 		var navigations = 0;
 
 		// Act
@@ -153,12 +154,28 @@ public sealed class NavigationGuardTests
 		Assert.That(result.Value, Is.InstanceOf<HandleResult.CanClose>());
 	}
 
+	// Installs the guard the way the host does: through the lifetime's main window assignment.
+	private static NavigationGuard CreateGuard(AutoMocker mocker, MainViewWindow view)
+	{
+		var lifetime = mocker.GetMock<IAvaloniaApplicationLifetime>();
+		lifetime.SetupGet(x => x.MainWindow).Returns(view);
+		var navigationGuard = new NavigationGuard(lifetime.Object);
+		navigationGuard.Initialize();
+		lifetime.Raise(x => x.PropertyChanged += null,
+			new PropertyChangedEventArgs(nameof(IAvaloniaApplicationLifetime.MainWindow)));
+		Assert.That(view.NavigationGuard, Is.EqualTo((Func<Action, ValueTask>)navigationGuard.Navigate));
+		return navigationGuard;
+	}
+
 	private sealed class MainViewWindow : Window, IMainView
 	{
 		public object? CurrentContent { get; init; }
 
-		public void SetNavigationGuard(Func<Action, ValueTask> navigate) =>
-			throw new AssertionException("No navigation guard expected.");
+		public Func<Action, ValueTask>? NavigationGuard { get; private set; }
+
+		public void SetNavigationGuard(Func<Action, ValueTask> navigate) => NavigationGuard = navigate;
+
+		public void ReloadViews() => throw new AssertionException("No view reload expected.");
 	}
 
 	private sealed class StubGuard(Func<ValueTask<bool>> canNavigate) : INavigationGuard

@@ -4,4 +4,12 @@ namespace LauncherKit.Desktop.Services;
 public interface IUiDispatcher
 {
 	void Post(Action action);
+
+	Task InvokeAsync(Action action);
+
+	Task<TResult> InvokeAsync<TResult>(Func<TResult> action);
+
+	Task InvokeAsync(Func<Task> action);
+
+	Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> action);
 }

@@ -21,7 +21,7 @@ public sealed class FeedLoadNotificationsInitializer(
 	private IDisposable? _subscription;
 	private AppNotification? _notification;
 
-	public ValueTask Initialize()
+	public void Initialize()
 	{
 		_subscription ??= feedStatus.ObservePropertyChanged(x => x.Status).Subscribe(status =>
 		{
@@ -44,7 +44,6 @@ public sealed class FeedLoadNotificationsInitializer(
 			};
 			if (_notification is not null) notifications.Show(_notification);
 		});
-		return ValueTask.CompletedTask;
 	}
 
 	public void Dispose() => _subscription?.Dispose();

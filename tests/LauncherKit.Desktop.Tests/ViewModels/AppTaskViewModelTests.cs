@@ -16,7 +16,7 @@ public sealed class AppTaskViewModelTests
 	{
 		// Arrange
 		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.Use<IUiDispatcher>(ImmediateDispatcher.Instance);
+		mocker.Use<IUiDispatcher>(ImmediateUiDispatcher.Instance);
 		mocker.Use(new AppTask("task", new AppTaskDescription.Custom("Task"), _ => [], [], null));
 		var sut = mocker.CreateInstance<AppTaskViewModel>();
 
@@ -40,7 +40,7 @@ public sealed class AppTaskViewModelTests
 	public void SelectChoicesStep_ProjectsSelectionAndCompletionClearsIt()
 	{
 		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.Use<IUiDispatcher>(ImmediateDispatcher.Instance);
+		mocker.Use<IUiDispatcher>(ImmediateUiDispatcher.Instance);
 		mocker.Use(new AppTask("task", new AppTaskDescription.Custom("Task"), _ => [], [], null));
 		var sut = mocker.CreateInstance<AppTaskViewModel>();
 		using var context = new ChoiceSelectionContext(new ChoiceText.Content("Choices"), [], CancellationToken.None);
@@ -61,7 +61,7 @@ public sealed class AppTaskViewModelTests
 	public void ReplacingMicroTask_UnsubscribesOldChoiceSteps()
 	{
 		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.Use<IUiDispatcher>(ImmediateDispatcher.Instance);
+		mocker.Use<IUiDispatcher>(ImmediateUiDispatcher.Instance);
 		mocker.Use(new AppTask("task", new AppTaskDescription.Custom("Task"), _ => [], [], null));
 		var sut = mocker.CreateInstance<AppTaskViewModel>();
 		using var steps = new Subject<MicroTaskStep>();
@@ -70,10 +70,5 @@ public sealed class AppTaskViewModelTests
 		sut.Complete();
 		steps.OnNext(new MicroTaskStep.SelectChoices(context));
 		Assert.That(sut.ChoiceSelection, Is.Null);
-	}
-
-	private sealed class ImmediateDispatcher : IUiDispatcher
-	{
-		public void Post(Action action) => action();
 	}
 }

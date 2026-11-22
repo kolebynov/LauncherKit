@@ -2,5 +2,5 @@
 
 public interface IGlobalInitializer
 {
-	ValueTask Initialize();
+	void Initialize();
 }

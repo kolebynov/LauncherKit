@@ -27,7 +27,7 @@ public sealed class InstallationAnalyticsInitializerTests
 		var sut = mocker.CreateInstance<InstallationAnalyticsInitializer>(enablePrivate: true);
 
 		// Act
-		await sut.Initialize();
+		sut.Initialize();
 
 		// Assert
 		await TaskAssert.WithinTimeout(called.Task);
@@ -48,7 +48,7 @@ public sealed class InstallationAnalyticsInitializerTests
 		var sut = mocker.CreateInstance<InstallationAnalyticsInitializer>(enablePrivate: true);
 
 		// Act
-		await sut.Initialize();
+		sut.Initialize();
 		time.Advance(TimeSpan.FromSeconds(5));
 
 		// Assert

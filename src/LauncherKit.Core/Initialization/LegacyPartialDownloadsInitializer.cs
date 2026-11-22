@@ -22,14 +22,12 @@ internal sealed class LegacyPartialDownloadsInitializer : IConfiguredScopeInitia
 		_fileStorageService = fileStorageService;
 	}
 
-	public ValueTask Initialize()
+	public void Initialize()
 	{
 		var lastRunVersion = _appVersionProvider.LastRunVersion;
 		if (lastRunVersion != null && lastRunVersion < FirstVersionWithFileParts)
 		{
 			_fileStorageService.MigrateLegacyPartialDownloads();
 		}
-
-		return ValueTask.CompletedTask;
 	}
 }

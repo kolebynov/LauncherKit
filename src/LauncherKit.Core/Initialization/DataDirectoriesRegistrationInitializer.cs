@@ -31,11 +31,10 @@ internal sealed class DataDirectoriesRegistrationInitializer : IGlobalInitialize
 		_logger = logger;
 	}
 
-	public ValueTask Initialize()
+	public void Initialize()
 	{
 		Register(_appSettingsMonitor.CurrentValue);
 		_subscription = _appSettingsMonitor.OnChange((settings, _) => Register(settings));
-		return ValueTask.CompletedTask;
 	}
 
 	public void Dispose() => _subscription?.Dispose();
