@@ -23,7 +23,7 @@ public sealed class TaskbarProgressInitializerTests
 		var task = new AppTask("failed", new AppTaskDescription.Custom("failed"), _ => [], [], null);
 
 		// Act
-		await sut.Initialize();
+		sut.Initialize();
 		events.OnNext(new AppTaskQueue.Event.TaskFailed(task, new InvalidOperationException("failed")));
 		sut.Dispose();
 

@@ -153,12 +153,12 @@ public sealed class AppTaskQueue : IAppTaskQueue
 		}
 	}
 
-	public async ValueTask DisposeAsync()
+	public void Dispose()
 	{
 		_cancellationTokenSource.Cancel();
 		try
 		{
-			await _processingTask.WaitAsync(TimeSpan.FromSeconds(1), _timeProvider);
+			_processingTask.WaitAsync(TimeSpan.FromSeconds(1), _timeProvider).GetAwaiter().GetResult();
 		}
 		catch (TimeoutException)
 		{

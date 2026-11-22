@@ -123,14 +123,7 @@ public sealed class MainWindowCloseHandlerTests
 		var provider = services.BuildServiceProvider();
 		var mocker = new AutoMocker(MockBehavior.Strict);
 		mocker.Use<ILogger<MainWindowCloseHandler>>(NullLogger<MainWindowCloseHandler>.Instance);
-		mocker.Use(new LauncherKitDesktopOptions
-		{
-			GetMainWindow = () => null,
-			GetLifetime = () => throw new AssertionException("No lifetime expected."),
-			GetCurrentServices = () => provider,
-			RefreshMainWindow = () => { },
-			ReloadViews = () => { },
-		});
+		mocker.GetMock<IAvaloniaApplicationLifetime>().SetupGet(x => x.Services).Returns(provider);
 		var window = new Window();
 		var isClosed = false;
 		window.Closed += (_, _) => isClosed = true;

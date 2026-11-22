@@ -1,13 +1,14 @@
 using Avalonia.Controls;
 using LauncherKit.Desktop.Interop;
 using Avalonia.Threading;
+using LauncherKit.Desktop.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace LauncherKit.Desktop.Services;
 
 internal sealed class TaskbarProgressSink : ITaskbarProgressSink
 {
-	private readonly Func<Window?> _mainWindowProvider;
+	private readonly IAvaloniaApplicationLifetime _applicationLifetime;
 	private readonly Func<ITaskbarList3> _taskbarListFactory;
 	private readonly ILogger<TaskbarProgressSink> _logger;
 	private ITaskbarList3? _taskbarList3;
@@ -16,10 +17,10 @@ internal sealed class TaskbarProgressSink : ITaskbarProgressSink
 	/// <param name="taskbarListFactory">
 	/// Creates the COM object; called on the UI thread, so the object lives in the UI thread's apartment.
 	/// </param>
-	public TaskbarProgressSink(Func<Window?> mainWindowProvider, Func<ITaskbarList3> taskbarListFactory,
+	public TaskbarProgressSink(IAvaloniaApplicationLifetime applicationLifetime, Func<ITaskbarList3> taskbarListFactory,
 		ILogger<TaskbarProgressSink> logger)
 	{
-		_mainWindowProvider = mainWindowProvider;
+		_applicationLifetime = applicationLifetime;
 		_taskbarListFactory = taskbarListFactory;
 		_logger = logger;
 	}
@@ -28,7 +29,7 @@ internal sealed class TaskbarProgressSink : ITaskbarProgressSink
 	{
 		Dispatcher.UIThread.Post(() =>
 		{
-			var handle = _mainWindowProvider()?.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
+			var handle = _applicationLifetime.MainWindow?.AsWindow().TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
 			if (handle == IntPtr.Zero || GetTaskbarList() is not { } taskbarList3)
 			{
 				return;

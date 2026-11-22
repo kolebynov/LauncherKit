@@ -39,7 +39,7 @@ public sealed class LaunchHandlerRegistrationTests
 		var services = new ServiceCollection();
 
 		// Act
-		services.AddLauncherKitDesktop();
+		services.AddLauncherKitDesktop(applicationLifetime: null);
 		services.AddLaunchHandler<RecordingHandler>();
 		services.AddLaunchHandler<OtherHandler>();
 

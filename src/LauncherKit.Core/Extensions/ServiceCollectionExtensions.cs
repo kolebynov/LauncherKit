@@ -203,6 +203,14 @@ public static class ServiceCollectionExtensions
 		return services;
 	}
 
+	public static IServiceCollection AddScopeInitializer<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(
+		this IServiceCollection services)
+		where T : class, IScopeInitializer
+	{
+		services.AddScoped<IScopeInitializer, T>();
+		return services;
+	}
+
 	public static IServiceCollection AddGlobalInitializer(
 		this IServiceCollection services, Action<IServiceProvider> initializer)
 	{

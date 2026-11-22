@@ -2,8 +2,10 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Threading;
 using LauncherKit.Core;
 using LauncherKit.Core.Extensions;
+using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Localization;
 using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.ViewModels;
@@ -43,67 +45,81 @@ public abstract class LauncherKitApp : Application
 	/// </summary>
 	internal LaunchRequestQueue? OwnerLaunchRequests { get; init; }
 
+	internal AppInstance AppInstance => _appInstance ?? throw new InvalidOperationException("The application is not initialized.");
+
 	/// <summary>The current application scope's services; the scope is replaced when installation settings change.</summary>
-	public IServiceProvider Services => (_appInstance ?? throw new InvalidOperationException("The application is not initialized.")).ServiceProvider;
+	public IServiceProvider Services => AppInstance.ServiceProvider;
 
 	public sealed override void Initialize()
 	{
-		var appBuilder = new AppBuilder(Product);
-		ConfigureAppServices(appBuilder);
-		_appInstance = appBuilder.Build();
-		LocalizationMarkup.Configure(Services.GetRequiredService<IStringLocalizer<DesktopStrings>>());
-		OnServicesBuilt(Services);
 		LoadXaml();
-		_logger = Services.GetRequiredService<ILogger<LauncherKitApp>>();
-		InstallViewLocator();
-		Services.GetRequiredService<LauncherKitScopeReloadService>().Start(_appInstance.CreateNewScope);
+	}
+
+	public sealed override void OnFrameworkInitializationCompleted()
+	{
+		base.OnFrameworkInitializationCompleted();
+
+		var appBuilder = new AppBuilder(Product);
+		ConfigureAppServices(appBuilder, ApplicationLifetime as IClassicDesktopStyleApplicationLifetime);
+		_appInstance = appBuilder.Build();
+
+		_logger = _appInstance.RootServiceProvider.GetRequiredService<ILogger<LauncherKitApp>>();
 
 		AppDomain.CurrentDomain.UnhandledException += (_, args) =>
 		{
 			_logger.LogError(args.ExceptionObject as Exception, "Unhandled exception");
-			if (args.IsTerminating) DisposeServices();
+			if (args.IsTerminating) Log.CloseAndFlush();
 		};
 		TaskScheduler.UnobservedTaskException += (_, args) =>
 		{
 			_logger.LogError(args.Exception, "Unobserved task exception");
 			if (args.Exception.InnerException is OperationCanceledException) args.SetObserved();
 		};
-	}
 
-	public sealed override void OnFrameworkInitializationCompleted()
-	{
+		ObservableSystem.RegisterUnhandledExceptionHandler(e => _logger.LogError(e, "Unhandled observable system exception"));
+
 		try
 		{
-			_logger.LogInformation("OnFrameworkInitializationCompleted started");
-			base.OnFrameworkInitializationCompleted();
-			if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop) return;
-			ObservableSystem.RegisterUnhandledExceptionHandler(e => _logger.LogError(e, "Unhandled observable system exception"));
-			var mainView = Services.GetRequiredService<IMainView>();
-			var mainWindow = mainView as Window
-				?? throw new InvalidOperationException("The registered IMainView must derive from Avalonia.Controls.Window.");
-			Services.GetRequiredService<MainWindowStateHandler>().Restore(mainWindow);
-			mainView.SetNavigationGuard(new NavigationGuard(mainView).Navigate);
-			mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModelBase>();
-			desktop.MainWindow = mainWindow;
-			Services.GetRequiredService<MainWindowCloseHandler>().Attach(mainWindow);
-			StartModUpdateNotifications(mainWindow);
-			StartLaunchRequests(mainWindow);
-			var desktopServices = StartDesktopServices(desktop);
-			desktop.Exit += (_, _) =>
+			LanguageCulture.Apply(_appInstance!.Configuration["App:Language"]);
+			if (Design.IsDesignMode) _appInstance.InitializeDesignMode();
+			else _appInstance.Initialize();
+
+			DataTemplates.Insert(0, Services.GetRequiredService<ViewLocator>());
+			LocalizationMarkup.Configure(Services.GetRequiredService<IStringLocalizer<DesktopStrings>>());
+			OnServicesBuilt();
+
+			if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
 			{
-				_logger.LogInformation("Exiting...");
-				Services.GetRequiredService<LaunchRequestQueue>().Complete();
-				// Cancel the running handler here, on the UI thread, while its scope is still alive: its cancellation may
-				// touch UI (e.g. close a dialog), which fails from the disposal worker. Callback failures are logged.
-				Services.GetRequiredService<LaunchRequestPump>().Dispose();
-				desktopServices?.Dispose();
-				DisposeServices();
-			};
+				var mainView = CreateMainView();
+				var mainWindow = mainView.AsWindow();
+				Services.GetRequiredService<MainWindowStateHandler>().Restore(mainWindow);
+				mainView.SetNavigationGuard(new NavigationGuard(mainView).Navigate);
+				mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModelBase>();
+				desktop.MainWindow = mainWindow;
+				Services.GetRequiredService<MainWindowCloseHandler>().Attach(mainWindow);
+				((AvaloniaApplicationLifetime)Services.GetRequiredService<IAvaloniaApplicationLifetime>()).MainWindow = mainView;
+				StartModUpdateNotifications(mainWindow);
+				var desktopServices = StartDesktopServices(desktop);
+				desktop.Exit += (_, _) =>
+				{
+					_logger.LogInformation("Exiting...");
+					try
+					{
+						desktopServices?.Dispose();
+						_appInstance.Dispose();
+					}
+					finally
+					{
+						Log.CloseAndFlush();
+					}
+				};
+			}
+
 			_logger.LogInformation("OnFrameworkInitializationCompleted finished");
 		}
-		catch (Exception e)
+		catch (Exception e1)
 		{
-			_logger.LogError(e, "Failed to initialize");
+			_logger.LogError(e1, "Failed to initialize");
 			throw;
 		}
 	}
@@ -111,8 +127,8 @@ public abstract class LauncherKitApp : Application
 	/// <summary>
 	/// Loads the application XAML; implement it as <c>AvaloniaXamlLoader.Load(this)</c>. The call must be written in the
 	/// consumer's <c>x:Class</c> type: Avalonia's XAML compiler binds the precompiled XAML only to calls in that type's own
-	/// code, and otherwise populates the XAML from the constructor, before the application is set up. Called after the
-	/// services are built and <see cref="OnServicesBuilt"/>, so XAML markup can resolve localized texts.
+	/// code, and otherwise populates the XAML from the constructor, before the application is set up. Called from
+	/// <see cref="Initialize"/>, before the services are built.
 	/// </summary>
 	protected abstract void LoadXaml();
 
@@ -130,16 +146,13 @@ public abstract class LauncherKitApp : Application
 	/// </summary>
 	protected abstract void ConfigureServices(AppBuilder builder);
 
-	/// <summary>Runs once the services are built and the initial scope exists, before the application XAML is loaded.</summary>
-	protected virtual void OnServicesBuilt(IServiceProvider services)
+	/// <summary>
+	/// Runs after the services and the current scope are created and the kit's localization is configured, before the main
+	/// window is created; also runs in the designer.
+	/// </summary>
+	protected virtual void OnServicesBuilt()
 	{
 	}
-
-	/// <summary>
-	/// Rebuilds the rendered pages after a language change, keeping their view models and the scope that owns the tasks;
-	/// the consumer must also clear its navigation caches, which keep the old texts.
-	/// </summary>
-	protected abstract void ReloadViews(Window mainWindow);
 
 	/// <summary>
 	/// Starts optional services that need the desktop lifetime and main window (e.g. development automation); the result
@@ -153,9 +166,7 @@ public abstract class LauncherKitApp : Application
 	/// </summary>
 	protected virtual IEnumerable<KeyValuePair<string, string?>> GetInMemoryConfiguration() => [];
 
-	// The locator uses the consumer's registry and current scope to build view models' views.
-	private void InstallViewLocator() =>
-		DataTemplates.Insert(0, Services.GetRequiredService<ViewLocator>());
+	protected abstract IMainView CreateMainView();
 
 	// Once per process, only for the installation configured at startup: later scopes (first setup, Skyrim directory
 	// changes) are not checked. The notifier is resolved now, so a scope replaced before the window opens disposes it and
@@ -165,14 +176,6 @@ public abstract class LauncherKitApp : Application
 		if (string.IsNullOrEmpty(Services.GetRequiredService<IOptionsSnapshot<AppSettings>>().Value.SkyrimDirectory)) return;
 		var notifications = Services.GetRequiredService<ModUpdateNotifications>();
 		OnceOpened(mainWindow, () => _ = notifications.Start());
-	}
-
-	// Launches admitted before the window opens wait until it is shown, so handlers can rely on the window. The exit handler
-	// stops the pump on the UI thread before the services are disposed.
-	private void StartLaunchRequests(Window mainWindow)
-	{
-		var pump = Services.GetRequiredService<LaunchRequestPump>();
-		OnceOpened(mainWindow, pump.Start);
 	}
 
 	// Runs the action the first time the window raises Opened.
@@ -187,7 +190,7 @@ public abstract class LauncherKitApp : Application
 		}
 	}
 
-	private void ConfigureAppServices(AppBuilder appBuilder)
+	private void ConfigureAppServices(AppBuilder appBuilder, IClassicDesktopStyleApplicationLifetime? applicationLifetime)
 	{
 		var services = appBuilder.Services;
 		ConfigureLogging(services);
@@ -209,24 +212,10 @@ public abstract class LauncherKitApp : Application
 			services.AddSingleton<LaunchRequestQueue>();
 			services.AddSingleton<ILaunchRequestQueue>(sp => sp.GetRequiredService<LaunchRequestQueue>());
 		}
-		services.AddSingleton<LaunchRequestPump>();
-		services.AddSingleton(new LauncherKitDesktopOptions
-		{
-			GetMainWindow = () => (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow,
-			GetLifetime = () => (IClassicDesktopStyleApplicationLifetime)ApplicationLifetime!,
-			GetCurrentServices = () => Services,
-			RefreshMainWindow = () =>
-			{
-				if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: { } window })
-					window.DataContext = Services.GetRequiredService<MainWindowViewModelBase>();
-			},
-			ReloadViews = () =>
-			{
-				if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: { } window })
-					ReloadViews(window);
-			},
-		});
-		services.AddLauncherKitDesktop();
+
+		services.AddScopeInitializer<LaunchRequestPump>();
+
+		services.AddLauncherKitDesktop(applicationLifetime);
 		ConfigureServices(appBuilder);
 #if RELEASE
 		services.AddInstallationAnalytics();
@@ -253,11 +242,5 @@ public abstract class LauncherKitApp : Application
 				formatProvider: CultureInfo.InvariantCulture)
 			.CreateLogger();
 		services.AddLogging(builder => builder.AddSerilog(dispose: false));
-	}
-
-	private void DisposeServices()
-	{
-		_appInstance?.Dispose();
-		Log.CloseAndFlush();
 	}
 }

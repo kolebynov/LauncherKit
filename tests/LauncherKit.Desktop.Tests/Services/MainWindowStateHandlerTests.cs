@@ -85,14 +85,7 @@ public sealed class MainWindowStateHandlerTests
 	private static MainWindowStateHandler CreateHandler(AutoMocker mocker)
 	{
 		var services = new ServiceCollection().AddSingleton(mocker.Get<ISettingsService>()).BuildServiceProvider();
-		mocker.Use(new LauncherKitDesktopOptions
-		{
-			GetMainWindow = () => null,
-			GetLifetime = () => throw new AssertionException("No lifetime expected."),
-			GetCurrentServices = () => services,
-			RefreshMainWindow = () => { },
-			ReloadViews = () => { },
-		});
+		mocker.GetMock<IApplicationLifetime>().SetupGet(x => x.Services).Returns(services);
 		return mocker.CreateInstance<MainWindowStateHandler>();
 	}
 

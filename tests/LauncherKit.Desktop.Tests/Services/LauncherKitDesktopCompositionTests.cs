@@ -13,7 +13,7 @@ public sealed class LauncherKitDesktopCompositionTests
 	public void DesktopRegistration_KeepsPageModelsScopedAndPlatformServicesSingleton()
 	{
 		var services = new ServiceCollection();
-		services.AddLauncherKitDesktop();
+		services.AddLauncherKitDesktop(applicationLifetime: null);
 
 		Assert.Multiple(() =>
 		{
@@ -25,7 +25,7 @@ public sealed class LauncherKitDesktopCompositionTests
 			})
 				Assert.That(services.Single(x => x.ServiceType == model).Lifetime, Is.EqualTo(ServiceLifetime.Scoped));
 			Assert.That(services.Single(x => x.ServiceType == typeof(IUiDispatcher)).Lifetime, Is.EqualTo(ServiceLifetime.Singleton));
-			Assert.That(services.Single(x => x.ServiceType == typeof(LauncherKitScopeReloadService)).Lifetime, Is.EqualTo(ServiceLifetime.Singleton));
+			Assert.That(services.Single(x => x.ImplementationType == typeof(LauncherKitScopeReloadService)).Lifetime, Is.EqualTo(ServiceLifetime.Singleton));
 			Assert.That(services.Count(x => x.ServiceType == typeof(IAppCloseHandler)), Is.EqualTo(3));
 			Assert.That(services.Any(x => x.ServiceType == typeof(IConfiguredScopeInitializer)), Is.True);
 			Assert.That(services.Single(x => x.ServiceType == typeof(INotificationService)).Lifetime, Is.EqualTo(ServiceLifetime.Singleton));
@@ -38,7 +38,7 @@ public sealed class LauncherKitDesktopCompositionTests
 	{
 		// Arrange
 		var services = new ServiceCollection();
-		services.AddLauncherKitDesktop();
+		services.AddLauncherKitDesktop(applicationLifetime: null);
 		var providerResolved = false;
 		services.AddSingleton<INotificationManagerProvider>(_ =>
 		{
@@ -59,21 +59,12 @@ public sealed class LauncherKitDesktopCompositionTests
 	{
 		// Arrange
 		var services = new ServiceCollection();
-		services.AddLauncherKitDesktop();
-		services.AddSingleton(CreateOptions(() => throw new AssertionException("No scope expected.")));
+		services.AddLauncherKitDesktop(applicationLifetime: null);
+		services.AddSingleton(new Mock<IAvaloniaApplicationLifetime>(MockBehavior.Strict).Object);
 		using var provider = services.BuildServiceProvider();
 
 		// Act & Assert
 		Assert.That(() => provider.GetRequiredService<ViewLocator>(),
 			Throws.InvalidOperationException.With.Message.Contains(nameof(IViewRegistry)));
 	}
-
-	private static LauncherKitDesktopOptions CreateOptions(Func<IServiceProvider> currentServices) => new()
-	{
-		GetMainWindow = () => null,
-		GetLifetime = () => throw new AssertionException("No lifetime expected."),
-		GetCurrentServices = currentServices,
-		RefreshMainWindow = () => { },
-		ReloadViews = () => { },
-	};
 }

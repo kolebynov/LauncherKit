@@ -159,6 +159,8 @@ public sealed class NavigationGuardTests
 
 		public void SetNavigationGuard(Func<Action, ValueTask> navigate) =>
 			throw new AssertionException("No navigation guard expected.");
+
+		public void ReloadViews() => throw new AssertionException("No view reload expected.");
 	}
 
 	private sealed class StubGuard(Func<ValueTask<bool>> canNavigate) : INavigationGuard

@@ -21,7 +21,7 @@ public sealed class AppTaskQueueTests
 		mocker.Use(TimeProvider.System);
 		var microTasksFactory = mocker.GetMock<IMicroTasksFactory>().Object;
 		ServiceScopeFactoryStub.ScopeFactoryFor(mocker, microTasksFactory);
-		await using var sut = mocker.CreateInstance<AppTaskQueue>();
+		using var sut = mocker.CreateInstance<AppTaskQueue>();
 
 		// Act
 		await TaskAssert.WithinTimeout(sut.EnqueueAndWaitForCompletion(root, CancellationToken.None));
@@ -44,7 +44,7 @@ public sealed class AppTaskQueueTests
 		mocker.Use(TimeProvider.System);
 		var microTasksFactory = mocker.GetMock<IMicroTasksFactory>().Object;
 		ServiceScopeFactoryStub.ScopeFactoryFor(mocker, microTasksFactory);
-		await using var sut = mocker.CreateInstance<AppTaskQueue>();
+		using var sut = mocker.CreateInstance<AppTaskQueue>();
 
 		// Act
 		await TaskAssert.WithinTimeout(sut.EnqueueAndWaitForCompletion(root, CancellationToken.None));
@@ -77,7 +77,7 @@ public sealed class AppTaskQueueTests
 		mocker.Use(TimeProvider.System);
 		var microTasksFactory = mocker.GetMock<IMicroTasksFactory>().Object;
 		ServiceScopeFactoryStub.ScopeFactoryFor(mocker, microTasksFactory);
-		await using var sut = mocker.CreateInstance<AppTaskQueue>();
+		using var sut = mocker.CreateInstance<AppTaskQueue>();
 		await sut.Enqueue(blocker, CancellationToken.None);
 		await sut.Enqueue(install, CancellationToken.None);
 		var modCompletion = (await sut.Enqueue(mod, CancellationToken.None)) switch
@@ -127,7 +127,7 @@ public sealed class AppTaskQueueTests
 		mocker.Use(TimeProvider.System);
 		var microTasksFactory = mocker.GetMock<IMicroTasksFactory>().Object;
 		ServiceScopeFactoryStub.ScopeFactoryFor(mocker, microTasksFactory);
-		await using var sut = mocker.CreateInstance<AppTaskQueue>();
+		using var sut = mocker.CreateInstance<AppTaskQueue>();
 		using var subscription = SubscribeToRemovedTasks(sut, removedTasks, optionalRemoved);
 
 		// Act
@@ -180,7 +180,7 @@ public sealed class AppTaskQueueTests
 		mocker.Use(TimeProvider.System);
 		var microTasksFactory = mocker.GetMock<IMicroTasksFactory>().Object;
 		ServiceScopeFactoryStub.ScopeFactoryFor(mocker, microTasksFactory);
-		await using var sut = mocker.CreateInstance<AppTaskQueue>();
+		using var sut = mocker.CreateInstance<AppTaskQueue>();
 		using var subscription = SubscribeToRemovedTasks(sut, removedTasks, optionalRemoved);
 		await sut.Enqueue(game, CancellationToken.None);
 		await TaskAssert.WithinTimeout(optionalRemoved.Task);
@@ -220,7 +220,7 @@ public sealed class AppTaskQueueTests
 		mocker.Use(TimeProvider.System);
 		var microTasksFactory = mocker.GetMock<IMicroTasksFactory>().Object;
 		ServiceScopeFactoryStub.ScopeFactoryFor(mocker, microTasksFactory);
-		await using var sut = mocker.CreateInstance<AppTaskQueue>();
+		using var sut = mocker.CreateInstance<AppTaskQueue>();
 		var taskCounts = new List<int>();
 		sut.PropertyChanged += (_, args) =>
 		{

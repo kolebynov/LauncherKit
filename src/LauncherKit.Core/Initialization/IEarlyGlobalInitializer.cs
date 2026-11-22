@@ -2,5 +2,5 @@
 
 public interface IEarlyGlobalInitializer
 {
-	ValueTask Initialize();
+	void Initialize();
 }

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using LauncherKit.Desktop.Localization;
 using LauncherKit.Core.Extensions;
+using LauncherKit.Core.Initialization;
 using LauncherKit.Infrastructure;
 
 namespace LauncherKit.Desktop.Services;
@@ -9,37 +10,28 @@ namespace LauncherKit.Desktop.Services;
 /// Owns the application scope, which belongs to the Skyrim directory: the scope is replaced only when
 /// <see cref="AppSettings.SkyrimDirectory"/> changes. A language change only reloads the views.
 /// </summary>
-public sealed class LauncherKitScopeReloadService : IDisposable
+internal sealed class LauncherKitScopeReloadService : IGlobalInitializer, IDisposable
 {
 	private readonly IOptionsMonitor<AppSettings> _settings;
 	private readonly IUiDispatcher _dispatcher;
-	private readonly LauncherKitDesktopOptions _desktop;
+	private readonly IAvaloniaApplicationLifetime _applicationLifetime;
 	private readonly Action _requestConfigurationReload;
 	private IDisposable? _subscription;
-	private Action? _replaceScope;
 	private bool _disposed;
 
 	public LauncherKitScopeReloadService(IOptionsMonitor<AppSettings> settings, IUiDispatcher dispatcher,
-		LauncherKitDesktopOptions desktop, TimeProvider timeProvider)
+		IAvaloniaApplicationLifetime applicationLifetime, TimeProvider timeProvider)
 	{
 		_settings = settings;
 		_dispatcher = dispatcher;
-		_desktop = desktop;
-		_requestConfigurationReload = DelegateExtensions.Debounce(() =>
-			PostConfigurationReload(dispatcher, () =>
-			{
-				if (!_disposed) _replaceScope!();
-			}, () =>
-			{
-				if (!_disposed) _desktop.RefreshMainWindow();
-			}), TimeSpan.FromMilliseconds(200), timeProvider);
+		_applicationLifetime = applicationLifetime;
+		_requestConfigurationReload = DelegateExtensions.Debounce(
+			PostConfigurationReload,
+			TimeSpan.FromMilliseconds(200), timeProvider);
 	}
 
-	/// <summary>Attaches after the initial application scope has been published.</summary>
-	public void Start(Action replaceScope)
+	public void Initialize()
 	{
-		if (_replaceScope is not null) throw new InvalidOperationException("Scope reload is already attached.");
-		_replaceScope = replaceScope;
 		var oldSkyrimDirectory = _settings.CurrentValue.SkyrimDirectory;
 		var oldLanguage = _settings.CurrentValue.Language;
 		_subscription = _settings.OnChange(settings =>
@@ -52,7 +44,7 @@ public sealed class LauncherKitScopeReloadService : IDisposable
 				{
 					if (_disposed) return;
 					LanguageCulture.ApplyToCurrentThread();
-					_desktop.ReloadViews();
+					_applicationLifetime.ReloadViews();
 				});
 			}
 			if (settings.SkyrimDirectory != oldSkyrimDirectory)
@@ -63,13 +55,12 @@ public sealed class LauncherKitScopeReloadService : IDisposable
 		});
 	}
 
-	internal static void PostConfigurationReload(IUiDispatcher dispatcher, Action replaceScope, Action refreshMainWindow)
+	private void PostConfigurationReload()
 	{
-		dispatcher.Post(() =>
+		_dispatcher.Post(() =>
 		{
-			// Disposal, scope publication and main window view model replacement share one UI turn.
-			replaceScope();
-			refreshMainWindow();
+			if (_disposed) return;
+			_applicationLifetime.CreateNewScope();
 		});
 	}
 

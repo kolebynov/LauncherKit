@@ -3,7 +3,7 @@ using R3;
 
 namespace LauncherKit.Core.AppTasks;
 
-public interface IAppTaskQueue : IAsyncDisposable, INotifyPropertyChanged
+public interface IAppTaskQueue : IDisposable, INotifyPropertyChanged
 {
 	Observable<AppTaskQueue.Event> Events { get; }
 

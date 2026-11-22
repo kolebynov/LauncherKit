@@ -11,7 +11,7 @@ namespace LauncherKit.Desktop.Services;
 /// skipped; repeated close requests while the handlers run are cancelled. Application/OS shutdown and owner closing
 /// cannot be cancelled and close at once.
 /// </summary>
-internal sealed class MainWindowCloseHandler(LauncherKitDesktopOptions desktop, ILogger<MainWindowCloseHandler> logger)
+internal sealed class MainWindowCloseHandler(IAvaloniaApplicationLifetime applicationLifetime, ILogger<MainWindowCloseHandler> logger)
 {
 	private CloseState _state = CloseState.Idle.Instance;
 
@@ -44,7 +44,7 @@ internal sealed class MainWindowCloseHandler(LauncherKitDesktopOptions desktop, 
 	private async Task RunHandlers(Window window)
 	{
 		_state = CloseState.InvokingHandlers.Instance;
-		foreach (var handler in desktop.GetCurrentServices().GetServices<IAppCloseHandler>())
+		foreach (var handler in applicationLifetime.Services.GetServices<IAppCloseHandler>())
 		{
 			try
 			{

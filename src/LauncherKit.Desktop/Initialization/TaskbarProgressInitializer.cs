@@ -22,15 +22,14 @@ public sealed class TaskbarProgressInitializer : IConfiguredScopeInitializer, ID
 		_taskbarProgressSink = taskbarProgressSink;
 	}
 
-	public ValueTask Initialize()
+	public void Initialize()
 	{
 		if (!OperatingSystem.IsWindows() || _queueSubscription != null)
 		{
-			return ValueTask.CompletedTask;
+			return;
 		}
 
 		_queueSubscription = SubscribeToEvents();
-		return ValueTask.CompletedTask;
 	}
 
 	public void Dispose()

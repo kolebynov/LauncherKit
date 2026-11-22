@@ -83,7 +83,6 @@ public static class LauncherKitProgram
 		}
 		finally
 		{
-			launchRequests.Complete();
 			consoleWriter?.Dispose();
 			ownership.ReleaseMutex();
 			ownership.Dispose();

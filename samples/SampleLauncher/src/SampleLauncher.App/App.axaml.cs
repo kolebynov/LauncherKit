@@ -1,7 +1,7 @@
-using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using LauncherKit.Core.Services.Abstractions;
 using LauncherKit.Desktop;
+using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.ViewModels;
 using LauncherKit.Infrastructure;
@@ -36,14 +36,14 @@ public sealed class App : LauncherKitApp
 		services.AddSingleton<IViewRegistry, SampleViewRegistry>();
 		services.AddScoped<MainWindowViewModelBase, MainWindowViewModel>();
 		services.AddScoped<HomePageViewModel>();
-		services.AddSingleton<MainWindow>();
-		services.AddSingleton<IMainView>(sp => sp.GetRequiredService<MainWindow>());
-		services.AddSingleton<INotificationManagerProvider>(sp => sp.GetRequiredService<MainWindow>());
+		services.AddSingleton<INotificationManagerProvider>(sp =>
+			(MainWindow)sp.GetRequiredService<IAvaloniaApplicationLifetime>().RequiredMainWindow);
 		services.AddSingleton<IDialogService, DialogService>();
 		services.AddLaunchHandler<SampleLaunchHandler>();
 	}
 
-	protected override void ReloadViews(Window mainWindow) => ((MainWindow)mainWindow).ReloadViews();
+	protected override IMainView CreateMainView() => new MainWindow(
+		Services.GetRequiredService<IOptions<LauncherProductOptions>>(), Services.GetRequiredService<IAppVersionProvider>());
 
 #if DEV_AUTOMATION
 	protected override IDisposable? StartDesktopServices(IClassicDesktopStyleApplicationLifetime desktop) =>

@@ -11,7 +11,7 @@ namespace LauncherKit.Desktop.Services;
 /// the window is shown and saves it on close. A minimized window saves nothing and a maximized one keeps its saved
 /// normal bounds.
 /// </summary>
-internal sealed class MainWindowStateHandler(LauncherKitDesktopOptions desktop) : IAppCloseHandler
+internal sealed class MainWindowStateHandler(IApplicationLifetime applicationLifetime) : IAppCloseHandler
 {
 	public void Restore(Window mainWindow)
 	{
@@ -48,5 +48,5 @@ internal sealed class MainWindowStateHandler(LauncherKitDesktopOptions desktop) 
 		return IAppCloseHandler.HandleResult.CanClose.Instance;
 	}
 
-	private ISettingsService SettingsService() => desktop.GetCurrentServices().GetRequiredService<ISettingsService>();
+	private ISettingsService SettingsService() => applicationLifetime.Services.GetRequiredService<ISettingsService>();
 }

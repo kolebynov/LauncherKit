@@ -337,7 +337,7 @@ public sealed class ModCategoryViewModelTests
 	private static AutoMocker CreateMocker(Subject<AppTaskQueue.Event> events, IReadOnlyList<ModFeedData> mods)
 	{
 		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.Use<IUiDispatcher>(HomeCardsDispatcher.Instance);
+		mocker.Use<IUiDispatcher>(ImmediateUiDispatcher.Instance);
 		mocker.GetMock<IAppTaskQueue>().SetupGet(x => x.Events).Returns(events);
 		var modpackVersionProvider = mocker.GetMock<IModpackVersionProvider>();
 		modpackVersionProvider.SetupGet(x => x.InstalledModpackVersion).Returns(ModpackVersion);

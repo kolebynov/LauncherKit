@@ -169,7 +169,7 @@ public sealed class HomeViewModelTests
 	private static AutoMocker CreateMocker(Subject<AppTaskQueue.Event> events, Subject<Unit> beta)
 	{
 		var mocker = new AutoMocker(MockBehavior.Strict);
-		mocker.Use<IUiDispatcher>(HomeCardsDispatcher.Instance);
+		mocker.Use<IUiDispatcher>(ImmediateUiDispatcher.Instance);
 		mocker.GetMock<IAppTaskQueue>().SetupGet(x => x.Events).Returns(events);
 		var provider = mocker.GetMock<IModpackVersionProvider>();
 		provider.SetupGet(x => x.InstalledModpackVersion).Returns(NuGetVersion.Parse("3.2.0"));
@@ -196,9 +196,4 @@ public sealed class HomeViewModelTests
 		Version = NuGetVersion.Parse(version), DownloadInfo = new DownloadInfo { S3Path = version + ".exe" },
 		ChangelogPath = path == null ? null : new() { ["en"] = path },
 	};
-}
-
-internal sealed class HomeCardsDispatcher : IUiDispatcher
-{
-	public void Post(Action action) => action();
 }

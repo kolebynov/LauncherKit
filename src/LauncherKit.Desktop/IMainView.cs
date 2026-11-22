@@ -19,4 +19,6 @@ public interface IMainView
 	/// navigates directly. The application host sets it once, before assigning the data context.
 	/// </summary>
 	void SetNavigationGuard(Func<Action, ValueTask> navigate);
+
+	void ReloadViews();
 }

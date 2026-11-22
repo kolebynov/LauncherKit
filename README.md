@@ -249,21 +249,22 @@ public sealed class App : LauncherKitApp
 			sp.GetRequiredService<IOptions<LauncherProductOptions>>().Value));
 		services.AddSingleton<IViewRegistry, MyViewRegistry>();
 		services.AddScoped<MainWindowViewModelBase, MainWindowViewModel>();
-		services.AddSingleton<MainWindow>();
-		services.AddSingleton<IMainView>(sp => sp.GetRequiredService<MainWindow>());
-		services.AddSingleton<INotificationManagerProvider>(sp => sp.GetRequiredService<MainWindow>());
+		services.AddSingleton<INotificationManagerProvider>(sp =>
+			(MainWindow)sp.GetRequiredService<IAvaloniaApplicationLifetime>().RequiredMainWindow);
 		services.AddSingleton<IDialogService, MyDialogService>();
 		// Views, dialogs and other consumer services.
 	}
 
-	// Rebuilds views after a scope reload (e.g. a language change).
-	protected override void ReloadViews(Window mainWindow) => ((MainWindow)mainWindow).ReloadViews();
+	// Creates the main window from Services once the scope exists.
+	protected override IMainView CreateMainView() => new MainWindow(/* dependencies from Services */);
 }
 ```
 
+`App` must also implement `CreateMainView`, which creates the main window (an `IMainView`) from `Services` once the scope exists; the kit restores its state, sets its data context and publishes it as `IAvaloniaApplicationLifetime.MainWindow`.
+
 Optional hooks:
 - `BeforeConfiguration`: runs before the configuration is read, e.g. to migrate files.
-- `OnServicesBuilt`: runs after the services are built, before the XAML is loaded.
+- `OnServicesBuilt`: runs after the services and the current scope are created and the kit's localization is configured, before the main window is created; also runs in the Avalonia previewer.
 - `StartDesktopServices`: starts services that need the desktop lifetime, e.g. `DevAutomationServer.Start` under `DEV_AUTOMATION`.
 
 The consumer must register:
@@ -273,7 +274,7 @@ The consumer must register:
 | `ILaunchersRootDirectoryManager` | A `LaunchersRootDirectoryManager` subclass describing the installation layout (step 5). |
 | `IViewRegistry` | Maps each kit or consumer view model to its view; throws for unknown models. `ViewLocator` uses it. |
 | `MainWindowViewModelBase` (scoped) | The consumer's main window model: pages, navigation, setup-versus-home selection (show `FirstSetupViewModel` only when `IsRequired`, i.e. it has steps). Kit page view models (`HomeViewModel`, `FirstSetupViewModel`, `SettingsViewModel`, `DownloadsViewModel`, `ModCategoriesViewModel`, `AppTaskQueueViewModel`, ...) are resolved from the scope. `HomeViewModel.ModCategoriesViewModel` lists a `ModCategoryViewModel` per feed category; the consumer registers a view for `ModCategoryViewModel` and activates each category only while its section is shown. |
-| `IMainView` (singleton) | The main window; it must derive from Avalonia `Window`, with any base class. |
+| `IMainView` | Not a DI registration: `CreateMainView` supplies the main window; it must derive from Avalonia `Window`, with any base class. |
 | `IDialogService` (`LauncherKit.Desktop.Services`, singleton) | `ShowYesNoConfirmation(header, message, defaultToNo, cancellationToken)`: a yes/no question, closed unanswered (returning `false`) when the token is cancelled. The kit's main-window close confirmation uses it; the consumer may extend the interface with its own dialogs and register the implementation under both. |
 
 View models expose typed facts and act directly. Views own the wording, confirmations, dialogs, notifications and directory pickers, and pass collected input as command parameters. Use compiled bindings, and use `ObjectConverters.IsNull`/`IsNotNull` (never `!obj`) to bind visibility to whether an object is null. AGENTS.md "Desktop contract" lists all the rules.

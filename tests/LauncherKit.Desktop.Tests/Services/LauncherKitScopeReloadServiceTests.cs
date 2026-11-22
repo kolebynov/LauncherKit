@@ -18,13 +18,12 @@ public sealed class LauncherKitScopeReloadServiceTests
 		try
 		{
 			var settings = new OptionsMonitorStub<AppSettings>(new AppSettings { Language = "ru" });
-			var dispatcher = new QueuedDispatcher();
+			var dispatcher = new QueuedUiDispatcher();
 			var replacements = 0;
-			var shells = 0;
 			var views = 0;
 			using var sut = new LauncherKitScopeReloadService(settings, dispatcher,
-				CreateOptions(() => shells++, () => views++), new FakeTimeProvider());
-			sut.Start(() => replacements++);
+				CreateLifetime(() => replacements++, () => views++), new FakeTimeProvider());
+			sut.Initialize();
 
 			settings.Change(new AppSettings { Language = "en" });
 			dispatcher.Drain();
@@ -32,7 +31,6 @@ public sealed class LauncherKitScopeReloadServiceTests
 			Assert.Multiple(() =>
 			{
 				Assert.That(replacements, Is.Zero);
-				Assert.That(shells, Is.Zero);
 				Assert.That(views, Is.EqualTo(1));
 				Assert.That(CultureInfo.CurrentUICulture.Name, Is.EqualTo("en"));
 			});
@@ -45,15 +43,15 @@ public sealed class LauncherKitScopeReloadServiceTests
 	}
 
 	[Test]
-	public async Task SkyrimDirectoryChange_ReplacesScopeThenRefreshesShellAfterDebounce()
+	public async Task SkyrimDirectoryChange_ReplacesScopeInOneDispatchTurnAfterDebounce()
 	{
 		var settings = new OptionsMonitorStub<AppSettings>(new AppSettings { SkyrimDirectory = "old" });
 		var dispatcher = new SignalingDispatcher();
 		var clock = new FakeTimeProvider();
 		var events = new List<string>();
 		using var sut = new LauncherKitScopeReloadService(settings, dispatcher,
-			CreateOptions(() => events.Add("shell"), () => events.Add("views")), clock);
-		sut.Start(() => events.Add("scope"));
+			CreateLifetime(() => events.Add("scope"), () => events.Add("views")), clock);
+		sut.Initialize();
 
 		settings.Change(new AppSettings { SkyrimDirectory = "new" });
 		Assert.That(events, Is.Empty);
@@ -61,18 +59,19 @@ public sealed class LauncherKitScopeReloadServiceTests
 		var dispatched = await dispatcher.Posted.Task.WaitAsync(TimeSpan.FromSeconds(5));
 		dispatched();
 
-		Assert.That(events, Is.EqualTo(new[] { "scope", "shell" }));
+		Assert.That(events, Is.EqualTo(new[] { "scope" }));
 	}
 
 	[Test]
 	public void Dispose_UnsubscribesFromSettingsChanges()
 	{
 		var settings = new OptionsMonitorStub<AppSettings>(new AppSettings { Language = "ru" });
-		var dispatcher = new QueuedDispatcher();
+		var dispatcher = new QueuedUiDispatcher();
 		var views = 0;
 		var sut = new LauncherKitScopeReloadService(settings, dispatcher,
-			CreateOptions(() => { }, () => views++), new FakeTimeProvider());
-		sut.Start(() => Assert.Fail("A disposed reload service cannot replace scopes."));
+			CreateLifetime(() => Assert.Fail("A disposed reload service cannot replace scopes."), () => views++),
+			new FakeTimeProvider());
+		sut.Initialize();
 		sut.Dispose();
 
 		settings.Change(new AppSettings { Language = "en" });
@@ -81,44 +80,23 @@ public sealed class LauncherKitScopeReloadServiceTests
 		Assert.That(views, Is.Zero);
 	}
 
-	[Test]
-	public void ConfigurationReplacement_AndShellPublicationShareOneDispatchTurn()
+	private static IAvaloniaApplicationLifetime CreateLifetime(Action createNewScope, Action reloadViews)
 	{
-		var dispatcher = new QueuedDispatcher();
-		var events = new List<string>();
-		LauncherKitScopeReloadService.PostConfigurationReload(dispatcher, () =>
-		{
-			events.Add("replace");
-			dispatcher.Post(() => events.Add("consumer"));
-		}, () => events.Add("shell"));
-
-		dispatcher.Drain();
-
-		Assert.That(events, Is.EqualTo(new[] { "replace", "shell", "consumer" }));
+		var lifetime = new Mock<IAvaloniaApplicationLifetime>(MockBehavior.Strict);
+		lifetime.Setup(x => x.CreateNewScope()).Callback(createNewScope);
+		lifetime.Setup(x => x.ReloadViews()).Callback(reloadViews);
+		return lifetime.Object;
 	}
-
-	private static LauncherKitDesktopOptions CreateOptions(Action refreshMainWindow, Action reloadViews) => new()
-	{
-		GetMainWindow = () => null,
-		GetLifetime = () => throw new InvalidOperationException("No lifetime is needed for reload tests."),
-		GetCurrentServices = () => throw new InvalidOperationException("No services are needed for reload tests."),
-		RefreshMainWindow = refreshMainWindow,
-		ReloadViews = reloadViews,
-	};
 
 	private sealed class SignalingDispatcher : IUiDispatcher
 	{
 		public TaskCompletionSource<Action> Posted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 		public void Post(Action action) => Posted.TrySetResult(action);
-	}
-
-	private sealed class QueuedDispatcher : IUiDispatcher
-	{
-		private readonly Queue<Action> _actions = new();
-		public void Post(Action action) => _actions.Enqueue(action);
-		public void Drain()
-		{
-			while (_actions.TryDequeue(out var action)) action();
-		}
+		public Task InvokeAsync(Action action) => throw new AssertionException("Reload is posted, not invoked.");
+		public Task<TResult> InvokeAsync<TResult>(Func<TResult> action) =>
+			throw new AssertionException("Reload is posted, not invoked.");
+		public Task InvokeAsync(Func<Task> func) => throw new AssertionException("Reload is posted, not invoked.");
+		public Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> action) =>
+			throw new AssertionException("Reload is posted, not invoked.");
 	}
 }

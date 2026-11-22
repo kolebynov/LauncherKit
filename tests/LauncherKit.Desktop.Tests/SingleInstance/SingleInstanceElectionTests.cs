@@ -237,7 +237,7 @@ public sealed class SingleInstanceElectionTests
 		var names = UniqueNames();
 		using var owner = Own(names);
 		using var queue = new LaunchRequestQueue();
-		queue.Complete();
+		queue.Dispose();
 		using var listener = new SingleInstanceListener(names.Pipe, queue);
 
 		// Act

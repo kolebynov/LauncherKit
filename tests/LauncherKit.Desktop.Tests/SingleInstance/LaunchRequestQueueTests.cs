@@ -73,7 +73,7 @@ public sealed class LaunchRequestQueueTests
 	{
 		// Arrange
 		using var queue = new LaunchRequestQueue();
-		queue.Complete();
+		queue.Dispose();
 
 		// Act
 		var accepted = queue.TryEnqueue(Request());

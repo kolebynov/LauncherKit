@@ -13,9 +13,5 @@ internal sealed class DelegateInitializer : IConfiguredScopeInitializer, IGlobal
 		_serviceProvider = serviceProvider;
 	}
 
-	public ValueTask Initialize()
-	{
-		_initializer(_serviceProvider);
-		return ValueTask.CompletedTask;
-	}
+	public void Initialize() => _initializer(_serviceProvider);
 }

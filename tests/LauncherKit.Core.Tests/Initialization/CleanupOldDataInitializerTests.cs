@@ -31,7 +31,7 @@ public sealed class CleanupOldDataInitializerTests
 		var sut = mocker.CreateInstance<CleanupOldDataInitializer>(enablePrivate: true);
 
 		// Act
-		await sut.Initialize();
+		sut.Initialize();
 
 		// Assert
 		Assert.Multiple(() =>
@@ -78,7 +78,7 @@ public sealed class CleanupOldDataInitializerTests
 		]);
 		storage.Setup(x => x.Delete("old-partial.7z")).Returns(IFileStorageService.DeleteResult.Deleted.Instance);
 		var sut = mocker.CreateInstance<CleanupOldDataInitializer>(enablePrivate: true);
-		await sut.Initialize();
+		sut.Initialize();
 		queued!.MicroTasksProvider(new MicroTasksProviderContext(mocker.Get<IMicroTasksFactory>(), mocker.Get<IServiceProvider>()));
 
 		// Act

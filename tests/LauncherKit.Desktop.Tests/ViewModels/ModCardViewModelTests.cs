@@ -268,7 +268,7 @@ public sealed class ModCardViewModelTests
 
 		// Act
 		activation.Dispose();
-		dispatcher.RunAll();
+		dispatcher.Drain();
 
 		// Assert
 		Assert.That(sut.IsAvailable, Is.True);
@@ -300,7 +300,7 @@ public sealed class ModCardViewModelTests
 		// Act
 		using var activation = CardContext.Activate(sut);
 		var availableBeforeDispatch = sut.InstallCommand.CanExecute(null);
-		dispatcher.RunAll();
+		dispatcher.Drain();
 
 		// Assert
 		Assert.Multiple(() =>
@@ -396,7 +396,7 @@ public sealed class ModCardViewModelTests
 			var card = new ModCardViewModel(mod,
 				new ModCategoryFeedData { Id = "mods", Title = new() { ["ru"] = "Mods" }, IsExclusive = isExclusive },
 				categoryMods ?? [mod], Installations.Object, _modpackVersion.Object, _feedUtils.Object,
-				dispatcher ?? HomeCardsDispatcher.Instance);
+				dispatcher ?? ImmediateUiDispatcher.Instance);
 			if (activate)
 				_activations.Add(Activate(card));
 			return card;
@@ -428,20 +428,6 @@ public sealed class ModCardViewModelTests
 		{
 			_activations.Dispose();
 			_changes.Dispose();
-		}
-	}
-
-	/// <summary>Runs posted actions only when asked, in posting order, as a UI dispatcher does after the current work.</summary>
-	private sealed class QueuedUiDispatcher : IUiDispatcher
-	{
-		private readonly Queue<Action> _actions = new();
-
-		public void Post(Action action) => _actions.Enqueue(action);
-
-		public void RunAll()
-		{
-			while (_actions.TryDequeue(out var action))
-				action();
 		}
 	}
 }
