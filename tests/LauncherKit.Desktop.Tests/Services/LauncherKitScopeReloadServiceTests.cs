@@ -22,7 +22,7 @@ public sealed class LauncherKitScopeReloadServiceTests
 			var replacements = 0;
 			var views = 0;
 			using var sut = new LauncherKitScopeReloadService(settings, dispatcher,
-				CreateLifetime(() => replacements++, () => views++), new FakeTimeProvider());
+				CreateLifetime(new AutoMocker(MockBehavior.Strict), () => replacements++, () => views++), new FakeTimeProvider());
 			sut.Initialize();
 
 			settings.Change(new AppSettings { Language = "en" });
@@ -50,7 +50,7 @@ public sealed class LauncherKitScopeReloadServiceTests
 		var clock = new FakeTimeProvider();
 		var events = new List<string>();
 		using var sut = new LauncherKitScopeReloadService(settings, dispatcher,
-			CreateLifetime(() => events.Add("scope"), () => events.Add("views")), clock);
+			CreateLifetime(new AutoMocker(MockBehavior.Strict), () => events.Add("scope"), () => events.Add("views")), clock);
 		sut.Initialize();
 
 		settings.Change(new AppSettings { SkyrimDirectory = "new" });
@@ -69,7 +69,7 @@ public sealed class LauncherKitScopeReloadServiceTests
 		var dispatcher = new QueuedUiDispatcher();
 		var views = 0;
 		var sut = new LauncherKitScopeReloadService(settings, dispatcher,
-			CreateLifetime(() => Assert.Fail("A disposed reload service cannot replace scopes."), () => views++),
+			CreateLifetime(new AutoMocker(MockBehavior.Strict), () => Assert.Fail("A disposed reload service cannot replace scopes."), () => views++),
 			new FakeTimeProvider());
 		sut.Initialize();
 		sut.Dispose();
@@ -80,9 +80,9 @@ public sealed class LauncherKitScopeReloadServiceTests
 		Assert.That(views, Is.Zero);
 	}
 
-	private static IAvaloniaApplicationLifetime CreateLifetime(Action createNewScope, Action reloadViews)
+	private static IAvaloniaApplicationLifetime CreateLifetime(AutoMocker mocker, Action createNewScope, Action reloadViews)
 	{
-		var lifetime = new Mock<IAvaloniaApplicationLifetime>(MockBehavior.Strict);
+		var lifetime = mocker.GetMock<IAvaloniaApplicationLifetime>();
 		lifetime.Setup(x => x.CreateNewScope()).Callback(createNewScope);
 		lifetime.Setup(x => x.ReloadViews()).Callback(reloadViews);
 		return lifetime.Object;

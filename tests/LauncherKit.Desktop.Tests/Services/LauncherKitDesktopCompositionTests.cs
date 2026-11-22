@@ -58,9 +58,10 @@ public sealed class LauncherKitDesktopCompositionTests
 	public void ViewLocator_NoViewRegistryRegistered_ThrowsNamingIt()
 	{
 		// Arrange
+		var mocker = new AutoMocker(MockBehavior.Strict);
 		var services = new ServiceCollection();
 		services.AddLauncherKitDesktop(applicationLifetime: null);
-		services.AddSingleton(new Mock<IAvaloniaApplicationLifetime>(MockBehavior.Strict).Object);
+		services.AddSingleton(mocker.GetMock<IAvaloniaApplicationLifetime>().Object);
 		using var provider = services.BuildServiceProvider();
 
 		// Act & Assert

@@ -21,7 +21,7 @@ public sealed class NavigationGuardTests
 		var navigations = 0;
 
 		// Act
-		await CreateGuard(view).Navigate(() => navigations++);
+		await CreateGuard(new AutoMocker(MockBehavior.Strict), view).Navigate(() => navigations++);
 
 		// Assert
 		Assert.That(navigations, Is.EqualTo(canNavigate ? 1 : 0));
@@ -35,7 +35,7 @@ public sealed class NavigationGuardTests
 		var navigations = 0;
 
 		// Act
-		await CreateGuard(view).Navigate(() => navigations++);
+		await CreateGuard(new AutoMocker(MockBehavior.Strict), view).Navigate(() => navigations++);
 
 		// Assert
 		Assert.That(navigations, Is.EqualTo(1));
@@ -47,7 +47,7 @@ public sealed class NavigationGuardTests
 		// Arrange
 		var answer = new TaskCompletionSource<bool>();
 		var guard = new StubGuard(() => new ValueTask<bool>(answer.Task));
-		var navigationGuard = CreateGuard(new MainViewWindow { CurrentContent = guard });
+		var navigationGuard = CreateGuard(new AutoMocker(MockBehavior.Strict), new MainViewWindow { CurrentContent = guard });
 		var navigations = new List<string>();
 		var first = navigationGuard.Navigate(() => navigations.Add("first"));
 
@@ -69,7 +69,7 @@ public sealed class NavigationGuardTests
 	public async Task Navigate_RequestedWhileNavigating_IsSkipped()
 	{
 		// Arrange
-		var navigationGuard = CreateGuard(new MainViewWindow());
+		var navigationGuard = CreateGuard(new AutoMocker(MockBehavior.Strict), new MainViewWindow());
 		var navigations = new List<string>();
 		Task? inner = null;
 
@@ -96,7 +96,7 @@ public sealed class NavigationGuardTests
 				? ValueTask.FromException<bool>(new InvalidOperationException("guard failed"))
 				: ValueTask.FromResult(true)),
 		};
-		var navigationGuard = CreateGuard(view);
+		var navigationGuard = CreateGuard(new AutoMocker(MockBehavior.Strict), view);
 		var navigations = 0;
 
 		// Act
@@ -155,9 +155,9 @@ public sealed class NavigationGuardTests
 	}
 
 	// Installs the guard the way the host does: through the lifetime's main window assignment.
-	private static NavigationGuard CreateGuard(MainViewWindow view)
+	private static NavigationGuard CreateGuard(AutoMocker mocker, MainViewWindow view)
 	{
-		var lifetime = new Mock<IAvaloniaApplicationLifetime>(MockBehavior.Strict);
+		var lifetime = mocker.GetMock<IAvaloniaApplicationLifetime>();
 		lifetime.SetupGet(x => x.MainWindow).Returns(view);
 		var navigationGuard = new NavigationGuard(lifetime.Object);
 		navigationGuard.Initialize();
