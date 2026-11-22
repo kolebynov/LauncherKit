@@ -1,4 +1,6 @@
 using Avalonia.Controls;
+using LauncherKit.Core.Initialization;
+using LauncherKit.Desktop.Extensions;
 using LauncherKit.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -6,16 +8,17 @@ using Microsoft.Extensions.Logging;
 namespace LauncherKit.Desktop.Services;
 
 /// <summary>
-/// Handles the user closing the main window: cancels the close, runs the current scope's <see cref="IAppCloseHandler"/>s
-/// in registration order and closes the window when none of them keeps it open. A failing handler is logged and
-/// skipped; repeated close requests while the handlers run are cancelled. Application/OS shutdown and owner closing
-/// cannot be cancelled and close at once.
+/// Handles the user closing the main window, attached when the window is assigned to the lifetime: cancels the close,
+/// runs the current scope's <see cref="IAppCloseHandler"/>s in registration order and closes the window when none of
+/// them keeps it open. A failing handler is logged and skipped; repeated close requests while the handlers run are
+/// cancelled. Application/OS shutdown and owner closing cannot be cancelled and close at once.
 /// </summary>
 internal sealed class MainWindowCloseHandler(IAvaloniaApplicationLifetime applicationLifetime, ILogger<MainWindowCloseHandler> logger)
+	: IGlobalInitializer
 {
 	private CloseState _state = CloseState.Idle.Instance;
 
-	public void Attach(Window window) => window.Closing += OnClosing;
+	public void Initialize() => applicationLifetime.OnMainWindowAssigned(mainView => mainView.AsWindow().Closing += OnClosing);
 
 	private async void OnClosing(object? sender, WindowClosingEventArgs e)
 	{

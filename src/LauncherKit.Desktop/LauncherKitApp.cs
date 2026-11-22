@@ -7,14 +7,12 @@ using LauncherKit.Core;
 using LauncherKit.Core.Extensions;
 using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.Localization;
-using LauncherKit.Desktop.Services;
 using LauncherKit.Desktop.ViewModels;
 using LauncherKit.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using LauncherKit.Desktop.SingleInstance;
 using R3;
 using Serilog;
@@ -92,13 +90,11 @@ public abstract class LauncherKitApp : Application
 			{
 				var mainView = CreateMainView();
 				var mainWindow = mainView.AsWindow();
-				Services.GetRequiredService<MainWindowStateHandler>().Restore(mainWindow);
-				mainView.SetNavigationGuard(new NavigationGuard(mainView).Navigate);
+				// Global initializers set the window up (state, navigation guard, close handling) when it is assigned, so
+				// it is published before its data context.
+				((AvaloniaApplicationLifetime)Services.GetRequiredService<IAvaloniaApplicationLifetime>()).MainWindow = mainView;
 				mainWindow.DataContext = Services.GetRequiredService<MainWindowViewModelBase>();
 				desktop.MainWindow = mainWindow;
-				Services.GetRequiredService<MainWindowCloseHandler>().Attach(mainWindow);
-				((AvaloniaApplicationLifetime)Services.GetRequiredService<IAvaloniaApplicationLifetime>()).MainWindow = mainView;
-				StartModUpdateNotifications(mainWindow);
 				var desktopServices = StartDesktopServices(desktop);
 				desktop.Exit += (_, _) =>
 				{
@@ -167,28 +163,6 @@ public abstract class LauncherKitApp : Application
 	protected virtual IEnumerable<KeyValuePair<string, string?>> GetInMemoryConfiguration() => [];
 
 	protected abstract IMainView CreateMainView();
-
-	// Once per process, only for the installation configured at startup: later scopes (first setup, Skyrim directory
-	// changes) are not checked. The notifier is resolved now, so a scope replaced before the window opens disposes it and
-	// the late start does nothing. Waiting for Opened lets the window's notification manager apply its template first.
-	private void StartModUpdateNotifications(Window mainWindow)
-	{
-		if (string.IsNullOrEmpty(Services.GetRequiredService<IOptionsSnapshot<AppSettings>>().Value.SkyrimDirectory)) return;
-		var notifications = Services.GetRequiredService<ModUpdateNotifications>();
-		OnceOpened(mainWindow, () => _ = notifications.Start());
-	}
-
-	// Runs the action the first time the window raises Opened.
-	private static void OnceOpened(Window window, Action action)
-	{
-		window.Opened += OnOpened;
-
-		void OnOpened(object? sender, EventArgs e)
-		{
-			window.Opened -= OnOpened;
-			action();
-		}
-	}
 
 	private void ConfigureAppServices(AppBuilder appBuilder, IClassicDesktopStyleApplicationLifetime? applicationLifetime)
 	{

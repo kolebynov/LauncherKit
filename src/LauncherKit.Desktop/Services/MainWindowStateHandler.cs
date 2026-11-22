@@ -1,18 +1,23 @@
 using Avalonia;
 using Avalonia.Controls;
+using LauncherKit.Core.Initialization;
 using LauncherKit.Core.Services.Abstractions;
+using LauncherKit.Desktop.Extensions;
 using LauncherKit.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LauncherKit.Desktop.Services;
 
 /// <summary>
-/// Keeps the main window's state in <c>AllSettings.Window</c> through the current scope's settings: restores it before
-/// the window is shown and saves it on close. A minimized window saves nothing and a maximized one keeps its saved
-/// normal bounds.
+/// Keeps the main window's state in <c>AllSettings.Window</c> through the current scope's settings: restores it when the
+/// window is assigned to the lifetime (before its data context is set and it is shown) and saves it on close. A
+/// minimized window saves nothing and a maximized one keeps its saved normal bounds.
 /// </summary>
-internal sealed class MainWindowStateHandler(IApplicationLifetime applicationLifetime) : IAppCloseHandler
+internal sealed class MainWindowStateHandler(IAvaloniaApplicationLifetime applicationLifetime)
+	: IAppCloseHandler, IGlobalInitializer
 {
+	public void Initialize() => applicationLifetime.OnMainWindowAssigned(mainView => Restore(mainView.AsWindow()));
+
 	public void Restore(Window mainWindow)
 	{
 		var settings = SettingsService().GetSettings().Window;

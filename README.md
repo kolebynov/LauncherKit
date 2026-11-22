@@ -260,7 +260,7 @@ public sealed class App : LauncherKitApp
 }
 ```
 
-`App` must also implement `CreateMainView`, which creates the main window (an `IMainView`) from `Services` once the scope exists; the kit restores its state, sets its data context and publishes it as `IAvaloniaApplicationLifetime.MainWindow`.
+`App` must also implement `CreateMainView`, which creates the main window (an `IMainView`) from `Services` once the scope exists; the kit publishes it as `IAvaloniaApplicationLifetime.MainWindow` and then sets its data context. Publishing raises `PropertyChanged(MainWindow)` (the window is assigned, not yet opened; `MainWindowOpened` signals opening), on which the kit's global initializers restore its state, install the navigation guard and attach close handling; a consumer `IGlobalInitializer` can do window setup the same way.
 
 Optional hooks:
 - `BeforeConfiguration`: runs before the configuration is read, e.g. to migrate files.

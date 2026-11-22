@@ -1,6 +1,8 @@
-﻿namespace LauncherKit.Core.Services.Abstractions;
+﻿using System.ComponentModel;
 
-public interface IApplicationLifetime
+namespace LauncherKit.Core.Services.Abstractions;
+
+public interface IApplicationLifetime : INotifyPropertyChanged
 {
 	IServiceProvider Services { get; }
 

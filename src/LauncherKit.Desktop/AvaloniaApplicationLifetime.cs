@@ -1,4 +1,6 @@
-﻿using Avalonia;
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using LauncherKit.Desktop.Extensions;
 using LauncherKit.Desktop.ViewModels;
@@ -26,6 +28,8 @@ internal sealed class AvaloniaApplicationLifetime : IAvaloniaApplicationLifetime
 
 			field.AsWindow().Opened += OnOpened;
 
+			OnPropertyChanged();
+
 			void OnOpened(object? sender, EventArgs e)
 			{
 				field.AsWindow().Opened -= OnOpened;
@@ -37,6 +41,8 @@ internal sealed class AvaloniaApplicationLifetime : IAvaloniaApplicationLifetime
 	public CancellationToken MainWindowOpened => _mainWindowOpenedCts.Token;
 
 	public IServiceProvider Services => ((LauncherKitApp)Application.Current!).Services;
+
+	public event PropertyChangedEventHandler? PropertyChanged;
 
 	public AvaloniaApplicationLifetime(IClassicDesktopStyleApplicationLifetime avaloniaLifetime)
 	{
@@ -52,6 +58,7 @@ internal sealed class AvaloniaApplicationLifetime : IAvaloniaApplicationLifetime
 	{
 		((LauncherKitApp)Application.Current!).AppInstance.CreateNewScope();
 		MainWindow?.AsWindow().DataContext = Services.GetRequiredService<MainWindowViewModelBase>();
+		OnPropertyChanged(nameof(Services));
 	}
 
 	public void Exit()
@@ -63,4 +70,7 @@ internal sealed class AvaloniaApplicationLifetime : IAvaloniaApplicationLifetime
 	{
 		_mainWindowOpenedCts.Dispose();
 	}
+
+	private void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
+		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }

@@ -1,4 +1,8 @@
+using System.ComponentModel;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using LauncherKit.Core.Initialization;
+using LauncherKit.Infrastructure;
 using LauncherKit.Desktop.Initialization;
 using LauncherKit.Desktop.Interop;
 using LauncherKit.Desktop.Services;
@@ -15,7 +19,6 @@ using LauncherKit.Core.Services.Abstractions;
 using LauncherKit.Desktop.SingleInstance;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using IApplicationLifetime = LauncherKit.Core.Services.Abstractions.IApplicationLifetime;
 
@@ -70,7 +73,23 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 		services.AddScoped<IAppCloseHandler, PendingTasksCloseHandler>();
 		services.TryAddSingleton<MainWindowStateHandler>();
 		services.AddSingleton<IAppCloseHandler>(sp => sp.GetRequiredService<MainWindowStateHandler>());
+		// Run in registration order when the main window is assigned, before its data context is set.
+		services.AddSingleton<IGlobalInitializer>(sp => sp.GetRequiredService<MainWindowStateHandler>());
+		services.AddGlobalInitializer<NavigationGuard>();
 		services.TryAddSingleton<MainWindowCloseHandler>();
+		services.AddSingleton<IGlobalInitializer>(sp => sp.GetRequiredService<MainWindowCloseHandler>());
+		// Once per process, only for the installation configured at startup: later scopes (first setup, Skyrim directory
+		// changes) are not checked. Waiting for the window to open lets its notification manager apply its template first.
+		services.AddGlobalInitializer(sp =>
+		{
+			if (string.IsNullOrEmpty(sp.GetRequiredService<IOptionsMonitor<AppSettings>>().CurrentValue.SkyrimDirectory))
+			{
+				return;
+			}
+
+			var lifetime = sp.GetRequiredService<IAvaloniaApplicationLifetime>();
+			lifetime.MainWindowOpened.Register(() => _ = lifetime.Services.GetRequiredService<ModUpdateNotifications>().Start());
+		});
 		services.AddConfiguredScopeInitializer<TaskbarProgressInitializer>();
 		services.AddGlobalInitializer<FeedLoadNotificationsInitializer>();
 		if (applicationLifetime != null)
@@ -128,6 +147,12 @@ public static class LauncherKitDesktopServiceCollectionExtensions
 		public IMainView? MainWindow => null;
 
 		public CancellationToken MainWindowOpened => CancellationToken.None;
+
+		public event PropertyChangedEventHandler? PropertyChanged
+		{
+			add { }
+			remove { }
+		}
 
 		public void ReloadViews()
 		{

@@ -16,7 +16,8 @@ public interface IMainView
 	/// <summary>
 	/// Sets the guard the view passes every navigation to instead of running it: the guard runs it only when
 	/// <see cref="CurrentContent"/> allows leaving and no other navigation is in progress. Without a guard the view
-	/// navigates directly. The application host sets it once, before assigning the data context.
+	/// navigates directly. The kit sets it once, when the window is assigned to
+	/// <see cref="IAvaloniaApplicationLifetime.MainWindow"/> and before the data context is assigned.
 	/// </summary>
 	void SetNavigationGuard(Func<Action, ValueTask> navigate);
 
