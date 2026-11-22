@@ -141,6 +141,9 @@ public class FileSystemUtils : IFileSystemUtils
 	public void MoveFile(string sourcePath, string destinationPath, bool overwrite = false) =>
 		File.Move(sourcePath, destinationPath, overwrite);
 
+	public void CopyFile(string sourcePath, string destinationPath, bool overwrite = false) =>
+		File.Copy(sourcePath, destinationPath, overwrite);
+
 	public Task WriteAllText(string path, string contents, CancellationToken cancellationToken) =>
 		File.WriteAllTextAsync(path, contents, cancellationToken);
 

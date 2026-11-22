@@ -28,6 +28,8 @@ public interface IFileSystemUtils
 
 	void MoveFile(string sourcePath, string destinationPath, bool overwrite = false);
 
+	void CopyFile(string sourcePath, string destinationPath, bool overwrite = false);
+
 	Task WriteAllText(string path, string contents, CancellationToken cancellationToken);
 
 	Task<string[]> ReadAllLines(string path, CancellationToken cancellationToken);
