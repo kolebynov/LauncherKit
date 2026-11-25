@@ -100,7 +100,6 @@
 	<data name="MicroUpdateModpackVersion" xml:space="preserve"><value>Update modpack version</value></data>
 	<data name="ModDependencyInstall" xml:space="preserve"><value>Version {0} will be installed</value></data>
 	<data name="ModDependencyKept" xml:space="preserve"><value>Installed version {0} will be kept</value></data>
-	<data name="ModDependencyStepTitle" xml:space="preserve"><value>Mods required by {0}: group {1}</value></data>
 	<data name="ModDependencyUpdate" xml:space="preserve"><value>Will be updated from version {0} to {1}</value></data>
 	<data name="ModNotUpdated" xml:space="preserve"><value>The mod is not yet updated for the current modpack version</value></data>
 	<data name="ModpackComponentsTitle" xml:space="preserve"><value>Installation components</value></data>

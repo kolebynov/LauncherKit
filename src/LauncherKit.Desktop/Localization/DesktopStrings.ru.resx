@@ -101,7 +101,6 @@
 	<data name="MicroUpdateModpackVersion" xml:space="preserve"><value>Обновление версии сборки</value></data>
 	<data name="ModDependencyInstall" xml:space="preserve"><value>Будет установлена версия {0}</value></data>
 	<data name="ModDependencyKept" xml:space="preserve"><value>Останется установленная версия {0}</value></data>
-	<data name="ModDependencyStepTitle" xml:space="preserve"><value>Моды, необходимые для {0}: группа {1}</value></data>
 	<data name="ModDependencyUpdate" xml:space="preserve"><value>Будет обновлён с версии {0} до {1}</value></data>
 	<data name="ModNotUpdated" xml:space="preserve"><value>Мод пока не обновлен под текущую версию модпака</value></data>
 	<data name="ModpackComponentsTitle" xml:space="preserve"><value>Компоненты установки</value></data>

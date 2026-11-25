@@ -257,10 +257,6 @@ public sealed class InstallAppTaskProvider : IInstallAppTaskProvider
 		var dependentName = choice.Dependent.ResolveDisplayName();
 		ChoiceStep step = new()
 		{
-			// Names the dependent mod by its unique feed name, so every choice of an installation has its own step title
-			// even when mods share a display name.
-			Title = new ChoiceText.ModDependencyStepTitle(choice.Dependent.Name, choice.Index + 1),
-			Subtitle = ChoiceText.SelectOneModSubtitle.Instance,
 			SelectionMode = ChoiceSelectionMode.ExactlyOne,
 			Options = options,
 		};

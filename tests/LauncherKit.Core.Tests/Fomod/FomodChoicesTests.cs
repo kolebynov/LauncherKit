@@ -25,8 +25,8 @@ public sealed class FomodChoicesTests
 			Assert.That(sut.Steps, Has.Count.EqualTo(installSteps.Count));
 			Assert.That(start.SelectionMode, Is.EqualTo(ChoiceSelectionMode.Any));
 			Assert.That(start.Options.Single().IsRequired, Is.True);
-			Assert.That(weather.Title.Value, Is.EqualTo(new ChoiceText.Content("Погодный мод")));
-			Assert.That(weather.Subtitle.Value, Is.EqualTo(new ChoiceText.Content("Выберите погодный мод")));
+			Assert.That(weather.Title?.Value, Is.EqualTo(new ChoiceText.Content("Погодный мод")));
+			Assert.That(weather.Subtitle?.Value, Is.EqualTo(new ChoiceText.Content("Выберите погодный мод")));
 			Assert.That(weather.SelectionMode, Is.EqualTo(ChoiceSelectionMode.ExactlyOne));
 			Assert.That(weather.Options[0].Name.Value, Is.EqualTo(new ChoiceText.Content("Azurite CS")));
 			Assert.That(weather.Options[0].IsRequired, Is.False);

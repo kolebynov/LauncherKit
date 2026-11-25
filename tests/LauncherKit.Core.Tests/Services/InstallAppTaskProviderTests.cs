@@ -1453,7 +1453,7 @@ public sealed class InstallAppTaskProviderTests
 	}
 
 	[Test]
-	public async Task CreateModInstallWithDependenciesAppTask_DependentsShareDisplayName_AsksWithDistinctStepTitles()
+	public async Task CreateModInstallWithDependenciesAppTask_DependencyChoice_AsksWithoutStepTitleOrSubtitleInDialogNamingDependent()
 	{
 		// Arrange
 		var mocker = CreateDependencyMocker();
@@ -1475,7 +1475,7 @@ public sealed class InstallAppTaskProviderTests
 		mocker.GetMock<IModOrganizerService>().Setup(x => x.IsModInstalled(It.IsAny<string>())).Returns(false);
 		var sut = mocker.CreateInstance<InstallAppTaskProvider>();
 		var appTask = await sut.CreateModInstallWithDependenciesAppTask(addon, null, Reservations(_ => { }), CancellationToken.None);
-		var titles = new List<ChoiceText>();
+		var asked = new List<(ChoiceText DialogTitle, ChoiceText? StepTitle, ChoiceText? StepSubtitle)>();
 
 		// Act
 		await RunMicroTasks(mocker, appTask.Dependencies.Single(), step =>
@@ -1483,15 +1483,16 @@ public sealed class InstallAppTaskProviderTests
 			if (step is MicroTaskStep.SelectChoices(var context))
 			{
 				var choiceStep = context.Steps.Single();
-				titles.Add(choiceStep.Title);
+				asked.Add((context.Title, choiceStep.Title, choiceStep.Subtitle));
 				context.SetResult([new ChoiceStepSelection { Step = choiceStep, SelectedOptions = [choiceStep.Options[0]] }]);
 			}
 		});
 
 		// Assert
-		Assert.That(titles, Is.EqualTo(new ChoiceText[]
+		Assert.That(asked, Is.EqualTo(new (ChoiceText, ChoiceText?, ChoiceText?)[]
 		{
-			new ChoiceText.ModDependencyStepTitle("Core A", 1), new ChoiceText.ModDependencyStepTitle("Core B", 1),
+			(new ChoiceText.SelectModDependencyTitle("Core"), null, null),
+			(new ChoiceText.SelectModDependencyTitle("Core"), null, null),
 		}));
 
 		static ModFeedData CoreRequiring(string name, string first, string second) => new()

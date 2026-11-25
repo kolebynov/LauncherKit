@@ -67,14 +67,14 @@ public sealed class SelectChoicesMicroTaskTests
 		{
 			Assert.That(shown!.Title.Value, Is.EqualTo(new ChoiceText.Content("Title")));
 			var first = shown.Steps[0];
-			Assert.That(first.Title.Value, Is.EqualTo(new ChoiceText.Content("Page 1")));
-			Assert.That(first.Subtitle.Value, Is.EqualTo(new ChoiceText.Content("Subtitle")));
+			Assert.That(first.Title?.Value, Is.EqualTo(new ChoiceText.Content("Page 1")));
+			Assert.That(first.Subtitle?.Value, Is.EqualTo(new ChoiceText.Content("Subtitle")));
 			Assert.That(first.SelectionMode, Is.EqualTo(ChoiceSelectionMode.Any));
 			Assert.That(first.Options.Select(x => x.Name.Value), Is.EqualTo(new[] { new ChoiceText.Content("A"), new ChoiceText.Content("B") }));
 			Assert.That(first.Options.Select(x => x.Description.Value),
 				Is.EqualTo(new[] { new ChoiceText.Content("Description"), new ChoiceText.Content("") }));
 			Assert.That(first.Options.Select(x => (x.IsRequired, x.IsSelectedByDefault)), Is.EqualTo(new[] { (true, false), (false, true) }));
-			Assert.That(shown.Steps[1].Subtitle.Value, Is.EqualTo(new ChoiceText.Content("")));
+			Assert.That(shown.Steps[1].Subtitle?.Value, Is.EqualTo(new ChoiceText.Content("")));
 			Assert.That(new[] { "A", "B", "C", "D" }.Select(context.GetValue), Is.EqualTo(new[] { "true", "false", "false", "true" }));
 		});
 	}

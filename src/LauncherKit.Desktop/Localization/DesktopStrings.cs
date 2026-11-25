@@ -99,7 +99,6 @@ public sealed class DesktopStrings
 	public const string MicroUpdateModpackVersion = nameof(MicroUpdateModpackVersion);
 	public const string ModDependencyInstall = nameof(ModDependencyInstall);
 	public const string ModDependencyKept = nameof(ModDependencyKept);
-	public const string ModDependencyStepTitle = nameof(ModDependencyStepTitle);
 	public const string ModDependencyUpdate = nameof(ModDependencyUpdate);
 	public const string ModNotUpdated = nameof(ModNotUpdated);
 	public const string ModUpdatesAvailable = nameof(ModUpdatesAvailable);

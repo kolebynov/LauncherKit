@@ -17,7 +17,6 @@ public union ChoiceText(
 	ChoiceText.ModpackComponentsTitle,
 	ChoiceText.ComponentOptionDescription,
 	ChoiceText.SelectModDependencyTitle,
-	ChoiceText.ModDependencyStepTitle,
 	ChoiceText.ModDependencyOptionDescription,
 	ChoiceText.ModDependencyKeptDescription,
 	ChoiceText.UnavailableModDependency)
@@ -37,12 +36,6 @@ public union ChoiceText(
 	public sealed record ComponentOptionDescription(string Name, string? OptionDescription, long? DownloadBytes);
 	/// <summary>Choosing which mod to install for a dependency of the mod <paramref name="ModName"/> (display name).</summary>
 	public sealed record SelectModDependencyTitle(string ModName);
-	/// <summary>
-	/// The step of the dependency numbered <paramref name="Number"/> (from 1, in feed order) of the mod whose unique
-	/// feed name is <paramref name="FeedName"/>; distinct for every dependency choice of an installation, even when mods
-	/// share a display name, so automation selects steps by it.
-	/// </summary>
-	public sealed record ModDependencyStepTitle(string FeedName, int Number);
 	/// <summary>
 	/// Installing <paramref name="TargetVersion"/> of a dependency, updating <paramref name="InstalledVersion"/> when it
 	/// is installed.

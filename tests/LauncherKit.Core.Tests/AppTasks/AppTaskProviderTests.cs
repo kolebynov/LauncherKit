@@ -522,7 +522,7 @@ public sealed class AppTaskProviderTests
 		{
 			Assert.That(task.Id, Is.EqualTo("InstallModpackComponent_EnglishVoices"));
 			Assert.That(GraphPackOptions(offer!), Is.Empty);
-			Assert.That(choices.Steps.Select(x => x.Title.Value), Is.EqualTo(new[] { new LauncherKit.Core.Choices.ChoiceText.Content("Английская озвучка") }));
+			Assert.That(choices.Steps.Select(x => x.Title?.Value), Is.EqualTo(new[] { new LauncherKit.Core.Choices.ChoiceText.Content("Английская озвучка") }));
 		});
 	}
 
