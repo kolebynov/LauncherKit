@@ -7,6 +7,9 @@ public union FeedLoadEvent(FeedLoadEvent.Started, FeedLoadEvent.Succeeded, FeedL
 
 	public sealed record Succeeded;
 
-	/// <summary>The feed could not be loaded; the provider returns the empty default feed until it retries.</summary>
+	/// <summary>
+	/// The feed could not be loaded; until it retries, the provider returns the last loaded feed, or the empty default
+	/// feed when none has loaded yet.
+	/// </summary>
 	public sealed record Failed(Exception Exception);
 }

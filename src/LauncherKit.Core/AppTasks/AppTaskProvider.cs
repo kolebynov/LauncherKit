@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -179,7 +180,8 @@ public sealed class AppTaskProvider : IAppTaskProvider
 					archiveName, SkyrimRelativePath.Root, versionFileEntry, MicroTaskDescription.ExtractModpackPatch.Instance),
 				// A patch is never rolled back, so its steps take no backups.
 				..context.ServiceProvider.GetRequiredService<IInstallStepsMicroTasksFactory>()
-					.CreateInstallMicroTasks(modpackPatchFeedItem.InstallSteps ?? [], null),
+					.CreateInstallMicroTasks(modpackPatchFeedItem.InstallSteps ?? [], null,
+						FrozenDictionary<string, NuGetVersion>.Empty),
 				context.MicroTasksFactory.CreateExtractSevenZipEntryMicroTask(
 					archiveName, SkyrimRelativePath.Root, versionFileEntry, MicroTaskDescription.UpdateModpackVersion.Instance),
 			],

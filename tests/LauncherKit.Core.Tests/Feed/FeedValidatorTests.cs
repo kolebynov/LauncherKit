@@ -186,6 +186,46 @@ public sealed class FeedValidatorTests
 	}
 
 	[Test]
+	public void Validate_DependencyAlternativesOfExistingOtherMods_AcceptsFeed()
+	{
+		// Arrange
+		var feed = With(mods: [ModRequiring("A", "B", "C"), Mod("B", "mods"), Mod("C", "mods")], components: []);
+
+		// Act / Assert
+		Assert.That(() => FeedValidator.Validate(feed), Throws.Nothing);
+	}
+
+	[Test]
+	public void Validate_InvalidDependencyAlternatives_RejectsFeed()
+	{
+		// Arrange
+		var unknown = With(mods: [ModRequiring("A", "Missing")], components: []);
+		var self = With(mods: [ModRequiring("A", "A")], components: []);
+		var duplicate = With(mods: [ModRequiring("A", "B", "B"), Mod("B", "mods")], components: []);
+		var empty = With(mods: [ModRequiring("A")], components: []);
+
+		// Act / Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(() => FeedValidator.Validate(unknown), Throws.TypeOf<InvalidDataException>());
+			Assert.That(() => FeedValidator.Validate(self), Throws.TypeOf<InvalidDataException>());
+			Assert.That(() => FeedValidator.Validate(duplicate), Throws.TypeOf<InvalidDataException>());
+			Assert.That(() => FeedValidator.Validate(empty), Throws.TypeOf<InvalidDataException>());
+		});
+	}
+
+	[TestCase("1.*")]
+	[TestCase("[1.*, )")]
+	public void Validate_FloatingDependencyRange_RejectsFeed(string range)
+	{
+		// Arrange
+		var feed = With(mods: [ModRequiringRange("A", "B", range), Mod("B", "mods")], components: []);
+
+		// Act / Assert
+		Assert.That(() => FeedValidator.Validate(feed), Throws.TypeOf<InvalidDataException>());
+	}
+
+	[Test]
 	public void Validate_ComponentsWithDifferentDefaults_AcceptsFeed()
 	{
 		// Arrange
@@ -286,6 +326,29 @@ public sealed class FeedValidatorTests
 	private static ModFeedData Mod(string name, string categoryId) => new()
 	{
 		Name = name, CategoryId = categoryId, DescriptionPath = new() { ["ru"] = "d.md" }, LogoPath = "logo.png", Items = [],
+	};
+
+	/// <summary>The mod <paramref name="name"/> whose only version requires one of <paramref name="alternatives"/>.</summary>
+	private static ModFeedData ModRequiring(string name, params string[] alternatives) =>
+		ModRequiring(name, alternatives.Select(x => new ModDependencyAlternative(x, VersionRange.Parse("[1.0.0,)"))).ToArray());
+
+	/// <summary>The mod <paramref name="name"/> whose only version requires <paramref name="alternative"/> in <paramref name="range"/>.</summary>
+	private static ModFeedData ModRequiringRange(string name, string alternative, string range) =>
+		ModRequiring(name, [new ModDependencyAlternative(alternative, VersionRange.Parse(range))]);
+
+	private static ModFeedData ModRequiring(string name, ModDependencyAlternative[] alternatives) => new()
+	{
+		Name = name, CategoryId = "mods", DescriptionPath = new() { ["ru"] = "d.md" }, LogoPath = "logo.png",
+		Items =
+		[
+			new ModFeedItem
+			{
+				Version = NuGetVersion.Parse("1.0.0"),
+				ArchiveDownloadInfo = new DownloadInfo { S3Path = "a.7z" },
+				SupportedModpackVersion = VersionRange.Parse("[1.0.0,)"),
+				Dependencies = [new ModDependency.AnotherMod(alternatives)],
+			},
+		],
 	};
 
 	private static InstallComponent ModChoice(params ModChoiceOption[] options) => new()

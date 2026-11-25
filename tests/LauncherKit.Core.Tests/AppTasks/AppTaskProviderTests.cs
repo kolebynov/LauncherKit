@@ -159,7 +159,7 @@ public sealed class AppTaskProviderTests
 				ProductTestSupport.CreateProduct().ModpackVersionFile, updateVersion))
 			.Returns(Marker("extract version"));
 		var installSteps = mocker.GetMock<IInstallStepsMicroTasksFactory>();
-		installSteps.Setup(x => x.CreateInstallMicroTasks(patch.InstallSteps, null)).Returns([Marker("steps")]);
+		installSteps.Setup(x => x.CreateInstallMicroTasks(patch.InstallSteps, null, It.Is<IDictionary<string, NuGetVersion>>(kept => kept.Count == 0))).Returns([Marker("steps")]);
 		mocker.GetMock<IServiceProvider>()
 			.Setup(x => x.GetService(typeof(IInstallStepsMicroTasksFactory)))
 			.Returns(installSteps.Object);

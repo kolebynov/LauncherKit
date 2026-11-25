@@ -8,6 +8,7 @@ using LauncherKit.Core.AppTasks;
 using LauncherKit.Core.Feed;
 using LauncherKit.Core.Feed.Mods;
 using LauncherKit.Core.Models;
+using LauncherKit.Core.ModDependencies;
 using LauncherKit.Core.Services;
 using LauncherKit.Core.Services.Abstractions;
 using LauncherKit.Core.Utils;
@@ -167,7 +168,8 @@ public sealed class ModCategoryViewModelTests
 			.Setup(x => x.GetModInstallState(It.Is<ModFeedData>(m => m.Name == "Lite"), ModpackVersion))
 			.Returns(() => state);
 		mocker.GetMock<IInstallAppTaskProvider>()
-			.Setup(x => x.CreateModInstallAppTask(It.Is<ModFeedData>(m => m.Name == "Lite"), NuGetVersion.Parse("1.0.0"), It.IsAny<CancellationToken>()))
+			.Setup(x => x.CreateModInstallWithDependenciesAppTask(It.Is<ModFeedData>(m => m.Name == "Lite"), NuGetVersion.Parse("1.0.0"),
+				It.IsAny<ModDependencyReservations>(), It.IsAny<CancellationToken>()))
 			.ReturnsAsync(install);
 		mocker.GetMock<IInstallAppTaskProvider>()
 			.Setup(x => x.CreateModUninstallAppTask(It.Is<ModFeedData>(m => m.Name == "Lite"))).Returns(uninstall);
@@ -209,7 +211,8 @@ public sealed class ModCategoryViewModelTests
 		var install = new AppTask("InstallLite", new AppTaskDescription.Custom("Install"), _ => [], [], null);
 		var installCompletion = new TaskCompletionSource();
 		mocker.GetMock<IInstallAppTaskProvider>()
-			.Setup(x => x.CreateModInstallAppTask(lite, NuGetVersion.Parse("1.0.0"), It.IsAny<CancellationToken>()))
+			.Setup(x => x.CreateModInstallWithDependenciesAppTask(lite, NuGetVersion.Parse("1.0.0"), It.IsAny<ModDependencyReservations>(),
+				It.IsAny<CancellationToken>()))
 			.ReturnsAsync(install);
 		mocker.GetMock<IAppTaskQueue>().Setup(x => x.EnqueueAndWaitForCompletion(install, It.IsAny<CancellationToken>()))
 			.Returns(installCompletion.Task);
@@ -254,7 +257,8 @@ public sealed class ModCategoryViewModelTests
 		var installCompletion = new TaskCompletionSource();
 		var enqueueCount = 0;
 		mocker.GetMock<IInstallAppTaskProvider>()
-			.Setup(x => x.CreateModInstallAppTask(lite, NuGetVersion.Parse("1.0.0"), It.IsAny<CancellationToken>()))
+			.Setup(x => x.CreateModInstallWithDependenciesAppTask(lite, NuGetVersion.Parse("1.0.0"), It.IsAny<ModDependencyReservations>(),
+				It.IsAny<CancellationToken>()))
 			.ReturnsAsync(install);
 		// The queue drops a duplicate of a queued task, so waiting for it completes at once.
 		mocker.GetMock<IAppTaskQueue>().Setup(x => x.EnqueueAndWaitForCompletion(install, It.IsAny<CancellationToken>()))
@@ -302,7 +306,8 @@ public sealed class ModCategoryViewModelTests
 		var install = new AppTask("InstallLite", new AppTaskDescription.Custom("Install"), _ => [], [], null);
 		var installCompletion = new TaskCompletionSource();
 		mocker.GetMock<IInstallAppTaskProvider>()
-			.Setup(x => x.CreateModInstallAppTask(lite, NuGetVersion.Parse("1.0.0"), It.IsAny<CancellationToken>()))
+			.Setup(x => x.CreateModInstallWithDependenciesAppTask(lite, NuGetVersion.Parse("1.0.0"), It.IsAny<ModDependencyReservations>(),
+				It.IsAny<CancellationToken>()))
 			.ReturnsAsync(install);
 		mocker.GetMock<IAppTaskQueue>().Setup(x => x.EnqueueAndWaitForCompletion(install, It.IsAny<CancellationToken>()))
 			.Returns(installCompletion.Task);

@@ -16,6 +16,13 @@
 	<data name="DeleteAccessDenied" xml:space="preserve"><value>{0}: access denied to {1}.</value></data>
 	<data name="DeleteError" xml:space="preserve"><value>{0}: {1}</value></data>
 	<data name="DeleteFileInUse" xml:space="preserve"><value>{0}: the file is in use. Wait for its download or installation to finish, cancel the task, or close the application using it.</value></data>
+	<data name="DependencyConflictingVersion" xml:space="preserve"><value>Another required mod needs version {0}</value></data>
+	<data name="DependencyCycle" xml:space="preserve"><value>The mods require each other</value></data>
+	<data name="DependencyNewerVersionInstalled" xml:space="preserve"><value>A newer version {0} is installed</value></data>
+	<data name="DependencyNoSupportedVersion" xml:space="preserve"><value>No version in range {0} supports the installed modpack</value></data>
+	<data name="DependencyOtherExclusiveMod" xml:space="preserve"><value>Cannot be installed together with {0}</value></data>
+	<data name="DependencyUnknownInstalledVersion" xml:space="preserve"><value>The installed version {0} is unknown</value></data>
+	<data name="DependencyUnsatisfiable" xml:space="preserve"><value>The mods it requires cannot all be installed</value></data>
 	<data name="DirectoryAppDataConflict" xml:space="preserve"><value>The launcher data directory must not overlap the Skyrim directory</value></data>
 	<data name="DirectoryNotFound" xml:space="preserve"><value>The directory does not exist</value></data>
 	<data name="DirectoryNotWritable" xml:space="preserve"><value>The directory is not writable</value></data>
@@ -32,6 +39,7 @@
 	<data name="ExceptionDownloadStalled" xml:space="preserve"><value>No download data was received for {0}. Try again.</value></data>
 	<data name="ExceptionDuplicatePlugin" xml:space="preserve"><value>Plugin {0} occurs more than once.</value></data>
 	<data name="ExceptionLocalSavesDisabled" xml:space="preserve"><value>Local saves are disabled for profile {0}.</value></data>
+	<data name="ExceptionModDependencyUnavailable" xml:space="preserve"><value>None of the mods required by {0} can be installed. {1}</value></data>
 	<data name="ExceptionModOrganizerRunning" xml:space="preserve"><value>Mod Organizer is already running. Close it and try again.</value></data>
 	<data name="ExceptionModpackNotInstalled" xml:space="preserve"><value>The modpack is not installed</value></data>
 	<data name="ExceptionNotEnoughSpace" xml:space="preserve"><value>There is not enough space on drive {0}. Required: {1}; available: {2}. Free space or change the launcher data directory in settings.</value></data>
@@ -73,6 +81,7 @@
 	<data name="MicroInstallSevenZip" xml:space="preserve"><value>Install 7-Zip</value></data>
 	<data name="MicroInstallSkyrim" xml:space="preserve"><value>Install Skyrim</value></data>
 	<data name="MicroInstalling" xml:space="preserve"><value>Installing</value></data>
+	<data name="MicroResolveModDependencies" xml:space="preserve"><value>Checking mod dependencies</value></data>
 	<data name="MicroRunLauncherSetup" xml:space="preserve"><value>Start the launcher setup</value></data>
 	<data name="MicroMergePlugins" xml:space="preserve"><value>Merge plugins from {0}</value></data>
 	<data name="MicroPrepareFile" xml:space="preserve"><value>Prepare file</value></data>
@@ -89,6 +98,10 @@
 	<data name="MicroUninstallMod" xml:space="preserve"><value>Uninstall mod {0}</value></data>
 	<data name="MicroUpdateModMetadata" xml:space="preserve"><value>Update mod metadata</value></data>
 	<data name="MicroUpdateModpackVersion" xml:space="preserve"><value>Update modpack version</value></data>
+	<data name="ModDependencyInstall" xml:space="preserve"><value>Version {0} will be installed</value></data>
+	<data name="ModDependencyKept" xml:space="preserve"><value>Installed version {0} will be kept</value></data>
+	<data name="ModDependencyStepTitle" xml:space="preserve"><value>Mods required by {0}: group {1}</value></data>
+	<data name="ModDependencyUpdate" xml:space="preserve"><value>Will be updated from version {0} to {1}</value></data>
 	<data name="ModNotUpdated" xml:space="preserve"><value>The mod is not yet updated for the current modpack version</value></data>
 	<data name="ModpackComponentsTitle" xml:space="preserve"><value>Installation components</value></data>
 	<data name="ModpackInstallUnavailable" xml:space="preserve"><value>No modpack versions are available to install</value></data>
@@ -101,6 +114,7 @@
 	<data name="PendingTasksCloseMessage" xml:space="preserve"><value>The launcher is waiting for tasks to finish. Exiting will cancel all unfinished tasks. Continue?</value></data>
 	<data name="PendingTasksCloseTitle" xml:space="preserve"><value>Tasks are still running</value></data>
 	<data name="RequiredModsStepTitle" xml:space="preserve"><value>Required mods</value></data>
+	<data name="SelectModDependencyTitle" xml:space="preserve"><value>Select a mod required by {0}</value></data>
 	<data name="SelectOneModSubtitle" xml:space="preserve"><value>Select one mod</value></data>
 	<data name="SelectRequiredModTitle" xml:space="preserve"><value>Select a required mod: {0}</value></data>
 	<data name="SetupFailed" xml:space="preserve"><value>Setup failed</value></data>
@@ -121,6 +135,7 @@
 	<data name="TaskInstallSevenZip" xml:space="preserve"><value>Install 7-Zip</value></data>
 	<data name="TaskInstallSkyrim" xml:space="preserve"><value>Install Skyrim</value></data>
 	<data name="TaskInstallVcRedist" xml:space="preserve"><value>Install Visual C++ {0}</value></data>
+	<data name="TaskResolveModDependencies" xml:space="preserve"><value>Checking dependencies of {0}</value></data>
 	<data name="TaskRunGame" xml:space="preserve"><value>Launch game: {0}</value></data>
 	<data name="TaskSelectModpackComponents" xml:space="preserve"><value>Select installation components</value></data>
 	<data name="TaskUninstallMod" xml:space="preserve"><value>Uninstall mod {0}</value></data>

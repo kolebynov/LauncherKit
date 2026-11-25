@@ -66,7 +66,7 @@ public sealed class FeedProviderTests
 	}
 
 	[Test]
-	public async Task GetFeedData_FeedRequestFails_ReturnsDefaultFeed()
+	public async Task GetFeedData_FeedRequestFailsBeforeAnyFeedLoaded_ReturnsDefaultFeed()
 	{
 		// Arrange
 		using var handler = MockHttpClientFactory.StrictHandler();
@@ -97,7 +97,7 @@ public sealed class FeedProviderTests
 	}
 
 	[Test]
-	public async Task GetLauncherFeedItems_FeedPayloadIsInvalidJson_ReturnsDefaultFeed()
+	public async Task GetLauncherFeedItems_FeedPayloadIsInvalidJsonBeforeAnyFeedLoaded_ReturnsDefaultFeed()
 	{
 		// Arrange
 		using var handler = MockHttpClientFactory.StrictHandler();
@@ -323,6 +323,39 @@ public sealed class FeedProviderTests
 			Assert.That(afterFailure, Is.Empty);
 			Assert.That(beforeRetry, Is.Empty);
 			Assert.That(afterRetry.Select(x => x.Version.ToNormalizedString()), Is.EqualTo(new[] { "1.2.3" }));
+		});
+		handler.VerifyNoOutstandingExpectation();
+	}
+
+	[Test]
+	public async Task GetLauncherFeedItems_ReloadAfterLoadedFeedFails_ReturnsLastLoadedFeedUntilRetrySucceeds()
+	{
+		// Arrange
+		using var handler = MockHttpClientFactory.StrictHandler();
+		handler.Expect(HttpMethod.Get, FeedUrl).Respond("application/json", FeedJson);
+		handler.Expect(HttpMethod.Get, FeedUrl).Respond(HttpStatusCode.InternalServerError);
+		handler.Expect(HttpMethod.Get, FeedUrl).Respond("application/json", FeedJson);
+		var timeProvider = new FakeTimeProvider();
+		var mocker = CreateMocker(handler, timeProvider);
+		using var sut = mocker.CreateInstance<FeedProvider>();
+		var loadedLaunchers = await sut.GetLauncherFeedItems(CancellationToken.None);
+		var events = new List<string>();
+		using var subscription = sut.LoadEvents.Subscribe(e => events.Add(Describe(e)));
+
+		// Act
+		timeProvider.Advance(FeedProvider.FeedLifetime);
+		var afterFailure = await sut.GetLauncherFeedItems(CancellationToken.None);
+		var skyrimAfterFailure = await sut.GetSkyrimDownloadInfo(CancellationToken.None);
+		timeProvider.Advance(FeedProvider.FailedFeedLifetime);
+		var afterRetry = await sut.GetLauncherFeedItems(CancellationToken.None);
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(afterFailure, Is.SameAs(loadedLaunchers));
+			Assert.That(skyrimAfterFailure.S3Path, Is.EqualTo("skyrim/skyrim.7z"));
+			Assert.That(afterRetry.Select(x => x.Version.ToNormalizedString()), Is.EqualTo(new[] { "1.2.3" }));
+			Assert.That(events, Is.EqualTo(new[] { "started", "failed: HttpRequestException", "started", "succeeded" }));
 		});
 		handler.VerifyNoOutstandingExpectation();
 	}

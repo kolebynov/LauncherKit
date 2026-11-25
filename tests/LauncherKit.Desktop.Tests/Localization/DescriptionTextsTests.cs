@@ -107,6 +107,8 @@ public sealed class DescriptionTextsTests
 				ChoiceText.NoneOption.Instance, ChoiceText.YesOption.Instance,
 				new ChoiceText.ExtraDownloadSize(1536), new ChoiceText.SelectRequiredModTitle(["mod-marker"]),
 				ChoiceText.RequiredModsStepTitle.Instance, ChoiceText.SelectOneModSubtitle.Instance,
+				new ChoiceText.ModDependencyStepTitle("feed-marker", 2),
+				new ChoiceText.ModDependencyKeptDescription(version),
 				ChoiceText.UnavailableModNotUpdated.Instance, ChoiceText.UnavailableFomodOption.Instance,
 				ChoiceText.ModpackComponentsTitle.Instance,
 				new ChoiceText.ComponentOptionDescription("name-marker", "option-marker", 1536),
@@ -122,6 +124,9 @@ public sealed class DescriptionTextsTests
 					Does.Contain(BytesFormatter.Format(1536, BytesFormatter.Measurement.Size.Instance)));
 				Assert.That(choices.Get(new ChoiceText.SelectRequiredModTitle(["first-marker", "second-marker"])).Value,
 					Does.Contain("first-marker").And.Contain("second-marker"));
+				Assert.That(choices.Get(new ChoiceText.ModDependencyStepTitle("feed-marker", 2)).Value,
+					Does.Contain("feed-marker").And.Contain("2"));
+				Assert.That(choices.Get(new ChoiceText.ModDependencyKeptDescription(version)).Value, Does.Contain(version.ToString()));
 				Assert.That(tasks.Get(new AppTaskDescription.Custom("custom-marker")).Value, Is.EqualTo("custom-marker"));
 				Assert.That(tasks.Get(new MicroTaskDescription.Custom("custom-marker")).Value, Is.EqualTo("custom-marker"));
 				Assert.That(choices.Get(new ChoiceText.Content("content-marker")).Value, Is.EqualTo("content-marker"));
@@ -200,6 +205,34 @@ public sealed class DescriptionTextsTests
 		Assert.That(description.Value.Contains("option-marker", StringComparison.Ordinal), Is.EqualTo(hasOptionDescription));
 		if (bytes is { } count)
 			Assert.That(description.Value, Does.Contain(BytesFormatter.Format(count, BytesFormatter.Measurement.Size.Instance)));
+	}
+
+	[Test]
+	public void ModDependencyStepTitle_DependentsWhoseDisplayAndFeedNamesCollide_RendersDistinctSelectorsFromFeedNames()
+	{
+		// Arrange: the mod "Core A" is shown as "Core", the mod "Core (Core A)" as itself.
+		var previous = CultureInfo.CurrentUICulture;
+		try
+		{
+			CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("ru");
+			using var provider = new ServiceCollection().AddLogging().AddLauncherKitLocalization().BuildServiceProvider();
+			var choices = provider.GetRequiredService<ChoiceTexts>();
+
+			// Act
+			var coreA = choices.Get(new ChoiceText.ModDependencyStepTitle("Core A", 1)).Value;
+			var coreWithSuffix = choices.Get(new ChoiceText.ModDependencyStepTitle("Core (Core A)", 1)).Value;
+
+			// Assert
+			Assert.Multiple(() =>
+			{
+				Assert.That(coreA, Is.EqualTo("Моды, необходимые для Core A: группа 1"));
+				Assert.That(coreWithSuffix, Is.EqualTo("Моды, необходимые для Core (Core A): группа 1"));
+			});
+		}
+		finally
+		{
+			CultureInfo.CurrentUICulture = previous;
+		}
 	}
 
 	private static void AssertResolved(LocalizedString value)

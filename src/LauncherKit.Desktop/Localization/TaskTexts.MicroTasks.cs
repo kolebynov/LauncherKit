@@ -49,6 +49,7 @@ public sealed partial class TaskTexts
 		MicroTaskDescription.PrepareFile => strings[DesktopStrings.MicroPrepareFile],
 		MicroTaskDescription.ConfigureMod => strings[DesktopStrings.MicroConfigureMod],
 		MicroTaskDescription.GetDownloadSizes => strings[DesktopStrings.MicroGetDownloadSizes],
+		MicroTaskDescription.ResolveModDependencies => strings[DesktopStrings.MicroResolveModDependencies],
 		MicroTaskDescription.ActivatePlugins(var activate) => strings[activate ? DesktopStrings.ActivatePlugins : DesktopStrings.DeactivatePlugins],
 		MicroTaskDescription.ActivateMods(var activate) => strings[activate ? DesktopStrings.ActivateMods : DesktopStrings.DeactivateMods],
 		MicroTaskDescription.Custom(var value) => new LocalizedString(nameof(MicroTaskDescription.Custom), value),

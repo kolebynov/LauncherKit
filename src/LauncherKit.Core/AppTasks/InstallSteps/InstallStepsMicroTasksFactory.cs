@@ -9,6 +9,7 @@ using LauncherKit.Core.FileStorage;
 using LauncherKit.Core.Models;
 using LauncherKit.Core.Services.Abstractions;
 using LauncherKit.Infrastructure;
+using NuGet.Versioning;
 
 namespace LauncherKit.Core.AppTasks.InstallSteps;
 
@@ -33,12 +34,13 @@ public sealed class InstallStepsMicroTasksFactory : IInstallStepsMicroTasksFacto
 		_product = product.Value;
 	}
 
-	public IReadOnlyList<IAppMicroTask> CreateInstallMicroTasks(IReadOnlyList<InstallStep> steps, InstallBackupId? backupId)
+	public IReadOnlyList<IAppMicroTask> CreateInstallMicroTasks(IReadOnlyList<InstallStep> steps, InstallBackupId? backupId,
+		IDictionary<string, NuGetVersion> keptMods)
 	{
 		var context = new InstallContext();
 		var microTasks = steps
 			.SelectMany((step, index) =>
-				CreateMicroTasksForStep(step, index, step.CanRollback ? backupId : null, context));
+				CreateMicroTasksForStep(step, index, step.CanRollback ? backupId : null, context, keptMods));
 		return backupId != null && steps.Any(x => x.CanRollback)
 			?
 			[
@@ -55,7 +57,7 @@ public sealed class InstallStepsMicroTasksFactory : IInstallStepsMicroTasksFacto
 	}
 
 	public IReadOnlyList<IAppMicroTask> CreateRollbackMicroTasks(IReadOnlyList<InstallStep> steps,
-		InstallBackupId backupId) =>
+		InstallBackupId backupId, Func<string, CancellationToken, ValueTask<bool>> keepsMod) =>
 		steps
 			.Select((step, stepIndex) => (Step: step, StepIndex: stepIndex))
 			.Reverse()
@@ -66,7 +68,7 @@ public sealed class InstallStepsMicroTasksFactory : IInstallStepsMicroTasksFacto
 				.Select(y => y.Action switch
 				{
 					InstallAction.InstallMod(_, var modName, _) => CreateRollbackIfAppliedMicroTask(y.Backup,
-						CreateRollbackInstallModMicroTask(modName)),
+						CreateRollbackInstallModMicroTask(modName, keepsMod)),
 					InstallAction.SelectRequiredMod or InstallAction.SelectChoices => null,
 					InstallAction.ActivateMods(var activate, var mods) => CreateRollbackIfAppliedMicroTask(y.Backup,
 						CreateRollbackActivateModsMicroTask(mods, !activate)),
@@ -186,13 +188,20 @@ public sealed class InstallStepsMicroTasksFactory : IInstallStepsMicroTasksFacto
 			];
 	}
 
-	private IAppMicroTask CreateRollbackInstallModMicroTask(string modName) =>
+	private IAppMicroTask CreateRollbackInstallModMicroTask(string modName,
+		Func<string, CancellationToken, ValueTask<bool>> keepsMod) =>
 		_microTasksFactory.CreateDelegateMicroTask(
 			async (_, ct) =>
 			{
 				if (!_modOrganizerService.IsModInstalled(modName))
 				{
 					_logger.LogWarning("Mod {ModName} is not installed, skipping its uninstallation", modName);
+					return;
+				}
+
+				if (await keepsMod(modName, ct))
+				{
+					_logger.LogInformation("Mod {ModName} is kept installed", modName);
 					return;
 				}
 
@@ -226,10 +235,10 @@ public sealed class InstallStepsMicroTasksFactory : IInstallStepsMicroTasksFacto
 	/// rolled back.
 	/// </param>
 	private IEnumerable<IAppMicroTask> CreateMicroTasksForStep(InstallStep step, int index, InstallBackupId? backupId,
-		InstallContext context)
+		InstallContext context, IDictionary<string, NuGetVersion> keptMods)
 	{
 		var stepMicroTasks = step.Actions.SelectMany((action, actionIndex) =>
-			CreateMicroTasksForAction(action, index, backupId?.ForAction(index, actionIndex), context));
+			CreateMicroTasksForAction(action, index, backupId?.ForAction(index, actionIndex), context, keptMods));
 
 		return step.Condition != null
 			? stepMicroTasks.Select(microTask => CreateConditionalMicroTask(microTask, step.Condition, context))
@@ -237,14 +246,14 @@ public sealed class InstallStepsMicroTasksFactory : IInstallStepsMicroTasksFacto
 	}
 
 	private IReadOnlyList<IAppMicroTask> CreateMicroTasksForAction(InstallAction action, int stepIndex,
-		InstallActionBackup? backup, InstallContext context) =>
+		InstallActionBackup? backup, InstallContext context, IDictionary<string, NuGetVersion> keptMods) =>
 		action switch
 		{
 			InstallAction.InstallMod(var downloadInfo, var modName, var placement) =>
 			[
-				_microTasksFactory.CreateDownloadFileMicroTask(downloadInfo),
-				MarkingApplied(backup,
-					_microTasksFactory.CreateInstallModMicroTask(modName, downloadInfo.FileName, placement)),
+				UnlessKept(modName, keptMods, _microTasksFactory.CreateDownloadFileMicroTask(downloadInfo)),
+				MarkingApplied(backup, UnlessKept(modName, keptMods,
+					_microTasksFactory.CreateInstallModMicroTask(modName, downloadInfo.FileName, placement))),
 			],
 			InstallAction.SelectRequiredMod(var modNames) =>
 				[_microTasksFactory.CreateSelectRequiredModMicroTask(context.GetContextForStep(stepIndex), modNames)],
@@ -284,6 +293,32 @@ public sealed class InstallStepsMicroTasksFactory : IInstallStepsMicroTasksFacto
 					new MicroTaskDescription.ChangeProfile(profileName))),
 			],
 		};
+
+	/// <summary>
+	/// <paramref name="microTask"/> of an <c>installMod</c> action, skipped when the preceding rollback kept the mod
+	/// <paramref name="modName"/> installed (<paramref name="keptMods"/>) and it still is, at the version it kept: the
+	/// action reuses that mod. A kept mod that is no longer installed is forgotten, so the action installs it.
+	/// </summary>
+	private DelegateMicroTask UnlessKept(string modName, IDictionary<string, NuGetVersion> keptMods,
+		IAppMicroTask microTask) =>
+		new(microTask.Description, (stepSubject, ct) =>
+		{
+			if (keptMods.TryGetValue(modName, out var keptVersion))
+			{
+				if (!_modOrganizerService.IsModInstalled(modName))
+				{
+					keptMods.Remove(modName);
+				}
+				else if (_modOrganizerService.ReadModVersion(modName) == keptVersion)
+				{
+					_logger.LogInformation("Mod {ModName} {Version} was kept installed by the rollback, reusing it",
+						modName, keptVersion);
+					return ValueTask.CompletedTask;
+				}
+			}
+
+			return microTask.Execute(stepSubject, ct);
+		});
 
 	/// <summary>
 	/// <paramref name="microTask"/>, recording right before it runs that its action ran when the step can be rolled back

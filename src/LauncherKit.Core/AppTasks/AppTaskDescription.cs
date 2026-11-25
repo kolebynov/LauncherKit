@@ -19,6 +19,7 @@ public union AppTaskDescription(
 	AppTaskDescription.InstallSevenZip,
 	AppTaskDescription.InstallVcRedist,
 	AppTaskDescription.CleanupOldData,
+	AppTaskDescription.ResolveModDependencies,
 	AppTaskDescription.Custom)
 {
 	public sealed record InstallModpack(NuGetVersion Version);
@@ -48,6 +49,8 @@ public union AppTaskDescription(
 	public sealed record InstallVcRedist(string Architecture);
 
 	public sealed record CleanupOldData;
+
+	public sealed record ResolveModDependencies(string ModName);
 
 	public sealed record Custom(string Text);
 }

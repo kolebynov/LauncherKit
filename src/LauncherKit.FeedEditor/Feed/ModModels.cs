@@ -102,10 +102,35 @@ public sealed class ModItemModel : FeedEntity
 	[OmitWhenEmpty]
 	public List<ModPatchModel> Patches { get; init => field = value ?? []; } = [];
 
+	/// <summary>
+	/// Dependencies the launcher installs before this version, in order; patches use their version's. Each entry is
+	/// required and satisfied by any one of its alternatives.
+	/// </summary>
+	[OmitWhenEmpty]
+	public List<ModDependencyModel> Dependencies { get; init => field = value ?? []; } = [];
+
 	public string SupportedModpackVersion { get; set; } = string.Empty;
 
 	/// <summary>The launcher offers to uninstall this version, rolling back its rollbackable steps.</summary>
 	public bool SupportsUninstall { get; set; }
+}
+
+/// <summary>The launcher's <c>ModDependency</c> closed hierarchy, written with <c>$type</c> first.</summary>
+public abstract class ModDependencyModel : FeedEntity;
+
+/// <summary>Requires another mod: any one of <see cref="Mods"/>, the first being the preferred one.</summary>
+public sealed class AnotherModDependency : ModDependencyModel
+{
+	public List<ModDependencyAlternativeModel> Mods { get; init => field = value ?? []; } = [];
+}
+
+/// <summary>A mod satisfying a dependency when its installed version is within <see cref="VersionRange"/>.</summary>
+public sealed class ModDependencyAlternativeModel : FeedEntity
+{
+	public string ModName { get; set; } = string.Empty;
+
+	/// <summary>A NuGet version range over the dependency mod's own (version or patch) versions.</summary>
+	public string VersionRange { get; set; } = string.Empty;
 }
 
 public sealed class ModPatchModel : FeedEntity

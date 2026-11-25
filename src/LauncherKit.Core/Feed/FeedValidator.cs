@@ -1,4 +1,5 @@
 using LauncherKit.Core.Feed.Install;
+using LauncherKit.Core.Feed.Mods;
 
 namespace LauncherKit.Core.Feed;
 
@@ -45,6 +46,14 @@ public static class FeedValidator
 			}
 		}
 
+		foreach (var mod in feed.Mods)
+		{
+			foreach (var dependency in mod.Items.SelectMany(x => x.Dependencies ?? []))
+			{
+				ValidateDependency(mod.Name, dependency, modNames);
+			}
+		}
+
 		var ids = new HashSet<string>(StringComparer.Ordinal);
 		foreach (var component in feed.InstallComponents)
 		{
@@ -85,6 +94,26 @@ public static class FeedValidator
 		if (options.Count(x => x.IsDefault) > 1)
 		{
 			throw new InvalidDataException($"Component '{component.Id}' must have at most one default option.");
+		}
+	}
+
+	/// <summary>
+	/// Checks that a dependency offers distinct existing mods other than <paramref name="modName"/> itself. Whether a
+	/// version in range can be installed depends on the installation and is decided when installing.
+	/// </summary>
+	private static void ValidateDependency(string modName, ModDependency dependency, HashSet<string> modNames)
+	{
+		var alternatives = dependency switch
+		{
+			ModDependency.AnotherMod(var mods) => mods,
+		};
+		var names = new HashSet<string>(StringComparer.Ordinal);
+		if (alternatives is not { Count: > 0 } || alternatives.Any(x =>
+			    x?.VersionRange == null || x.VersionRange.IsFloating || !modNames.Contains(x.ModName) ||
+			    x.ModName == modName || !names.Add(x.ModName)))
+		{
+			throw new InvalidDataException(
+				$"Dependencies of mod '{modName}' must offer distinct existing mods other than itself, each with a version range without floating versions.");
 		}
 	}
 

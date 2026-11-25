@@ -21,6 +21,15 @@ public sealed class ChoiceTexts(IStringLocalizer<DesktopStrings> strings)
 		ChoiceText.ModpackComponentsTitle => strings[DesktopStrings.ModpackComponentsTitle],
 		ChoiceText.ComponentOptionDescription(var name, var optionDescription, var downloadBytes) =>
 			ComponentDescription(name, optionDescription, downloadBytes),
+		ChoiceText.SelectModDependencyTitle(var modName) => strings[DesktopStrings.SelectModDependencyTitle, modName],
+		// The unique feed name alone, so mods sharing a display name never render the same title.
+		ChoiceText.ModDependencyStepTitle(var feedName, var number) =>
+			strings[DesktopStrings.ModDependencyStepTitle, feedName, number],
+		ChoiceText.ModDependencyKeptDescription(var version) => strings[DesktopStrings.ModDependencyKept, version],
+		ChoiceText.ModDependencyOptionDescription(var target, null) => strings[DesktopStrings.ModDependencyInstall, target],
+		ChoiceText.ModDependencyOptionDescription(var target, { } installed) =>
+			strings[DesktopStrings.ModDependencyUpdate, installed, target],
+		ChoiceText.UnavailableModDependency(var reason) => ModDependencyTexts.Get(strings, reason),
 	};
 
 	private LocalizedString ComponentDescription(string name, string? optionDescription, long? downloadBytes)

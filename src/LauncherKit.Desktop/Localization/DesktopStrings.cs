@@ -15,6 +15,13 @@ public sealed class DesktopStrings
 	public const string DeleteAccessDenied = nameof(DeleteAccessDenied);
 	public const string DeleteError = nameof(DeleteError);
 	public const string DeleteFileInUse = nameof(DeleteFileInUse);
+	public const string DependencyConflictingVersion = nameof(DependencyConflictingVersion);
+	public const string DependencyCycle = nameof(DependencyCycle);
+	public const string DependencyNewerVersionInstalled = nameof(DependencyNewerVersionInstalled);
+	public const string DependencyNoSupportedVersion = nameof(DependencyNoSupportedVersion);
+	public const string DependencyOtherExclusiveMod = nameof(DependencyOtherExclusiveMod);
+	public const string DependencyUnknownInstalledVersion = nameof(DependencyUnknownInstalledVersion);
+	public const string DependencyUnsatisfiable = nameof(DependencyUnsatisfiable);
 	public const string DirectoryAppDataConflict = nameof(DirectoryAppDataConflict);
 	public const string DirectoryNotFound = nameof(DirectoryNotFound);
 	public const string DirectoryNotWritable = nameof(DirectoryNotWritable);
@@ -31,6 +38,7 @@ public sealed class DesktopStrings
 	public const string ExceptionDownloadStalled = nameof(ExceptionDownloadStalled);
 	public const string ExceptionDuplicatePlugin = nameof(ExceptionDuplicatePlugin);
 	public const string ExceptionLocalSavesDisabled = nameof(ExceptionLocalSavesDisabled);
+	public const string ExceptionModDependencyUnavailable = nameof(ExceptionModDependencyUnavailable);
 	public const string ExceptionModOrganizerRunning = nameof(ExceptionModOrganizerRunning);
 	public const string ExceptionModpackNotInstalled = nameof(ExceptionModpackNotInstalled);
 	public const string ExceptionNotEnoughSpace = nameof(ExceptionNotEnoughSpace);
@@ -72,6 +80,7 @@ public sealed class DesktopStrings
 	public const string MicroInstallSevenZip = nameof(MicroInstallSevenZip);
 	public const string MicroInstallSkyrim = nameof(MicroInstallSkyrim);
 	public const string MicroInstalling = nameof(MicroInstalling);
+	public const string MicroResolveModDependencies = nameof(MicroResolveModDependencies);
 	public const string MicroRunLauncherSetup = nameof(MicroRunLauncherSetup);
 	public const string MicroMergePlugins = nameof(MicroMergePlugins);
 	public const string MicroPrepareFile = nameof(MicroPrepareFile);
@@ -88,6 +97,10 @@ public sealed class DesktopStrings
 	public const string MicroUninstallMod = nameof(MicroUninstallMod);
 	public const string MicroUpdateModMetadata = nameof(MicroUpdateModMetadata);
 	public const string MicroUpdateModpackVersion = nameof(MicroUpdateModpackVersion);
+	public const string ModDependencyInstall = nameof(ModDependencyInstall);
+	public const string ModDependencyKept = nameof(ModDependencyKept);
+	public const string ModDependencyStepTitle = nameof(ModDependencyStepTitle);
+	public const string ModDependencyUpdate = nameof(ModDependencyUpdate);
 	public const string ModNotUpdated = nameof(ModNotUpdated);
 	public const string ModUpdatesAvailable = nameof(ModUpdatesAvailable);
 	public const string ModpackComponentsTitle = nameof(ModpackComponentsTitle);
@@ -100,6 +113,7 @@ public sealed class DesktopStrings
 	public const string PendingTasksCloseMessage = nameof(PendingTasksCloseMessage);
 	public const string PendingTasksCloseTitle = nameof(PendingTasksCloseTitle);
 	public const string RequiredModsStepTitle = nameof(RequiredModsStepTitle);
+	public const string SelectModDependencyTitle = nameof(SelectModDependencyTitle);
 	public const string SelectOneModSubtitle = nameof(SelectOneModSubtitle);
 	public const string SelectRequiredModTitle = nameof(SelectRequiredModTitle);
 	public const string SetupFailed = nameof(SetupFailed);
@@ -120,6 +134,7 @@ public sealed class DesktopStrings
 	public const string TaskInstallSevenZip = nameof(TaskInstallSevenZip);
 	public const string TaskInstallSkyrim = nameof(TaskInstallSkyrim);
 	public const string TaskInstallVcRedist = nameof(TaskInstallVcRedist);
+	public const string TaskResolveModDependencies = nameof(TaskResolveModDependencies);
 	public const string TaskRunGame = nameof(TaskRunGame);
 	public const string TaskSelectModpackComponents = nameof(TaskSelectModpackComponents);
 	public const string TaskUninstallMod = nameof(TaskUninstallMod);

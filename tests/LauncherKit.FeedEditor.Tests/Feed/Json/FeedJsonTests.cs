@@ -430,6 +430,66 @@ public sealed class FeedJsonTests
 	}
 
 	[Test]
+	public void Serialize_ModItemWithDependencies_WritesTypeFirstAndKeepsOrderAndUnknownProperties()
+	{
+		// Arrange
+		var dependencies = """[{"$type":"AnotherMod","Mods":[{"ModName":"Other Mod","VersionRange":"[1.0.0, 2.0.0)","FutureFlag":"x"},{"ModName":"Alt Mod","VersionRange":"[3.0.0, )"}]},{"$type":"AnotherMod","Mods":[{"ModName":"Third","VersionRange":"(3.1.9,)"}]}]""";
+		var json = $$"""
+			{
+				"Mods": [{
+					"Name": "Mod", "LogoPath": "l", "DescriptionPath": {"ru":"d"},
+					"Items": [{ "Version": "1.0.0", "ArchiveDownloadInfo": { "S3Path": "Mods/mod.7z" }, "SupportedModpackVersion": "[1.0.0, 2.0.0)",
+						"Dependencies": {{dependencies}} }]
+				}]
+			}
+			""";
+
+		// Act
+		var feed = FeedJson.Deserialize(json);
+		var result = JsonNode.Parse(FeedJson.Serialize(feed))!;
+
+		// Assert
+		var alternatives = ((AnotherModDependency)feed.Mods[0].Items[0].Dependencies[0]).Mods;
+		Assert.Multiple(() =>
+		{
+			Assert.That(result["Mods"]![0]!["Items"]![0]!["Dependencies"]!.ToJsonString(), Is.EqualTo(dependencies));
+			Assert.That(alternatives.Select(x => x.ModName), Is.EqualTo(new[] { "Other Mod", "Alt Mod" }));
+			Assert.That(alternatives[1].VersionRange, Is.EqualTo("[3.0.0, )"));
+		});
+	}
+
+	[Test]
+	public void Serialize_ModItemWithoutDependencies_OmitsDependencies()
+	{
+		// Arrange
+		var feed = new FeedModel
+		{
+			DefaultLanguage = "ru",
+			Mods = { new ModModel { Name = "M", Items = { new ModItemModel { Version = "1.0.0" } } } },
+		};
+
+		// Act
+		var result = JsonNode.Parse(FeedJson.Serialize(feed))!;
+
+		// Assert
+		Assert.That(result["Mods"]![0]!["Items"]![0]!.AsObject().ContainsKey("Dependencies"), Is.False);
+	}
+
+	[TestCase("""{ "$type": "Plugin", "Name": "a" }""", TestName = "Deserialize_DependencyWithUnknownType_ThrowsJsonException")]
+	[TestCase("""{ "Mods": [] }""", TestName = "Deserialize_DependencyWithoutType_ThrowsJsonException")]
+	[TestCase("""{ "Mods": [], "$type": "AnotherMod" }""", TestName = "Deserialize_DependencyWithTypeNotFirst_ThrowsJsonException")]
+	public void Deserialize_InvalidDependency_ThrowsJsonException(string dependency)
+	{
+		// Arrange
+		var json = $$"""
+			{ "Mods": [{ "Name": "Mod", "Items": [{ "Version": "1.0.0", "Dependencies": [{{dependency}}] }] }] }
+			""";
+
+		// Act & Assert
+		Assert.That(() => FeedJson.Deserialize(json), Throws.InstanceOf<JsonException>());
+	}
+
+	[Test]
 	public void Serialize_NullLocalizedOptionalTextAndBlankOptionalHash_OmitsProperties()
 	{
 		// Arrange
