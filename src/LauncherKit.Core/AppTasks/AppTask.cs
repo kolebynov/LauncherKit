@@ -9,7 +9,11 @@ public sealed class AppTask : IEquatable<AppTask>
 
 	public AppTaskDescription Description { get; }
 
-	public Func<MicroTasksProviderContext, IReadOnlyList<IAppMicroTask>> MicroTasksProvider { get; }
+	/// <summary>
+	/// The task's microtasks, created each time the task runs. The queue enumerates them lazily, running each before
+	/// asking for the next, so a provider can create later microtasks from the state the earlier ones left.
+	/// </summary>
+	public Func<MicroTasksProviderContext, IEnumerable<IAppMicroTask>> MicroTasksProvider { get; }
 
 	public IReadOnlyList<AppTask> Dependencies { get; }
 
@@ -24,7 +28,7 @@ public sealed class AppTask : IEquatable<AppTask>
 	/// </summary>
 	public Func<bool>? IsUnneeded { get; init; }
 
-	public AppTask(string id, AppTaskDescription description, Func<MicroTasksProviderContext, IReadOnlyList<IAppMicroTask>> microTasksProvider,
+	public AppTask(string id, AppTaskDescription description, Func<MicroTasksProviderContext, IEnumerable<IAppMicroTask>> microTasksProvider,
 		IReadOnlyList<AppTask> dependencies, IAppTaskCompleteVerifier? completeVerifier)
 	{
 		Id = id;

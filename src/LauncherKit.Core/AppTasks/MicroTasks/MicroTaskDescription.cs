@@ -47,6 +47,7 @@ public union MicroTaskDescription(
 	MicroTaskDescription.PrepareFile,
 	MicroTaskDescription.ConfigureMod,
 	MicroTaskDescription.GetDownloadSizes,
+	MicroTaskDescription.ResolveModDependencies,
 	MicroTaskDescription.Custom)
 {
 	public sealed record Preparing;
@@ -136,6 +137,8 @@ public union MicroTaskDescription(
 	public sealed record ConfigureMod;
 
 	public sealed record GetDownloadSizes;
+
+	public sealed record ResolveModDependencies;
 
 	public sealed record Custom(string Text);
 }

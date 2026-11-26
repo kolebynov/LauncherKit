@@ -32,6 +32,9 @@ public partial class AppTaskViewModel : ViewModelBase
 	[ObservableProperty]
 	public partial ChoiceSelectionViewModel? ChoiceSelection { get; private set; }
 
+	[ObservableProperty]
+	public partial ModUpgradesConfirmationViewModel? UpgradesConfirmation { get; private set; }
+
 	private readonly IUiDispatcher _dispatcher;
 
 	public AppTaskViewModel(AppTask appTask, IAppLogsCollector appLogsCollector, IUiDispatcher dispatcher)
@@ -47,6 +50,7 @@ public partial class AppTaskViewModel : ViewModelBase
 		RunningMicroTaskDescription = description;
 		ProgressViewModel = description != null ? UnknownProgressViewModel.Instance : null;
 		ChoiceSelection = null;
+		UpgradesConfirmation = null;
 
 		if (description != null)
 		{
@@ -57,13 +61,16 @@ public partial class AppTaskViewModel : ViewModelBase
 					ChoiceSelection = step is MicroTaskStep.SelectChoices(var context)
 						? new ChoiceSelectionViewModel(context)
 						: null;
+					UpgradesConfirmation = step is MicroTaskStep.ConfirmModUpgrades(var confirmation)
+						? new ModUpgradesConfirmationViewModel(confirmation)
+						: null;
 					ProgressViewModel = step switch
 					{
 						MicroTaskStep.Progress(IDownloadProgress downloadProgress) =>
 							new DownloadFileProgressViewModel(downloadProgress, _dispatcher),
 						MicroTaskStep.Progress(var operationProgress) => new OperationProgressViewModel(operationProgress, _dispatcher),
 						MicroTaskStep.MicroOperation(var operation) => new UnknownProgressViewModel { Operation = operation },
-						MicroTaskStep.SelectChoices => UnknownProgressViewModel.Instance,
+						MicroTaskStep.SelectChoices or MicroTaskStep.ConfirmModUpgrades => UnknownProgressViewModel.Instance,
 					};
 				});
 		}

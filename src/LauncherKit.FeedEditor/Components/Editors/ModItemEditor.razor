@@ -1,3 +1,5 @@
+@inject FeedSession Session
+
 <MudStack Spacing="3">
 	<MudGrid Spacing="2">
 		<MudItem xs="12" sm="6">
@@ -28,6 +30,39 @@
 		<ModInstallStepsEditor Steps="Item.InstallSteps" />
 	</ExpanderSection>
 
+	<ExpanderSection Title="Зависимости" Count="@Item.Dependencies.Count"
+					 Description="Необязательны. Перед установкой или обновлением этой версии лаунчер ставит каждую зависимость (и их зависимости); патчи используют зависимости своей версии. Зависимость выполнена, если установлен любой из её модов в указанном диапазоне его версий; первый мод предлагается по умолчанию.">
+		<ListEditor TItem="ModDependencyModel" Items="Item.Dependencies" Factories="DependencyFactories" Title="DependencyTitle" AddToEnd="true">
+			<ItemContent Context="dependency">
+				@switch (dependency)
+				{
+					case AnotherModDependency anotherMod:
+						<ListEditor TItem="ModDependencyAlternativeModel" Items="anotherMod.Mods" Factories="AlternativeFactories"
+									Title="@(alternative => $"{alternative.ModName} {alternative.VersionRange}")" AddToEnd="true">
+							<ItemContent Context="alternative">
+								<MudGrid Spacing="2">
+									<MudItem xs="12" sm="6">
+										<MudSelect T="string" @bind-Value="alternative.ModName" Label="Мод" Required="true" Variant="Variant.Outlined" Margin="Margin.Dense">
+											@foreach (var mod in Session.Feed!.Mods.Where(x => x.Name != ModName))
+											{
+												<MudSelectItem Value="@mod.Name">@mod.Name</MudSelectItem>
+											}
+										</MudSelect>
+									</MudItem>
+									<MudItem xs="12" sm="6">
+										<MudTextField @bind-Value="alternative.VersionRange" Label="Версии мода" Required="true"
+													  Validation="@FeedRules.DependencyVersionRange" HelperText="Версии этого мода (или его патчей), например [1.0.0, 2.0.0)"
+													  Variant="Variant.Outlined" Margin="Margin.Dense" />
+									</MudItem>
+								</MudGrid>
+							</ItemContent>
+						</ListEditor>
+						break;
+				}
+			</ItemContent>
+		</ListEditor>
+	</ExpanderSection>
+
 	<ExpanderSection Title="Патчи" Count="@Item.Patches.Count"
 					 Description="Необязательны. Версия патча выше версии мода и ниже следующей версии мода. Новая установка ставит мод и все патчи по порядку версий; установленная версия этого мода обновляется только недостающими патчами, без переустановки. После каждого патча лаунчер записывает его версию в meta.ini мода.">
 		<ListEditor TItem="ModPatchModel" Items="Item.Patches" Factories="PatchFactories"
@@ -52,7 +87,19 @@
 
 @code {
 	private static readonly IReadOnlyList<ListItemFactory<ModPatchModel>> PatchFactories = [new("патч", () => new ModPatchModel())];
+	private static readonly IReadOnlyList<ListItemFactory<ModDependencyModel>> DependencyFactories = [new("другой мод", () => new AnotherModDependency())];
+	private static readonly IReadOnlyList<ListItemFactory<ModDependencyAlternativeModel>> AlternativeFactories = [new("вариант", () => new ModDependencyAlternativeModel())];
 
 	[Parameter, EditorRequired]
 	public required ModItemModel Item { get; set; }
+
+	/// <summary>The name of the mod this version belongs to, which cannot depend on itself.</summary>
+	[Parameter, EditorRequired]
+	public required string ModName { get; set; }
+
+	private static string DependencyTitle(ModDependencyModel dependency) => dependency switch
+	{
+		AnotherModDependency anotherMod => $"Другой мод: {string.Join(" или ", anotherMod.Mods.Select(x => x.ModName))}",
+		_ => throw new ArgumentException($"Unsupported mod dependency type {dependency.GetType()}.", nameof(dependency)),
+	};
 }

@@ -30,8 +30,9 @@ public sealed class FeedProvider : IFeedProvider, IDisposable
 	public static readonly TimeSpan FeedLifetime = TimeSpan.FromMinutes(1);
 
 	/// <summary>
-	/// How long the default feed is served after a failed load: short enough for the next page visit to retry, long
-	/// enough for the burst of reads of one page to share a single failed load.
+	/// How long the fallback feed (the last loaded one, or the default feed when none has loaded yet) is served after a
+	/// failed load: short enough for the next page visit to retry, long enough for the burst of reads of one page to share
+	/// a single failed load.
 	/// </summary>
 	public static readonly TimeSpan FailedFeedLifetime = TimeSpan.FromSeconds(15);
 
@@ -57,6 +58,9 @@ public sealed class FeedProvider : IFeedProvider, IDisposable
 	private readonly Lock _feedLock = new();
 	private readonly string _feedPath;
 	private Task<CachedFeed>? _feedTask;
+
+	// The last successfully loaded feed, served after a failed load. Only LoadFeed uses it, and loads never overlap.
+	private FeedData? _lastLoadedFeed;
 
 	public Observable<Unit> BetaAccessChanged => _betaAccessChangedSubject;
 
@@ -258,14 +262,16 @@ public sealed class FeedProvider : IFeedProvider, IDisposable
 				},
 				disposeToken);
 			FeedValidator.Validate(feed);
+			_lastLoadedFeed = feed;
 			_loadEventsSubject.OnNext(FeedLoadEvent.Succeeded.Instance);
 			return new CachedFeed(feed, _timeProvider.GetUtcNow() + FeedLifetime);
 		}
 		catch (Exception e) when (!disposeToken.IsCancellationRequested)
 		{
-			_logger.LogError(e, "Failed to load feed. Return default feed");
+			var fallbackFeed = _lastLoadedFeed;
+			_logger.LogError(e, "Failed to load feed. Return {FallbackFeed} feed", fallbackFeed is null ? "default" : "last loaded");
 			_loadEventsSubject.OnNext(new FeedLoadEvent.Failed(e));
-			return new CachedFeed(DefaultFeedData, _timeProvider.GetUtcNow() + FailedFeedLifetime);
+			return new CachedFeed(fallbackFeed ?? DefaultFeedData, _timeProvider.GetUtcNow() + FailedFeedLifetime);
 		}
 	}
 

@@ -16,6 +16,13 @@
 	<data name="DeleteAccessDenied" xml:space="preserve"><value>{0}: нет доступа к файлу {1}.</value></data>
 	<data name="DeleteError" xml:space="preserve"><value>{0}: {1}</value></data>
 	<data name="DeleteFileInUse" xml:space="preserve"><value>{0}: файл используется. Если он сейчас скачивается или устанавливается, дождитесь завершения задачи или отмените её; иначе закройте программу, которая его открыла.</value></data>
+	<data name="DependencyConflictingVersion" xml:space="preserve"><value>Другому моду нужна версия {0}</value></data>
+	<data name="DependencyCycle" xml:space="preserve"><value>Моды требуют друг друга</value></data>
+	<data name="DependencyNewerVersionInstalled" xml:space="preserve"><value>Установлена более новая версия {0}</value></data>
+	<data name="DependencyNoSupportedVersion" xml:space="preserve"><value>Нет версии из диапазона {0} для текущей версии модпака</value></data>
+	<data name="DependencyOtherExclusiveMod" xml:space="preserve"><value>Нельзя установить вместе с {0}</value></data>
+	<data name="DependencyUnknownInstalledVersion" xml:space="preserve"><value>Установленная версия {0} неизвестна</value></data>
+	<data name="DependencyUnsatisfiable" xml:space="preserve"><value>Невозможно установить все необходимые для него моды</value></data>
 	<data name="DirectoryAppDataConflict" xml:space="preserve"><value>Папка данных лаунчера не должна совпадать с папкой Skyrim или пересекаться с ней</value></data>
 	<data name="DirectoryNotFound" xml:space="preserve"><value>Папка не существует</value></data>
 	<data name="DirectoryNotWritable" xml:space="preserve"><value>Нет доступа для записи в папку</value></data>
@@ -32,6 +39,7 @@
 	<data name="ExceptionDownloadStalled" xml:space="preserve"><value>Данные не поступали в течение {0}. Повторите попытку.</value></data>
 	<data name="ExceptionDuplicatePlugin" xml:space="preserve"><value>Плагин {0} встречается несколько раз.</value></data>
 	<data name="ExceptionLocalSavesDisabled" xml:space="preserve"><value>Локальные сохранения отключены для профиля {0}.</value></data>
+	<data name="ExceptionModDependencyUnavailable" xml:space="preserve"><value>Не удалось установить ни один из модов, необходимых для {0}. {1}</value></data>
 	<data name="ExceptionModOrganizerRunning" xml:space="preserve"><value>Обнаружен запущенный экземпляр Mod Organizer. Закройте его и повторите операцию.</value></data>
 	<data name="ExceptionModpackNotInstalled" xml:space="preserve"><value>Сборка не установлена</value></data>
 	<data name="ExceptionNotEnoughSpace" xml:space="preserve"><value>На диске {0} недостаточно места для проведения операции. Требуется {1}, доступно {2}.
@@ -74,6 +82,7 @@
 	<data name="MicroInstallSevenZip" xml:space="preserve"><value>Установка 7-Zip</value></data>
 	<data name="MicroInstallSkyrim" xml:space="preserve"><value>Установка Skyrim</value></data>
 	<data name="MicroInstalling" xml:space="preserve"><value>Установка</value></data>
+	<data name="MicroResolveModDependencies" xml:space="preserve"><value>Проверка зависимостей мода</value></data>
 	<data name="MicroRunLauncherSetup" xml:space="preserve"><value>Запуск установки лаунчера</value></data>
 	<data name="MicroMergePlugins" xml:space="preserve"><value>Объединение плагинов из {0}</value></data>
 	<data name="MicroPrepareFile" xml:space="preserve"><value>Подготовка файла</value></data>
@@ -90,6 +99,9 @@
 	<data name="MicroUninstallMod" xml:space="preserve"><value>Удаление мода {0}</value></data>
 	<data name="MicroUpdateModMetadata" xml:space="preserve"><value>Обновление метаданных мода</value></data>
 	<data name="MicroUpdateModpackVersion" xml:space="preserve"><value>Обновление версии сборки</value></data>
+	<data name="ModDependencyInstall" xml:space="preserve"><value>Будет установлена версия {0}</value></data>
+	<data name="ModDependencyKept" xml:space="preserve"><value>Останется установленная версия {0}</value></data>
+	<data name="ModDependencyUpdate" xml:space="preserve"><value>Будет обновлён с версии {0} до {1}</value></data>
 	<data name="ModNotUpdated" xml:space="preserve"><value>Мод пока не обновлен под текущую версию модпака</value></data>
 	<data name="ModpackComponentsTitle" xml:space="preserve"><value>Компоненты установки</value></data>
 	<data name="ModpackInstallUnavailable" xml:space="preserve"><value>Нет версий сборки, доступных для установки</value></data>
@@ -102,6 +114,7 @@
 	<data name="PendingTasksCloseMessage" xml:space="preserve"><value>Лаунчер ожидает завершения задачи. При выходе все незавершённые задачи будут отменены. Продолжить?</value></data>
 	<data name="PendingTasksCloseTitle" xml:space="preserve"><value>Остались незавершённые задачи</value></data>
 	<data name="RequiredModsStepTitle" xml:space="preserve"><value>Обязательные моды</value></data>
+	<data name="SelectModDependencyTitle" xml:space="preserve"><value>Выберите мод, необходимый для {0}</value></data>
 	<data name="SelectOneModSubtitle" xml:space="preserve"><value>Выберите один мод</value></data>
 	<data name="SelectRequiredModTitle" xml:space="preserve"><value>Выберите обязательный мод: {0}</value></data>
 	<data name="SetupFailed" xml:space="preserve"><value>Ошибка конфигурации</value></data>
@@ -122,6 +135,7 @@
 	<data name="TaskInstallSevenZip" xml:space="preserve"><value>Установка 7-Zip</value></data>
 	<data name="TaskInstallSkyrim" xml:space="preserve"><value>Установка Skyrim</value></data>
 	<data name="TaskInstallVcRedist" xml:space="preserve"><value>Установка Visual C++ {0}</value></data>
+	<data name="TaskResolveModDependencies" xml:space="preserve"><value>Проверка зависимостей мода {0}</value></data>
 	<data name="TaskRunGame" xml:space="preserve"><value>Запуск игры: {0}</value></data>
 	<data name="TaskSelectModpackComponents" xml:space="preserve"><value>Выбор компонентов установки</value></data>
 	<data name="TaskUninstallMod" xml:space="preserve"><value>Удаление мода {0}</value></data>

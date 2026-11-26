@@ -6,9 +6,11 @@ namespace LauncherKit.Core.Choices;
 /// </summary>
 public sealed class ChoiceStep
 {
-	public required ChoiceText Title { get; init; }
+	/// <summary>The heading above the options; none when the dialog title already says what the step asks.</summary>
+	public ChoiceText? Title { get; init; }
 
-	public required ChoiceText Subtitle { get; init; }
+	/// <summary>The text under the heading; none when the dialog title already says what the step asks.</summary>
+	public ChoiceText? Subtitle { get; init; }
 
 	public required ChoiceSelectionMode SelectionMode { get; init; }
 

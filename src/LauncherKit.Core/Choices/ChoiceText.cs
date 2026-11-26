@@ -1,3 +1,6 @@
+using NuGet.Versioning;
+using LauncherKit.Core.ModDependencies;
+
 namespace LauncherKit.Core.Choices;
 
 /// <summary>Content supplied by a feed or FOMOD, or a culture-neutral description of kit-owned choice text.</summary>
@@ -12,7 +15,11 @@ public union ChoiceText(
 	ChoiceText.UnavailableModNotUpdated,
 	ChoiceText.UnavailableFomodOption,
 	ChoiceText.ModpackComponentsTitle,
-	ChoiceText.ComponentOptionDescription)
+	ChoiceText.ComponentOptionDescription,
+	ChoiceText.SelectModDependencyTitle,
+	ChoiceText.ModDependencyOptionDescription,
+	ChoiceText.ModDependencyKeptDescription,
+	ChoiceText.UnavailableModDependency)
 {
 	public sealed record Content(string Value);
 	public sealed record NoneOption;
@@ -27,4 +34,14 @@ public union ChoiceText(
 	public sealed record ModpackComponentsTitle;
 	/// <summary>Installing <paramref name="Name"/>, with its feed <paramref name="OptionDescription"/> and download size.</summary>
 	public sealed record ComponentOptionDescription(string Name, string? OptionDescription, long? DownloadBytes);
+	/// <summary>Choosing which mod to install for a dependency of the mod <paramref name="ModName"/> (display name).</summary>
+	public sealed record SelectModDependencyTitle(string ModName);
+	/// <summary>
+	/// Installing <paramref name="TargetVersion"/> of a dependency, updating <paramref name="InstalledVersion"/> when it
+	/// is installed.
+	/// </summary>
+	public sealed record ModDependencyOptionDescription(NuGetVersion TargetVersion, NuGetVersion? InstalledVersion);
+	/// <summary>A dependency met by keeping its installed <paramref name="Version"/>.</summary>
+	public sealed record ModDependencyKeptDescription(NuGetVersion Version);
+	public sealed record UnavailableModDependency(ModDependencyUnavailableReason Reason);
 }

@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuGet.Versioning;
@@ -51,7 +52,7 @@ public sealed class InstallStepsMicroTasksFactoryTests
 		];
 
 		// Act
-		await Run(sut.CreateInstallMicroTasks(steps, null));
+		await Run(sut.CreateInstallMicroTasks(steps, null, FrozenDictionary<string, NuGetVersion>.Empty));
 
 		// Assert
 		Assert.That(calls, Is.EqualTo(new[]
@@ -101,7 +102,7 @@ public sealed class InstallStepsMicroTasksFactoryTests
 		];
 
 		// Act
-		async Task Act() => await Run(sut.CreateInstallMicroTasks(steps, BackupId));
+		async Task Act() => await Run(sut.CreateInstallMicroTasks(steps, BackupId, FrozenDictionary<string, NuGetVersion>.Empty));
 
 		// Assert
 		if (failOnFailedDelete)
@@ -154,7 +155,7 @@ public sealed class InstallStepsMicroTasksFactoryTests
 		];
 
 		// Act
-		await Run(sut.CreateInstallMicroTasks(steps, null));
+		await Run(sut.CreateInstallMicroTasks(steps, null, FrozenDictionary<string, NuGetVersion>.Empty));
 
 		// Assert
 		Assert.That(calls, Is.EqualTo(new[] { "select A", "activate A" }));
@@ -201,7 +202,7 @@ public sealed class InstallStepsMicroTasksFactoryTests
 		];
 
 		// Act
-		await Run(sut.CreateInstallMicroTasks(steps, BackupId));
+		await Run(sut.CreateInstallMicroTasks(steps, BackupId, FrozenDictionary<string, NuGetVersion>.Empty));
 
 		// Assert
 		Assert.That(calls, Is.EqualTo(new[]
@@ -277,7 +278,7 @@ public sealed class InstallStepsMicroTasksFactoryTests
 		];
 
 		// Act
-		await Run(sut.CreateRollbackMicroTasks(steps, BackupId));
+		await Run(sut.CreateRollbackMicroTasks(steps, BackupId, KeepsNothing));
 
 		// Assert
 		Assert.That(calls, Is.EqualTo(new[]
@@ -320,11 +321,148 @@ public sealed class InstallStepsMicroTasksFactoryTests
 		];
 
 		// Act
-		await Run(sut.CreateRollbackMicroTasks(steps, BackupId));
+		await Run(sut.CreateRollbackMicroTasks(steps, BackupId, KeepsNothing));
 
 		// Assert
 		Assert.That(calls, Is.EqualTo(new[] { "activate Hub", "forget 0.1" }));
 	}
+
+	[Test]
+	public async Task CreateRollbackMicroTasks_InstalledModKept_LeavesItInstalledAndUninstallsTheOthers()
+	{
+		// Arrange
+		var calls = new List<string>();
+		var mocker = CreateMocker(calls);
+		var modOrganizer = mocker.GetMock<IModOrganizerService>();
+		modOrganizer.Setup(x => x.IsModInstalled(It.IsAny<string>())).Returns(true);
+		modOrganizer.Setup(x => x.UninstallMod("Extra", CancellationToken.None))
+			.Callback(() => calls.Add("uninstall Extra"))
+			.Returns(Task.CompletedTask);
+		var backups = mocker.GetMock<IInstallBackupService>();
+		backups.Setup(x => x.IsTracked(BackupId)).Returns(true);
+		backups.Setup(x => x.IsApplied(It.IsAny<InstallActionBackup>())).Returns(true);
+		backups.Setup(x => x.Delete(It.IsAny<InstallActionBackup>()))
+			.Callback((InstallActionBackup backup) => calls.Add($"forget {backup.RelativePath}"));
+		var sut = mocker.CreateInstance<InstallStepsMicroTasksFactory>();
+		InstallStep[] steps =
+		[
+			new()
+			{
+				Actions =
+				[
+					new InstallAction.InstallMod(new DownloadInfo { S3Path = "Mods/extra.7z" }, "Extra"),
+					new InstallAction.InstallMod(new DownloadInfo { S3Path = "Mods/library.7z" }, "Library"),
+				],
+				CanRollback = true,
+			},
+		];
+		var asked = new List<string>();
+
+		// Act
+		await Run(sut.CreateRollbackMicroTasks(steps, BackupId, (modName, _) =>
+		{
+			asked.Add(modName);
+			return ValueTask.FromResult(modName == "Library");
+		}));
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(asked, Is.EqualTo(new[] { "Library", "Extra" }));
+			Assert.That(calls, Is.EqualTo(new[]
+			{
+				$"forget {BackupId.ForAction(0, 1).RelativePath}", "uninstall Extra", $"forget {BackupId.ForAction(0, 0).RelativePath}",
+			}));
+		});
+	}
+
+	[Test]
+	public async Task CreateInstallMicroTasks_InstallModOfModKeptByRollback_ReusesItAndStillInstallsOtherInstalledMods()
+	{
+		// Arrange
+		var calls = new List<string>();
+		var mocker = CreateMocker(calls);
+		var modOrganizer = mocker.GetMock<IModOrganizerService>();
+		modOrganizer.Setup(x => x.IsModInstalled(It.IsAny<string>())).Returns(true);
+		SetupInstalledVersion(modOrganizer, "Library", "1.0.0");
+		var backups = mocker.GetMock<IInstallBackupService>();
+		backups.Setup(x => x.StartTracking(BackupId)).Callback(() => calls.Add("start tracking"));
+		backups.Setup(x => x.MarkApplied(It.IsAny<InstallActionBackup>()))
+			.Callback((InstallActionBackup backup) => calls.Add($"applied {backup.StepIndex}.{backup.ActionIndex}"));
+		var sut = mocker.CreateInstance<InstallStepsMicroTasksFactory>();
+		InstallStep[] steps =
+		[
+			new()
+			{
+				Actions =
+				[
+					new InstallAction.InstallMod(new DownloadInfo { S3Path = "Mods/library.7z" }, "library"),
+					new InstallAction.InstallMod(new DownloadInfo { S3Path = "Mods/extra.7z" }, "Extra"),
+				],
+				CanRollback = true,
+			},
+		];
+		// Filled by the rollback only after the microtasks are created.
+		var keptMods = new Dictionary<string, NuGetVersion>(StringComparer.OrdinalIgnoreCase);
+		var microTasks = sut.CreateInstallMicroTasks(steps, BackupId, keptMods);
+		keptMods.Add("Library", NuGetVersion.Parse("1.0.0"));
+
+		// Act
+		await Run(microTasks);
+
+		// Assert
+		Assert.That(calls, Is.EqualTo(new[]
+		{
+			"start tracking", "applied 0.0", "download extra.7z", "applied 0.1", "install Extra from extra.7z",
+		}));
+	}
+
+	[TestCase(true, "2.0.0", TestName = "CreateInstallMicroTasks_ModKeptByRollbackNowAtAnotherVersion_RunsTheAction")]
+	[TestCase(false, null, TestName = "CreateInstallMicroTasks_ModKeptByRollbackNoLongerInstalled_RunsTheActionAndForgetsIt")]
+	public async Task CreateInstallMicroTasks_ModKeptByRollbackChangedSince_RunsTheAction(bool isInstalled, string? liveVersion)
+	{
+		// Arrange
+		var calls = new List<string>();
+		var mocker = CreateMocker(calls);
+		var modOrganizer = mocker.GetMock<IModOrganizerService>();
+		modOrganizer.Setup(x => x.IsModInstalled("library")).Returns(isInstalled);
+		SetupInstalledVersion(modOrganizer, "Library", liveVersion);
+		var backups = mocker.GetMock<IInstallBackupService>();
+		backups.Setup(x => x.StartTracking(BackupId)).Callback(() => calls.Add("start tracking"));
+		backups.Setup(x => x.MarkApplied(It.IsAny<InstallActionBackup>()))
+			.Callback((InstallActionBackup backup) => calls.Add($"applied {backup.StepIndex}.{backup.ActionIndex}"));
+		var sut = mocker.CreateInstance<InstallStepsMicroTasksFactory>();
+		InstallStep[] steps =
+		[
+			new()
+			{
+				Actions = [new InstallAction.InstallMod(new DownloadInfo { S3Path = "Mods/library.7z" }, "library")],
+				CanRollback = true,
+			},
+		];
+		var keptMods = new Dictionary<string, NuGetVersion>(StringComparer.OrdinalIgnoreCase)
+		{
+			["Library"] = NuGetVersion.Parse("1.0.0"),
+		};
+
+		// Act
+		await Run(sut.CreateInstallMicroTasks(steps, BackupId, keptMods));
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(calls, Is.EqualTo(new[] { "start tracking", "download library.7z", "applied 0.0", "install library from library.7z" }));
+			Assert.That(keptMods.ContainsKey("Library"), Is.EqualTo(isInstalled));
+		});
+	}
+
+	/// <summary>Makes <paramref name="modName"/> the only installed mod, its meta.ini recording <paramref name="version"/>.</summary>
+	private static void SetupInstalledVersion(Mock<IModOrganizerService> modOrganizer, string modName, string? version) =>
+		modOrganizer.SetupGet(x => x.InstalledMods).Returns(
+			[new ModInfo(modName, new Lazy<MetaIniData?>(() => new MetaIniData { Comments = null, Version = version }))]);
+
+	private static ValueTask<bool> KeepsNothing(string modName, CancellationToken cancellationToken) =>
+		ValueTask.FromResult(false);
 
 	/// <summary>
 	/// A mocker whose microtask factory creates runnable microtasks: delegate microtasks run their delegate, while

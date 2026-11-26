@@ -72,7 +72,7 @@ public static class FeedValidator
 		foreach (var (mod, index) in feed.Mods.Select((x, i) => (x, i)))
 		{
 			var location = $"Мод {Label(mod.Name, index)}";
-			errors.Mod(location, mod);
+			errors.Mod(location, mod, feed.Mods);
 			if (!feed.ModCategories.Any(x => x.Id == mod.CategoryId))
 			{
 				errors.Add($"{location} › Категория", "Указанная категория отсутствует в фиде.");
@@ -281,7 +281,7 @@ public static class FeedValidator
 			}
 		}
 
-		public void Mod(string location, ModModel mod)
+		public void Mod(string location, ModModel mod, IReadOnlyList<ModModel> mods)
 		{
 			Check(location, "Имя", FeedRules.Required, mod.Name);
 			Check(location, "Путь к логотипу", FeedRules.Required, mod.LogoPath);
@@ -304,6 +304,11 @@ public static class FeedValidator
 				Check(itemLocation, "Поддерживаемые версии сборки", FeedRules.VersionRange, item.SupportedModpackVersion);
 				DownloadInfo($"{itemLocation} › Архив мода", item.ArchiveDownloadInfo);
 				Placement($"{itemLocation} › Размещение", item.Placement, mod.Name);
+				foreach (var (dependency, dependencyIndex) in item.Dependencies.Select((x, i) => (x, i)))
+				{
+					Dependency($"{itemLocation} › Зависимость {dependencyIndex + 1}", dependency, mod.Name, mods);
+				}
+
 				foreach (var stepIndex in Enumerable.Range(0, item.InstallSteps.Count))
 				{
 					InstallStep($"{itemLocation} › Шаг {stepIndex}", item.InstallSteps, stepIndex, mod.Name);
@@ -337,6 +342,43 @@ public static class FeedValidator
 						InstallStep($"{patchLocation} › Шаг {stepIndex}", patch.InstallSteps, stepIndex, mod.Name);
 					}
 				}
+			}
+		}
+
+		/// <summary>Checks a dependency of a version of the mod <paramref name="modName"/>, which cannot depend on itself.</summary>
+		private void Dependency(string location, ModDependencyModel dependency, string modName, IReadOnlyList<ModModel> mods)
+		{
+			switch (dependency)
+			{
+				case AnotherModDependency anotherMod:
+					if (anotherMod.Mods.Count == 0)
+					{
+						Add(location, "Нужен хотя бы один мод.");
+					}
+
+					foreach (var duplicate in anotherMod.Mods.GroupBy(x => x.ModName, StringComparer.Ordinal).Where(x => x.Count() > 1))
+					{
+						Add(location, $"Мод «{duplicate.Key}» указан больше одного раза.");
+					}
+
+					foreach (var (alternative, index) in anotherMod.Mods.Select((x, i) => (x, i)))
+					{
+						var alternativeLocation = $"{location} › Вариант {Label(alternative.ModName, index)}";
+						if (alternative.ModName == modName)
+						{
+							Add(alternativeLocation, "Мод не может зависеть от самого себя.");
+						}
+						else if (!mods.Any(x => x.Name == alternative.ModName))
+						{
+							Add(alternativeLocation, "Указанный мод отсутствует в фиде.");
+						}
+
+						Check(alternativeLocation, "Версии мода", FeedRules.DependencyVersionRange, alternative.VersionRange);
+					}
+
+					break;
+				default:
+					throw new ArgumentException($"Unsupported mod dependency type {dependency.GetType()}.", nameof(dependency));
 			}
 		}
 

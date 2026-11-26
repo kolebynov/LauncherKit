@@ -58,7 +58,7 @@ public sealed class TaskbarProgressInitializer : IConfiguredScopeInitializer, ID
 						var operationProgress = step switch
 						{
 							MicroTaskStep.Progress(var progress) => progress,
-							MicroTaskStep.MicroOperation or MicroTaskStep.SelectChoices => null,
+							MicroTaskStep.MicroOperation or MicroTaskStep.SelectChoices or MicroTaskStep.ConfirmModUpgrades => null,
 						};
 						if (operationProgress != null)
 						{

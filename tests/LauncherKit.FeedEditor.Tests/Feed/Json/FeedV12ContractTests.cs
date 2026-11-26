@@ -1,8 +1,10 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using LauncherKit.Core;
+using LauncherKit.Core.Feed.Mods;
 using LauncherKit.FeedEditor.Feed;
 using LauncherKit.FeedEditor.Feed.Json;
+using NuGet.Versioning;
 
 namespace LauncherKit.FeedEditor.Tests.Feed.Json;
 
@@ -73,6 +75,35 @@ public sealed class FeedV12ContractTests
 						editor["InstallComponents"]![componentIndex]![field]), Is.True, $"Component {componentIndex}, {field}");
 				}
 			}
+		});
+	}
+
+	[Test]
+	public void Serialize_ModItemDependencies_LauncherReadsEntriesAndAlternativesInOrder()
+	{
+		// Arrange
+		var feed = FeedJson.Deserialize(FeedFixtures.StoredFeedJson());
+		feed.Mods[1].Items[0].Dependencies.Add(new AnotherModDependency
+		{
+			Mods =
+			{
+				new ModDependencyAlternativeModel { ModName = "WispShelter", VersionRange = "[1.0.0, 2.0.0)" },
+				new ModDependencyAlternativeModel { ModName = "MKO", VersionRange = "(3.1.9,)" },
+			},
+		});
+
+		// Act
+		var runtimeFeed = JsonSerializer.Deserialize(FeedJson.Serialize(feed), SourceGeneratedJsonContext.Default.FeedData)!;
+
+		// Assert
+		var dependencies = runtimeFeed.Mods[1].Items[0].Dependencies;
+		Assert.Multiple(() =>
+		{
+			Assert.That(runtimeFeed.Mods[0].Items[0].Dependencies, Is.Null);
+			Assert.That(dependencies, Has.Count.EqualTo(1));
+			var alternatives = ((ModDependency.AnotherMod)dependencies![0]).Mods;
+			Assert.That(alternatives.Select(x => x.ModName), Is.EqualTo(new[] { "WispShelter", "MKO" }));
+			Assert.That(alternatives.Select(x => x.VersionRange), Is.EqualTo(new[] { VersionRange.Parse("[1.0.0, 2.0.0)"), VersionRange.Parse("(3.1.9,)") }));
 		});
 	}
 

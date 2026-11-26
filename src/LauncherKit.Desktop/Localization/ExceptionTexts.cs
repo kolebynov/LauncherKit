@@ -1,5 +1,6 @@
 using System.Net.Sockets;
 using Microsoft.Extensions.Localization;
+using LauncherKit.Core.Extensions;
 using LauncherKit.Core.Exceptions;
 using LauncherKit.Core.Utils;
 using LauncherKit.Infrastructure;
@@ -23,6 +24,10 @@ public sealed class ExceptionTexts(IStringLocalizer<DesktopStrings> strings)
 			BytesFormatter.Format(e.AvailableFreeSpace, BytesFormatter.Measurement.Size.Instance)],
 		ModpackNotInstalledException => strings[DesktopStrings.ExceptionModpackNotInstalled],
 		ModNotSupportedModpackVersionException e => strings[DesktopStrings.ExceptionUnsupportedMod, e.ModName, e.ModpackVersion],
+		ModDependencyUnavailableException e => strings[DesktopStrings.ExceptionModDependencyUnavailable,
+			e.Mod.ResolveDisplayName(),
+			string.Join("; ", e.Alternatives.Select(x =>
+				$"{x.Mod.ResolveDisplayName()}: {(x.UnavailableReason is { } reason ? ModDependencyTexts.Get(strings, reason).Value : string.Empty)}"))],
 		ModOrganizerAlreadyRunningException => strings[DesktopStrings.ExceptionModOrganizerRunning],
 		DownloadServersUnavailableException => strings[DesktopStrings.ExceptionDownloadServers],
 		DownloadStalledException e => strings[DesktopStrings.ExceptionDownloadStalled, e.Timeout],

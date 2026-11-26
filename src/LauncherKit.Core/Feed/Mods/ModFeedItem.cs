@@ -27,6 +27,12 @@ public class ModFeedItem
 
 	public required VersionRange SupportedModpackVersion { get; init; }
 
+	/// <summary>
+	/// Requirements, all of which must be met before the version is installed or updated from its card (not by the modpack
+	/// installation's components); the version's patches have the same ones. <see langword="null"/> when missing.
+	/// </summary>
+	public IReadOnlyList<ModDependency>? Dependencies { get; init; }
+
 	/// <summary>The version reached once every patch is applied.</summary>
 	public NuGetVersion GetLatestVersion() => Patches?.Max(x => x.Version) is { } patchVersion && patchVersion > Version
 		? patchVersion

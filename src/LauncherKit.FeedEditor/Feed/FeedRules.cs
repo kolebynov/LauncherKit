@@ -42,6 +42,15 @@ public static class FeedRules
 			: NuGet.Versioning.VersionRange.TryParse(value, out _) ? null
 			: "Некорректный диапазон версий (например, [3.1.0, 3.2.0)).";
 
+	/// <summary>
+	/// A mod dependency's range: a standard range (bracketed, exact or minimum), without floating versions such as
+	/// <c>1.*</c>, which the launcher rejects.
+	/// </summary>
+	public static readonly Func<string?, string?> DependencyVersionRange =
+		value => VersionRange(value) ?? (NuGet.Versioning.VersionRange.Parse(value!).IsFloating
+			? "Плавающие версии (например, 1.*) не поддерживаются, укажите диапазон (например, [1.0.0, 2.0.0))."
+			: null);
+
 	/// <summary>Optional download hash: empty, or a hex SHA-256 as accepted by the launcher's <c>Sha256Hash</c>.</summary>
 	public static readonly Func<string?, string?> OptionalSha256 =
 		value => string.IsNullOrEmpty(value) || IsSha256Hex(value) ? null : "Нужно 64 шестнадцатеричных символа (SHA-256).";

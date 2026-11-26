@@ -21,6 +21,7 @@ public sealed partial class TaskTexts(IStringLocalizer<DesktopStrings> strings)
 		AppTaskDescription.InstallSevenZip => strings[DesktopStrings.TaskInstallSevenZip],
 		AppTaskDescription.InstallVcRedist(var architecture) => strings[DesktopStrings.TaskInstallVcRedist, architecture],
 		AppTaskDescription.CleanupOldData => strings[DesktopStrings.TaskCleanupOldData],
+		AppTaskDescription.ResolveModDependencies(var modName) => strings[DesktopStrings.TaskResolveModDependencies, modName],
 		AppTaskDescription.Custom(var text) => new LocalizedString(nameof(AppTaskDescription.Custom), text),
 	};
 }

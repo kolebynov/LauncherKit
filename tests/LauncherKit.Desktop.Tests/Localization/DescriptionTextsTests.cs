@@ -107,6 +107,7 @@ public sealed class DescriptionTextsTests
 				ChoiceText.NoneOption.Instance, ChoiceText.YesOption.Instance,
 				new ChoiceText.ExtraDownloadSize(1536), new ChoiceText.SelectRequiredModTitle(["mod-marker"]),
 				ChoiceText.RequiredModsStepTitle.Instance, ChoiceText.SelectOneModSubtitle.Instance,
+				new ChoiceText.ModDependencyKeptDescription(version),
 				ChoiceText.UnavailableModNotUpdated.Instance, ChoiceText.UnavailableFomodOption.Instance,
 				ChoiceText.ModpackComponentsTitle.Instance,
 				new ChoiceText.ComponentOptionDescription("name-marker", "option-marker", 1536),
@@ -122,6 +123,7 @@ public sealed class DescriptionTextsTests
 					Does.Contain(BytesFormatter.Format(1536, BytesFormatter.Measurement.Size.Instance)));
 				Assert.That(choices.Get(new ChoiceText.SelectRequiredModTitle(["first-marker", "second-marker"])).Value,
 					Does.Contain("first-marker").And.Contain("second-marker"));
+				Assert.That(choices.Get(new ChoiceText.ModDependencyKeptDescription(version)).Value, Does.Contain(version.ToString()));
 				Assert.That(tasks.Get(new AppTaskDescription.Custom("custom-marker")).Value, Is.EqualTo("custom-marker"));
 				Assert.That(tasks.Get(new MicroTaskDescription.Custom("custom-marker")).Value, Is.EqualTo("custom-marker"));
 				Assert.That(choices.Get(new ChoiceText.Content("content-marker")).Value, Is.EqualTo("content-marker"));

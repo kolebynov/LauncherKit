@@ -11,9 +11,9 @@ public partial class ChoiceStepViewModel : ViewModelBase
 
 	public ChoiceSelectionMode SelectionMode => Step.SelectionMode;
 
-	public ChoiceText Title => Step.Title;
+	public ChoiceText? Title => Step.Title;
 
-	public ChoiceText Subtitle => Step.Subtitle;
+	public ChoiceText? Subtitle => Step.Subtitle;
 
 	public IReadOnlyList<ChoiceOptionViewModel> Options { get; }
 

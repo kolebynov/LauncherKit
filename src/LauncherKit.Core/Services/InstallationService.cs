@@ -4,6 +4,7 @@ using LauncherKit.Core.AppTasks;
 using LauncherKit.Core.Feed;
 using LauncherKit.Core.Feed.Mods;
 using LauncherKit.Core.Models;
+using LauncherKit.Core.ModDependencies;
 using LauncherKit.Core.Services.Abstractions;
 using LauncherKit.Core.Update;
 using LauncherKit.Infrastructure;
@@ -83,14 +84,92 @@ public sealed class InstallationService : IInstallationService, IDisposable
 		var installation = new QueuedInstallation.ModInstall(mod);
 		if (!TryReserve(installation, mod, category.IsExclusive ? category : null))
 			return;
+		var request = new DependencyRequest(mod);
+		using var requestEnded = new CancellationTokenSource();
 		try
 		{
-			var appTask = await _installAppTaskProvider.CreateModInstallAppTask(mod, version, cancellationToken);
+			var reservations = new ModDependencyReservations(
+				() => GetQueuedInstalls(mod),
+				(mods, categories) => ReserveDependencies(mods, categories, request),
+				requestEnded.Token);
+			var appTask = await _installAppTaskProvider.CreateModInstallWithDependenciesAppTask(mod, version, reservations,
+				cancellationToken);
 			await _appTaskQueue.EnqueueAndWaitForCompletion(appTask, cancellationToken);
 		}
 		finally
 		{
+			lock (_lock)
+			{
+				request.IsEnded = true;
+			}
+
+			// Ends a dependency resolution still running for the request, e.g. when its installation was removed from
+			// the queue while the resolution waited for a choice.
+			await requestEnded.CancelAsync();
 			Release(installation);
+			lock (_lock)
+			{
+				foreach (var dependency in request.Reserved)
+				{
+					Release(dependency);
+				}
+			}
+		}
+	}
+
+	/// <summary>Names of the mods other than <paramref name="mod"/> queued for installation.</summary>
+	private string[] GetQueuedInstalls(ModFeedData mod)
+	{
+		lock (_lock)
+		{
+			return _queuedInstallations
+				.OfType<QueuedInstallation.ModInstall>()
+				.Select(x => x.Mod.Name)
+				.Where(x => x != mod.Name)
+				.ToArray();
+		}
+	}
+
+	/// <summary>
+	/// Under the lock direct installs reserve with, tracks the planned dependencies as queued with the installation that
+	/// needs them (except those already queued on their own) unless the request ended or one of them is in an exclusive
+	/// category with another mod queued for install, which is returned instead of reserving anything.
+	/// </summary>
+	private ModReservationConflict? ReserveDependencies(IReadOnlyList<ModFeedData> mods,
+		IReadOnlyList<ModCategoryFeedData> categories, DependencyRequest request)
+	{
+		lock (_lock)
+		{
+			if (request.IsEnded)
+				return null;
+			foreach (var mod in mods)
+			{
+				if (!categories.Any(x => x.Id == mod.CategoryId && x.IsExclusive))
+					continue;
+				var queued = _queuedInstallations.FirstOrDefault(x => x is QueuedInstallation.ModInstall(var m) &&
+					m.CategoryId == mod.CategoryId && m.Name != mod.Name && m.Name != request.Mod.Name &&
+					!mods.Any(planned => planned.Name == m.Name));
+				if (queued is QueuedInstallation.ModInstall(var queuedMod))
+					return new ModReservationConflict(mod, queuedMod);
+			}
+
+			// Every dependency is reserved before the first change is published: a subscriber reacting to it (even by
+			// requesting another installation under this reentrant lock) sees the whole plan.
+			var reservedCount = request.Reserved.Count;
+			foreach (var mod in mods)
+			{
+				if (_queuedInstallations.Any(x => x is QueuedInstallation.ModInstall(var m) && m.Name == mod.Name ||
+				                                  x is QueuedInstallation.ModUninstall(var u) && u.Name == mod.Name))
+					continue;
+				var installation = new QueuedInstallation.ModInstall(mod);
+				_queuedInstallations.Add(installation);
+				request.Reserved.Add(installation);
+			}
+
+			foreach (var installation in request.Reserved.Skip(reservedCount).ToArray())
+				_changes.OnNext(new InstallationChange.Queued(installation));
+
+			return null;
 		}
 	}
 
@@ -212,5 +291,16 @@ public sealed class InstallationService : IInstallationService, IDisposable
 				_changes.OnNext(new InstallationChange.Finished(QueuedInstallation.Modpack.Instance));
 			}
 		}
+	}
+
+	/// <summary>A mod installation request's dependency reservations; guarded by the state lock.</summary>
+	private sealed class DependencyRequest(ModFeedData mod)
+	{
+		public ModFeedData Mod { get; } = mod;
+
+		public List<QueuedInstallation> Reserved { get; } = [];
+
+		/// <summary>Set once the request ended; it then reserves nothing more.</summary>
+		public bool IsEnded { get; set; }
 	}
 }

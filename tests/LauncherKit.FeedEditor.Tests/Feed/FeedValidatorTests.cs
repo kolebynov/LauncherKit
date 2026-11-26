@@ -665,6 +665,97 @@ public sealed class FeedValidatorTests
 		Assert.That(result.Select(x => x.Location), Is.EquivalentTo(new[] { "Роли разработчиков", "Роль разработчика #3 › ID" }));
 	}
 
+	[Test]
+	public void Validate_DependencyOnOtherModsInRange_ReturnsNoErrors()
+	{
+		// Arrange
+		var feed = FeedWithDependency(Alternative("B", "[1.0.0, 2.0.0)"), Alternative("C", "(3.1.9,)"));
+
+		// Act
+		var result = FeedValidator.Validate(feed);
+
+		// Assert
+		Assert.That(result, Is.Empty);
+	}
+
+	[Test]
+	public void Validate_DependencyWithoutMods_ReportsError()
+	{
+		// Arrange
+		var feed = FeedWithDependency();
+
+		// Act
+		var result = FeedValidator.Validate(feed);
+
+		// Assert
+		Assert.That(result, Is.EqualTo(new[] { new FeedValidationError("Мод M 1.0.0 › Зависимость 1", "Нужен хотя бы один мод.") }));
+	}
+
+	[TestCase("Missing", "Указанный мод отсутствует в фиде.")]
+	[TestCase("", "Указанный мод отсутствует в фиде.")]
+	[TestCase("M", "Мод не может зависеть от самого себя.")]
+	public void Validate_DependencyOnMissingModOrItself_ReportsError(string modName, string expectedMessage)
+	{
+		// Arrange
+		var feed = FeedWithDependency(Alternative("B", "[1.0.0, )"), Alternative(modName, "[1.0.0, )"));
+
+		// Act
+		var result = FeedValidator.Validate(feed);
+
+		// Assert
+		Assert.That(result.Select(x => x.Message), Is.EqualTo(new[] { expectedMessage }));
+	}
+
+	[Test]
+	public void Validate_DependencyListingModTwice_ReportsDuplicate()
+	{
+		// Arrange
+		var feed = FeedWithDependency(Alternative("B", "[1.0.0, )"), Alternative("B", "[2.0.0, )"));
+
+		// Act
+		var result = FeedValidator.Validate(feed);
+
+		// Assert
+		Assert.That(result, Is.EqualTo(new[] { new FeedValidationError("Мод M 1.0.0 › Зависимость 1", "Мод «B» указан больше одного раза.") }));
+	}
+
+	[TestCase("")]
+	[TestCase("1.0 to 2.0")]
+	[TestCase("1.*")]
+	[TestCase("[1.*, 2.0.0)")]
+	public void Validate_DependencyWithInvalidVersionRange_ReportsRange(string versionRange)
+	{
+		// Arrange
+		var feed = FeedWithDependency(Alternative("B", versionRange));
+
+		// Act
+		var result = FeedValidator.Validate(feed);
+
+		// Assert
+		Assert.That(result.Select(x => x.Location), Is.EqualTo(new[] { "Мод M 1.0.0 › Зависимость 1 › Вариант B › Версии мода" }));
+	}
+
+	private static ModDependencyAlternativeModel Alternative(string modName, string versionRange) =>
+		new() { ModName = modName, VersionRange = versionRange };
+
+	/// <summary>A feed of mods M, B and C, where M's version depends on one of <paramref name="alternatives"/>.</summary>
+	private static FeedModel FeedWithDependency(params ModDependencyAlternativeModel[] alternatives)
+	{
+		var feed = FeedWithModSteps();
+		var dependency = new AnotherModDependency();
+		dependency.Mods.AddRange(alternatives);
+		feed.Mods[0].Items[0].Dependencies.Add(dependency);
+		foreach (var name in new[] { "B", "C" })
+		{
+			var mod = FeedJson.Clone(feed.Mods[0]);
+			mod.Name = name;
+			mod.Items[0].Dependencies.Clear();
+			feed.Mods.Add(mod);
+		}
+
+		return feed;
+	}
+
 	private static SelectChoicesAction Choices(ChoiceSelectionMode mode, params ChoiceOptionModel[] options)
 	{
 		var page = new ChoiceStepModel { Title = new Dictionary<string, string> { ["ru"] = "Страница" }, SelectionMode = mode };

@@ -159,7 +159,7 @@ public sealed class AppTaskProviderTests
 				ProductTestSupport.CreateProduct().ModpackVersionFile, updateVersion))
 			.Returns(Marker("extract version"));
 		var installSteps = mocker.GetMock<IInstallStepsMicroTasksFactory>();
-		installSteps.Setup(x => x.CreateInstallMicroTasks(patch.InstallSteps, null)).Returns([Marker("steps")]);
+		installSteps.Setup(x => x.CreateInstallMicroTasks(patch.InstallSteps, null, It.Is<IDictionary<string, NuGetVersion>>(kept => kept.Count == 0))).Returns([Marker("steps")]);
 		mocker.GetMock<IServiceProvider>()
 			.Setup(x => x.GetService(typeof(IInstallStepsMicroTasksFactory)))
 			.Returns(installSteps.Object);
@@ -522,7 +522,7 @@ public sealed class AppTaskProviderTests
 		{
 			Assert.That(task.Id, Is.EqualTo("InstallModpackComponent_EnglishVoices"));
 			Assert.That(GraphPackOptions(offer!), Is.Empty);
-			Assert.That(choices.Steps.Select(x => x.Title.Value), Is.EqualTo(new[] { new LauncherKit.Core.Choices.ChoiceText.Content("Английская озвучка") }));
+			Assert.That(choices.Steps.Select(x => x.Title?.Value), Is.EqualTo(new[] { new LauncherKit.Core.Choices.ChoiceText.Content("Английская озвучка") }));
 		});
 	}
 

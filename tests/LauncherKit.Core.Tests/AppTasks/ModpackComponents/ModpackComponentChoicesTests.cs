@@ -50,7 +50,7 @@ public sealed class ModpackComponentChoicesTests
 		// Assert
 		Assert.Multiple(() =>
 		{
-			Assert.That(sut.Steps.Select(x => x.Title.Value), Is.EqualTo(new[] { new ChoiceText.Content("Графпак") }));
+			Assert.That(sut.Steps.Select(x => x.Title?.Value), Is.EqualTo(new[] { new ChoiceText.Content("Графпак") }));
 			Assert.That(selection.IsApplied, Is.True);
 			Assert.That((selection.InstallTasks.GetValueOrDefault("EnglishVoices") != null), Is.False);
 		});
@@ -69,7 +69,7 @@ public sealed class ModpackComponentChoicesTests
 		// Assert
 		Assert.Multiple(() =>
 		{
-			Assert.That(sut.Steps.Select(x => x.Title.Value), Is.EqualTo(new[] { new ChoiceText.Content("Английская озвучка") }));
+			Assert.That(sut.Steps.Select(x => x.Title?.Value), Is.EqualTo(new[] { new ChoiceText.Content("Английская озвучка") }));
 			Assert.That(selection.InstallTasks.GetValueOrDefault("GraphPack"), Is.Null);
 			Assert.That((selection.InstallTasks.GetValueOrDefault("EnglishVoices") != null), Is.True);
 		});
@@ -209,8 +209,8 @@ public sealed class ModpackComponentChoicesTests
 
 		Assert.Multiple(() =>
 		{
-			Assert.That(sut.Steps.Single().Title.Value, Is.EqualTo(new ChoiceText.Content("Textures")));
-			Assert.That(sut.Steps.Single().Subtitle.Value, Is.EqualTo(new ChoiceText.Content("Install textures?")));
+			Assert.That(sut.Steps.Single().Title?.Value, Is.EqualTo(new ChoiceText.Content("Textures")));
+			Assert.That(sut.Steps.Single().Subtitle?.Value, Is.EqualTo(new ChoiceText.Content("Install textures?")));
 			Assert.That(selection.InstallTasks["CustomTextures"], Is.SameAs(task));
 			Assert.That(selection.IsApplied, Is.True);
 		});

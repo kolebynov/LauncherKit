@@ -12,8 +12,9 @@ namespace LauncherKit.FeedEditor.Feed.Json;
 [JsonSerializable(typeof(ExtractArchiveAction))]
 [JsonSerializable(typeof(MergePluginsAction))]
 [JsonSerializable(typeof(ChangeProfileAction))]
+[JsonSerializable(typeof(AnotherModDependency))]
 [JsonSourceGenerationOptions(
-	Converters = [typeof(ModInstallActionJsonConverter)],
+	Converters = [typeof(ModInstallActionJsonConverter), typeof(ModDependencyJsonConverter)],
 	DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
 	UseStringEnumConverter = true,
 	WriteIndented = true,

@@ -60,7 +60,7 @@ public sealed class SelectModpackComponentsMicroTaskTests
 		// Assert
 		Assert.Multiple(() =>
 		{
-			Assert.That(shownSteps!.Select(x => x.Title.Value), Is.EqualTo(new[] { new ChoiceText.Content("Английская озвучка"), new ChoiceText.Content("Графпак") }));
+			Assert.That(shownSteps!.Select(x => x.Title?.Value), Is.EqualTo(new[] { new ChoiceText.Content("Английская озвучка"), new ChoiceText.Content("Графпак") }));
 			Assert.That(shownSteps![0].Options[0].Description.Value,
 				Is.EqualTo(new ChoiceText.ComponentOptionDescription("Английская озвучка", null, BytesFormatter.GigaByte / 2)));
 			Assert.That(shownSteps![1].Options[0].Description.Value,

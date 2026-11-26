@@ -40,7 +40,7 @@
 	<ListEditor TItem="ModItemModel" Items="Mod.Items" Factories="ItemFactories"
 				Title="@(item => $"{item.Version} — сборка {item.SupportedModpackVersion}{(item.SupportsUninstall ? " (можно удалить)" : string.Empty)}")">
 		<ItemContent Context="item">
-			<ModItemEditor Item="item" />
+			<ModItemEditor Item="item" ModName="@Mod.Name" />
 		</ItemContent>
 	</ListEditor>
 </MudStack>

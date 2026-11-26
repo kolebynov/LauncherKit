@@ -1,12 +1,15 @@
 using NuGet.Versioning;
 using R3;
 using LauncherKit.Core.AppTasks;
+using LauncherKit.Core.AppTasks.MicroTasks;
 using LauncherKit.Core.Feed;
 using LauncherKit.Core.Feed.Mods;
+using LauncherKit.Core.ModDependencies;
 using LauncherKit.Core.Services;
 using LauncherKit.Core.Services.Abstractions;
 using LauncherKit.Core.Update;
 using LauncherKit.Infrastructure;
+using LauncherKit.TestSupport;
 
 namespace LauncherKit.Core.Tests.Services;
 
@@ -24,7 +27,7 @@ public sealed class InstallationServiceTests
 		var mod = Mod("Lite");
 		var task = Task("Install_Lite");
 		var completion = new TaskCompletionSource();
-		mocker.GetMock<IInstallAppTaskProvider>().Setup(x => x.CreateModInstallAppTask(mod, ModVersion, It.IsAny<CancellationToken>()))
+		mocker.GetMock<IInstallAppTaskProvider>().Setup(x => x.CreateModInstallWithDependenciesAppTask(mod, ModVersion, It.IsAny<ModDependencyReservations>(), It.IsAny<CancellationToken>()))
 			.ReturnsAsync(task);
 		mocker.GetMock<IAppTaskQueue>().Setup(x => x.EnqueueAndWaitForCompletion(task, It.IsAny<CancellationToken>()))
 			.Returns(completion.Task);
@@ -52,13 +55,244 @@ public sealed class InstallationServiceTests
 	}
 
 	[Test]
+	public async Task InstallMod_DependenciesReserved_TrackedUntilTheInstallationEndsAndOtherQueuedInstallsReported()
+	{
+		// Arrange
+		using var events = new Subject<AppTaskQueue.Event>();
+		var mocker = CreateMocker(events);
+		var mod = Mod("Addon");
+		var dependency = Mod("Library");
+		var other = Mod("Other");
+		SetupInstall(mocker, other, new TaskCompletionSource().Task);
+		var task = Task("Install_Addon");
+		var completion = new TaskCompletionSource();
+		ModDependencyReservations? reservations = null;
+		mocker.GetMock<IInstallAppTaskProvider>()
+			.Setup(x => x.CreateModInstallWithDependenciesAppTask(mod, ModVersion, It.IsAny<ModDependencyReservations>(),
+				It.IsAny<CancellationToken>()))
+			.Callback((ModFeedData _, NuGetVersion? _, ModDependencyReservations r, CancellationToken _) => reservations = r)
+			.ReturnsAsync(task);
+		mocker.GetMock<IAppTaskQueue>().Setup(x => x.EnqueueAndWaitForCompletion(task, It.IsAny<CancellationToken>()))
+			.Returns(completion.Task);
+		using var sut = mocker.CreateInstance<InstallationService>();
+		_ = sut.InstallMod(other, Category(), ModVersion, CancellationToken.None);
+		var installing = sut.InstallMod(mod, Category(), ModVersion, CancellationToken.None);
+
+		// Act
+		var queuedInstalls = reservations!.GetQueuedInstalls();
+		var conflict = reservations.TryReserve([dependency, other], [Category()]);
+		var queuedWhileWaiting = sut.QueuedInstallations;
+		completion.SetResult();
+		await installing;
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(queuedInstalls, Is.EqualTo(new[] { "Other" }));
+			Assert.That(conflict, Is.Null);
+			Assert.That(queuedWhileWaiting, Is.EqualTo(new QueuedInstallation[]
+			{
+				new QueuedInstallation.ModInstall(other), new QueuedInstallation.ModInstall(mod),
+				new QueuedInstallation.ModInstall(dependency),
+			}));
+			Assert.That(sut.QueuedInstallations, Is.EqualTo(new[] { new QueuedInstallation.ModInstall(other) }));
+		});
+	}
+
+	[Test]
+	public async Task InstallMod_InstallationRemovedWhileResolvingDependencies_EndsResolutionAndFreesQueue()
+	{
+		// Arrange
+		using var queue = CreateQueue();
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		mocker.Use<IAppTaskQueue>(queue);
+		var addon = Mod("Addon");
+		var resolving = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+		var resolutionEnded = new TaskCompletionSource<ModReservationConflict?>(TaskCreationOptions.RunContinuationsAsynchronously);
+		SetupDependencyInstall(mocker, addon, async reservations =>
+		{
+			resolving.SetResult();
+			try
+			{
+				await System.Threading.Tasks.Task.Delay(Timeout.Infinite, reservations.RequestEnded);
+			}
+			catch (OperationCanceledException)
+			{
+			}
+
+			resolutionEnded.SetResult(reservations.TryReserve([Mod("Library")], [Category()]));
+		});
+		using var sut = mocker.CreateInstance<InstallationService>();
+		var installing = sut.InstallMod(addon, Category(), ModVersion, CancellationToken.None);
+		await TaskAssert.WithinTimeout(resolving.Task);
+
+		// Act
+		await queue.CancelAppTask("Install_Addon", CancellationToken.None);
+		await TaskAssert.WithinTimeout(installing);
+		var conflict = await TaskAssert.WithinTimeout(resolutionEnded.Task);
+		await TaskAssert.WithinTimeout(queue.EnqueueAndWaitForCompletion(Task("Next"), CancellationToken.None));
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(conflict, Is.Null);
+			Assert.That(sut.QueuedInstallations, Is.Empty);
+			Assert.That(queue.TaskCount, Is.Zero);
+		});
+	}
+
+	[Test]
+	public async Task InstallMod_ExclusivePeerQueuedWhileResolving_ReportsConflictAndReservesNothing()
+	{
+		// Arrange
+		using var queue = CreateQueue();
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		mocker.Use<IAppTaskQueue>(queue);
+		var addon = Mod("Addon");
+		var pack = Mod("Pack", "packs");
+		var otherPack = Mod("Other Pack", "packs");
+		var packs = PacksCategory();
+		var resolving = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+		var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+		var reserved = new TaskCompletionSource<(ModReservationConflict?, IReadOnlyList<QueuedInstallation>)>(
+			TaskCreationOptions.RunContinuationsAsynchronously);
+		InstallationService? service = null;
+		SetupDependencyInstall(mocker, addon, async reservations =>
+		{
+			resolving.SetResult();
+			await gate.Task;
+			reserved.SetResult((reservations.TryReserve([pack], [Category(), packs]), service!.QueuedInstallations));
+		});
+		mocker.GetMock<IInstallAppTaskProvider>()
+			.Setup(x => x.CreateModInstallWithDependenciesAppTask(otherPack, ModVersion, It.IsAny<ModDependencyReservations>(),
+				It.IsAny<CancellationToken>()))
+			.ReturnsAsync(Task("Install_Other Pack"));
+		using var sut = mocker.CreateInstance<InstallationService>();
+		service = sut;
+		var installing = sut.InstallMod(addon, Category(), ModVersion, CancellationToken.None);
+		await TaskAssert.WithinTimeout(resolving.Task);
+		var installingPeer = sut.InstallMod(otherPack, packs, ModVersion, CancellationToken.None);
+
+		// Act
+		gate.SetResult();
+		var (conflict, queuedAfterReserving) = await TaskAssert.WithinTimeout(reserved.Task);
+		await TaskAssert.WithinTimeout(installing);
+		await TaskAssert.WithinTimeout(installingPeer);
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(conflict, Is.EqualTo(new ModReservationConflict(pack, otherPack)));
+			Assert.That(queuedAfterReserving, Is.EqualTo(new QueuedInstallation[]
+			{
+				new QueuedInstallation.ModInstall(addon), new QueuedInstallation.ModInstall(otherPack),
+			}));
+		});
+	}
+
+	[Test]
+	public async Task InstallMod_DependencyOfExclusiveCategoryReserved_RefusesDirectInstallOfItsPeer()
+	{
+		// Arrange
+		using var queue = CreateQueue();
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		mocker.Use<IAppTaskQueue>(queue);
+		var addon = Mod("Addon");
+		var pack = Mod("Pack", "packs");
+		var otherPack = Mod("Other Pack", "packs");
+		var packs = PacksCategory();
+		var reserved = new TaskCompletionSource<ModReservationConflict?>(TaskCreationOptions.RunContinuationsAsynchronously);
+		var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+		SetupDependencyInstall(mocker, addon, async reservations =>
+		{
+			reserved.SetResult(reservations.TryReserve([pack], [Category(), packs]));
+			await gate.Task;
+		});
+		using var sut = mocker.CreateInstance<InstallationService>();
+		var installing = sut.InstallMod(addon, Category(), ModVersion, CancellationToken.None);
+		var conflict = await TaskAssert.WithinTimeout(reserved.Task);
+
+		// Act
+		await TaskAssert.WithinTimeout(sut.InstallMod(otherPack, packs, ModVersion, CancellationToken.None));
+		var queued = sut.QueuedInstallations;
+		gate.SetResult();
+		await TaskAssert.WithinTimeout(installing);
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(conflict, Is.Null);
+			Assert.That(queued, Is.EqualTo(new QueuedInstallation[]
+			{
+				new QueuedInstallation.ModInstall(addon), new QueuedInstallation.ModInstall(pack),
+			}));
+			mocker.GetMock<IInstallAppTaskProvider>().Verify(x => x.CreateModInstallWithDependenciesAppTask(otherPack,
+				It.IsAny<NuGetVersion?>(), It.IsAny<ModDependencyReservations>(), It.IsAny<CancellationToken>()), Times.Never);
+		});
+	}
+
+	[Test]
+	public async Task InstallMod_SubscriberRequestsPeerWhenFirstDependencyIsReported_SeesTheWholePlanAndIsRefused()
+	{
+		// Arrange
+		using var queue = CreateQueue();
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		mocker.Use<IAppTaskQueue>(queue);
+		var addon = Mod("Addon");
+		var library = Mod("Library");
+		var pack = Mod("Pack", "packs");
+		var otherPack = Mod("Other Pack", "packs");
+		var packs = PacksCategory();
+		ModReservationConflict? conflict = null;
+		SetupDependencyInstall(mocker, addon, reservations =>
+		{
+			conflict = reservations.TryReserve([library, pack], [Category(), packs]);
+			return System.Threading.Tasks.Task.CompletedTask;
+		});
+		mocker.GetMock<IInstallAppTaskProvider>()
+			.Setup(x => x.CreateModInstallWithDependenciesAppTask(otherPack, ModVersion, It.IsAny<ModDependencyReservations>(),
+				It.IsAny<CancellationToken>()))
+			.ReturnsAsync(Task("Install_Other Pack"));
+		using var sut = mocker.CreateInstance<InstallationService>();
+		IReadOnlyList<QueuedInstallation>? seen = null;
+		Task? peerRequest = null;
+		using var subscription = sut.Changes.Subscribe(change =>
+		{
+			// Synchronously, under the service's lock, like any subscriber.
+			if (peerRequest == null && change is InstallationChange.Queued(var installation) &&
+			    installation is QueuedInstallation.ModInstall(var mod) && mod == library)
+			{
+				seen = sut.QueuedInstallations;
+				peerRequest = sut.InstallMod(otherPack, packs, ModVersion, CancellationToken.None);
+			}
+		});
+
+		// Act
+		await TaskAssert.WithinTimeout(sut.InstallMod(addon, Category(), ModVersion, CancellationToken.None));
+		await TaskAssert.WithinTimeout(peerRequest!);
+
+		// Assert
+		Assert.Multiple(() =>
+		{
+			Assert.That(conflict, Is.Null);
+			Assert.That(seen, Is.EqualTo(new QueuedInstallation[]
+			{
+				new QueuedInstallation.ModInstall(addon), new QueuedInstallation.ModInstall(library),
+				new QueuedInstallation.ModInstall(pack),
+			}));
+			mocker.GetMock<IInstallAppTaskProvider>().Verify(x => x.CreateModInstallWithDependenciesAppTask(otherPack,
+				It.IsAny<NuGetVersion?>(), It.IsAny<ModDependencyReservations>(), It.IsAny<CancellationToken>()), Times.Never);
+		});
+	}
+
+	[Test]
 	public async Task InstallMod_TaskCreationCancelled_ReleasesReservation()
 	{
 		// Arrange
 		using var events = new Subject<AppTaskQueue.Event>();
 		var mocker = CreateMocker(events);
 		var mod = Mod("Lite");
-		mocker.GetMock<IInstallAppTaskProvider>().Setup(x => x.CreateModInstallAppTask(mod, null, It.IsAny<CancellationToken>()))
+		mocker.GetMock<IInstallAppTaskProvider>().Setup(x => x.CreateModInstallWithDependenciesAppTask(mod, null, It.IsAny<ModDependencyReservations>(), It.IsAny<CancellationToken>()))
 			.ThrowsAsync(new OperationCanceledException());
 		using var sut = mocker.CreateInstance<InstallationService>();
 
@@ -78,7 +312,7 @@ public sealed class InstallationServiceTests
 		var mod = Mod("Lite");
 		var task = Task("Install_Lite");
 		var completion = new TaskCompletionSource();
-		mocker.GetMock<IInstallAppTaskProvider>().Setup(x => x.CreateModInstallAppTask(mod, ModVersion, It.IsAny<CancellationToken>()))
+		mocker.GetMock<IInstallAppTaskProvider>().Setup(x => x.CreateModInstallWithDependenciesAppTask(mod, ModVersion, It.IsAny<ModDependencyReservations>(), It.IsAny<CancellationToken>()))
 			.ReturnsAsync(task);
 		mocker.GetMock<IAppTaskQueue>().Setup(x => x.EnqueueAndWaitForCompletion(task, It.IsAny<CancellationToken>()))
 			.Returns(completion.Task);
@@ -289,7 +523,7 @@ public sealed class InstallationServiceTests
 	[Test]
 	public async Task InstallMod_ExclusiveSiblingWhileFeedHasNoCategories_IsRejectedWithoutReadingTheFeed()
 	{
-		// Arrange: a failed feed reload serves the default feed, without categories.
+		// Arrange: a failed first feed load serves the default feed, without categories.
 		using var events = new Subject<AppTaskQueue.Event>();
 		var mocker = CreateMocker(events);
 		var feedProvider = mocker.GetMock<IFeedProvider>();
@@ -312,7 +546,7 @@ public sealed class InstallationServiceTests
 		Assert.That(queued, Is.EqualTo(new[] { new QueuedInstallation.ModInstall(lite) }));
 		feedProvider.Verify(x => x.GetModCategories(It.IsAny<CancellationToken>()), Times.Never);
 		mocker.GetMock<IInstallAppTaskProvider>().Verify(
-			x => x.CreateModInstallAppTask(full, It.IsAny<NuGetVersion?>(), It.IsAny<CancellationToken>()), Times.Never);
+			x => x.CreateModInstallWithDependenciesAppTask(full, It.IsAny<NuGetVersion?>(), It.IsAny<ModDependencyReservations>(), It.IsAny<CancellationToken>()), Times.Never);
 	}
 
 	[Test]
@@ -419,7 +653,7 @@ public sealed class InstallationServiceTests
 	private static void SetupInstall(AutoMocker mocker, ModFeedData mod, Task completion)
 	{
 		var task = Task($"Install_{mod.Name}");
-		mocker.GetMock<IInstallAppTaskProvider>().Setup(x => x.CreateModInstallAppTask(mod, ModVersion, It.IsAny<CancellationToken>()))
+		mocker.GetMock<IInstallAppTaskProvider>().Setup(x => x.CreateModInstallWithDependenciesAppTask(mod, ModVersion, It.IsAny<ModDependencyReservations>(), It.IsAny<CancellationToken>()))
 			.ReturnsAsync(task);
 		mocker.GetMock<IAppTaskQueue>().Setup(x => x.EnqueueAndWaitForCompletion(task, It.IsAny<CancellationToken>()))
 			.Returns(completion);
@@ -427,10 +661,44 @@ public sealed class InstallationServiceTests
 
 	private static AppTask Task(string id) => new(id, new AppTaskDescription.Custom(id), _ => [], [], null);
 
-	private static ModFeedData Mod(string name) => new()
+	/// <summary>A real queue running tasks without microtasks of their own.</summary>
+	private static AppTaskQueue CreateQueue()
+	{
+		var mocker = new AutoMocker(MockBehavior.Strict);
+		mocker.Use<Microsoft.Extensions.Logging.ILogger<AppTaskQueue>>(
+			Microsoft.Extensions.Logging.Abstractions.NullLogger<AppTaskQueue>.Instance);
+		mocker.Use(TimeProvider.System);
+		ServiceScopeFactoryStub.ScopeFactoryFor(mocker, mocker.GetMock<IMicroTasksFactory>().Object);
+		return mocker.CreateInstance<AppTaskQueue>();
+	}
+
+	/// <summary>
+	/// Makes the installation of <paramref name="mod"/> a resolution task running <paramref name="resolve"/> with the
+	/// request's reservations, followed by an installation task without microtasks.
+	/// </summary>
+	private static void SetupDependencyInstall(AutoMocker mocker, ModFeedData mod,
+		Func<ModDependencyReservations, Task> resolve) =>
+		mocker.GetMock<IInstallAppTaskProvider>()
+			.Setup(x => x.CreateModInstallWithDependenciesAppTask(mod, ModVersion, It.IsAny<ModDependencyReservations>(),
+				It.IsAny<CancellationToken>()))
+			.Returns((ModFeedData _, NuGetVersion? _, ModDependencyReservations reservations, CancellationToken _) =>
+			{
+				var resolveTask = new AppTask($"ResolveModDependencies_{mod.Name}",
+					new AppTaskDescription.Custom("resolve"), _ => [], [], null)
+				{
+					OnComplete = _ => new ValueTask(resolve(reservations)),
+				};
+				return ValueTask.FromResult(new AppTask($"Install_{mod.Name}", new AppTaskDescription.Custom("install"),
+					_ => [], [resolveTask], null));
+			});
+
+	private static ModCategoryFeedData PacksCategory() =>
+		new() { Id = "packs", Title = new() { ["ru"] = "Packs" }, IsExclusive = true };
+
+	private static ModFeedData Mod(string name, string categoryId = "mods") => new()
 	{
 		Name = name,
-		CategoryId = "mods",
+		CategoryId = categoryId,
 		LogoPath = $"{name}.png",
 		DescriptionPath = new() { ["ru"] = $"{name}.md" },
 		Items =
